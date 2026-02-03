@@ -1,24 +1,23 @@
-import cors from "cors";
-
-app.use(cors({
-  origin: "https://gohw.net"
-}));
-
-
 import express from "express";
 import fetch from "node-fetch";
 import FormData from "form-data";
 import dotenv from "dotenv";
+import cors from "cors";
 
 dotenv.config();
 
 const app = express();
+
+// ⭐ Enable CORS so your frontend at gohw.net can call this backend
+app.use(cors({
+  origin: "https://gohw.net"
+}));
+
 app.use(express.json());
-app.use(express.static(".")); // serve your muralmaker.html and assets
+app.use(express.static(".")); // not required for backend-only, but harmless
 
 app.post("/generate", async (req, res) => {
   try {
-    // ⭐ Read aspect_ratio from the request body
     const { prompt, width, height, aspect_ratio } = req.body;
 
     console.log("Incoming prompt:", prompt);
@@ -54,7 +53,6 @@ app.post("/generate", async (req, res) => {
     const result = await response.json();
     console.log("Stability JSON:", result);
 
-    // Return the JSON directly to the front-end
     res.json(result);
 
   } catch (err) {
@@ -68,7 +66,3 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
-
-
-
-
