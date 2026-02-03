@@ -1,4 +1,6 @@
 {
+  "name": "muralizer-backend",
+  "version": "1.0.0",
   "type": "module",
   "dependencies": {
     "dotenv": "^17.2.3",
@@ -10,3 +12,4 @@
     "start": "node server.js"
   }
 }
+
