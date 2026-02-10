@@ -2,8 +2,8 @@
   "name": "Atmos Studio",
   "short_name": "Atmos",
   "description": "A mural design and atmospheric scene generator.",
-  "start_url": "/",
-  "scope": "/",
+  "start_url": "/muralmaker.html?source=pwa",
+  "scope": "/muralmaker.html",
   "background_color": "#C9CDD2",
   "theme_color": "#111111",
   "display": "standalone",
@@ -61,3 +61,4 @@
     }
   ]
 }
+
