@@ -8,7 +8,6 @@ const CACHE_NAME = "atmos-studio-v1";
 // Add any files your app needs to load offline
 const ASSETS = [
   "/",
-  "/muralmaker.html",
   "/muralizer-manifest.json",
   "/styles.css",
   "/script.js",
@@ -70,3 +69,4 @@ self.addEventListener("fetch", event => {
     })
   );
 });
+
