@@ -3,7 +3,7 @@
 // Cache-first shell, network-first for generated images
 // ============================================================
 
-const CACHE_NAME = "atmos-studio-v1";
+const CACHE_NAME = "atmos-studio-v2";
 
 // Add any files your app needs to load offline
 const ASSETS = [
@@ -69,4 +69,5 @@ self.addEventListener("fetch", event => {
     })
   );
 });
+
 
