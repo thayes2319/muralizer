@@ -9,8 +9,6 @@ const CACHE_NAME = "atmos-studio-v2";
 const ASSETS = [
   "/",
   "/muralizer-manifest.json",
-  "/styles.css",
-  "/script.js",
   "/icons/icon-192.png",
   "/icons/icon-512.png",
   "/icons/maskable-512.png"
@@ -69,5 +67,6 @@ self.addEventListener("fetch", event => {
     })
   );
 });
+
 
 
