@@ -1,7 +1,7 @@
 {
-  "name": "Muralizer Studio",
-  "short_name": "Muralizer",
-  "description": "A mural design and atmospheric scene generator.",
+  "name": "Scénique",
+  "short_name": "Scénique",
+  "description": "Mural design and installion.",
   "start_url": "/muralmaker.html?source=pwa",
   "scope": "/",
   "background_color": "#C9CDD2",
@@ -11,12 +11,12 @@
 
   "icons": [
     {
-      "src": "icons/icon-192-v2.png",
+      "src": "icons/icon-192-scenique.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "icons/icon-512.png",
+      "src": "icons/icon-512-scenique.png",
       "sizes": "512x512",
       "type": "image/png"
     },
@@ -60,5 +60,4 @@
       "form_factor": "tablet"
     }
   ]
-
 }

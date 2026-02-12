@@ -3,7 +3,7 @@
 // Cache-first shell, network-first for generated images
 // ============================================================
 
-const CACHE_NAME = "Muralizer-Studio-v1";
+const CACHE_NAME = "Scénique";
 
 // Add any files your app needs to load offline
 const ASSETS = [

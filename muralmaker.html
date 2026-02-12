@@ -5,15 +5,17 @@
 <script src="https://cdn.jsdelivr.net/npm/@jaames/iro@5"></script>
 <meta name="" />
 <meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
-<title>HwRenewal, ReDesign | ReBuild | ReNew</title>
+<title>Scenique</title>
 
 <link rel="manifest" href="muralizer-manifest-v2.json">
 <meta name="theme-color" content="#111111">
-<link rel="apple-touch-icon" href="icons/icon-192-v2.png">
+<link rel="apple-touch-icon" href="icons/icon-512-scenique.png">
+
+<!-- ⭐ PWA NAME OVERRIDES (add these) -->
+<meta name="application-name" content="Scénique">
+<meta name="apple-mobile-web-app-title" content="Scénique">
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
-
 
 <link rel="apple-touch-startup-image" href="splash/splash-640x1136.png" media="(device-width: 320px) and (device-height: 568px)">
 <link rel="apple-touch-startup-image" href="splash/splash-750x1334.png" media="(device-width: 375px) and (device-height: 667px)">
@@ -25,9 +27,8 @@
 <link rel="apple-touch-startup-image" href="splash/splash-1668x2388.png" media="(device-width: 834px) and (device-height: 1194px)">
 <link rel="apple-touch-startup-image" href="splash/splash-2048x2732.png" media="(device-width: 1024px) and (device-height: 1366px)">
 
-
-
 <style type="text/css">
+
 
 
 
@@ -659,64 +660,93 @@ font-size: 18px;                 /* bigger text */
 }
 
 
-
 /* -----------------------------------------------------------
-   HEADER
+   HEADER — SCÉNIQUE VERSION
 ----------------------------------------------------------- */
-.muralizer-title {
+
+/* Brand title */
+.scenique-title {
   font-family: Candara, sans-serif;
-  font-size: 40px;
-  font-weight: 700;
+  font-size: 50px;
+  font-weight: 300;          /* lighter, more premium */
   color: #433D39;
   margin: 0;
   padding: 0;
-  letter-spacing: 0.5px;
-  text-align: right;
+  letter-spacing: 0.9px;
+  line-height: 1.05;         /* tighter vertical rhythm */
   white-space: nowrap;
+  position: relative;        /* allows subtitle to align under it */
+}
+
+/* Brand Subtitle — stacked but right-biased */
+.scenique-subtitle {
+  font-family: Candara, sans-serif;
+  font-size: 20px;           /* smaller than Scénique */
+  font-weight: 400;          /* light, elegant */
+  color: #433D39;
+  margin: 0;
+  padding: 0;
+  letter-spacing: 2px;       /* airy, refined */
+  text-transform: lowercase; /* optional: studio vibe */
+  white-space: nowrap;
+  opacity: 0.85;
+  
+  /* ⭐ The magic: bias subtitle to the right side of Scénique */
+  display: block;
+  text-align: right;         /* aligns subtitle to the right edge of Scénique */
+  width: 100%;               /* ensures alignment uses Scénique width */
+  
+  margin-top: -4px;          /* subtle tuck upward */
 }
 
 
+/* Phone number (now top-left) */
 .header-phone {
+  font-family: Candara, sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  color: #433D39;
   white-space: nowrap;
-  display: inline-block;
-  padding-right: 0;
+  margin-bottom: 10px;
 }
 
+/* Header container */
 .header-bar {
   width: 100%;
-  padding-left: 12px !important; 
-padding-right: 12px !important; 
-padding-top: 10px !important;;
+  padding-top: 2px !important; /* was 10px */ 
+  padding-bottom: 4px !important;
   margin: 0;
   box-sizing: border-box;
   display: flex;
   justify-content: space-between;
-  align-items: stretch; /* THIS WAS CORRECT */
+  align-items: center;   /* center vertically */
 }
 
-.header-right {
+/* LEFT: phone + Scénique stacked */
+.header-left {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
-  justify-content: space-between; /* phone top, Muralizer bottom */
-  padding: 0; /* no negative padding */
-  height: auto; /* restore natural height */
-padding-top: 0px; /* phone up */ 
-padding-bottom: 0px; /* Muralizer down */
+  align-items: flex-start;
 }
 
-.header-left img {
-  height: 150px;
-  width: auto !important;
+/* RIGHT: small logo */
+.header-right {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.header-right img.header-logo {
+  height: 44px;          /* small fraction of old size */
+  width: auto;
   object-fit: contain;
 }
 
 
-
 .nav-color-row {
-  width: 100%;
+   width: 100%;
   display: flex;
-  margin-top: 8px;
+  margin-top: 0px;
   margin-bottom: -5px;
 }
 
@@ -1193,18 +1223,11 @@ margin-bottom: 16px !important; /* increase or decrease as needed */
 
 
 
- /* ============================================================
+/* ============================================================
      MOBILE RENDER CHANGES
      ============================================================ */
 
 @media (max-width: 600px) {
-
-  /* Scale logo down for mobile */
-  .header-left img {
-    height: 90px !important;
-    width: auto !important;
-    object-fit: contain;
-  }
 
   /* All dropdowns */
   .selector-group select {
@@ -1218,37 +1241,6 @@ margin-bottom: 16px !important; /* increase or decrease as needed */
     max-width: 300px; 
     font-size: 14px; 
   }
-  
-
-  /* Header: duplicate desktop geometry, only adjust vertical spacing */
-  .header-bar {
-   
-    margin: 0 !important;
-    display: flex;
-    justify-content: space-between !important;
-    align-items: stretch !important; /* desktop baseline */
-    min-height: 90px; /* match the mobile logo height */
-  }
-
-  /* Right column: phone top, Muralizer bottom */
-  .header-right {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between !important;
-    align-items: flex-end !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    height: auto !important;
-    padding-top: 20px;  /* phone up */ 
-    padding-bottom: 20px; /* Muralizer down */
-  }
-
-  /* Muralizer text: scaled but no extra margins */
-  .muralizer-title {
-    font-size: 30px !important;
-    margin: 0 !important;
-    padding: 0 !important;
-  }
 
   /* Nav bars: duplicate desktop (flush left/right) */
   .nav-color-row {
@@ -1256,13 +1248,30 @@ margin-bottom: 16px !important; /* increase or decrease as needed */
     padding: 0 !important;
   }
 
+  /* Header mobile refinements */
+  .header-bar { 
+    padding-top: 2px !important; 
+    padding-bottom: 2px !important; 
+  } 
 
+  .header-phone { 
+    font-size: 16px; 
+    margin-bottom: 1px; 
+  } 
+
+  .scenique-title { 
+    font-size: 32px; 
+    letter-spacing: 0.6px; 
+  } 
+
+  .header-right img.header-logo { 
+    height: 32px; 
+  }
 
   /* ============================================================
      MOBILE PANEL EXPANSION — LEFT + RIGHT COLUMNS
      ============================================================ */
 
-  /* Collapse two-column layout into one full-width column */
   .main-content,
   .content-wrapper,
   .columns,
@@ -1271,7 +1280,6 @@ margin-bottom: 16px !important; /* increase or decrease as needed */
     width: 100% !important;
   }
 
-  /* Expand the left column (Attributes) */
   .left-column {
     width: 100% !important;
     max-width: 100% !important;
@@ -1280,7 +1288,6 @@ margin-bottom: 16px !important; /* increase or decrease as needed */
     box-sizing: border-box !important;
   }
 
-  /* Expand the right column (Description, Scenes, Keywords, etc.) */
   .right-column {
     width: 100% !important;
     max-width: 100% !important;
@@ -1289,7 +1296,6 @@ margin-bottom: 16px !important; /* increase or decrease as needed */
     box-sizing: border-box !important;
   }
 
-  /* Expand ALL panels inside both columns */
   .mzr-panel,
   .mzr-panel-body,
   .attribute-panel,
@@ -1304,12 +1310,10 @@ margin-bottom: 16px !important; /* increase or decrease as needed */
     box-sizing: border-box !important;
   }
 
-  /* Optional: tighten vertical spacing for mobile */
   .mzr-panel {
     margin-bottom: 12px !important;
   }
 
-  /* Mobile: tighten spacing around generated image */
   .mural-wrapper {
     padding-left: 10px !important;
     padding-right: 10px !important;
@@ -1318,41 +1322,44 @@ margin-bottom: 16px !important; /* increase or decrease as needed */
   #muralImage {
     margin: 0 !important;
     padding: 0 !important;
-    width: 100% !important;   /* ensures full-width scaling */
+    width: 100% !important;
     height: auto !important;
   }
-/* Ensure Scene Elements container expands on mobile */
-.attribute-section,
-.mzr-panel-body,
-.scenes-wrapper {
-  height: auto !important;
-  min-height: auto !important;
-  overflow: visible !important;
-}
-}
 
+  .attribute-section,
+  .mzr-panel-body,
+  .scenes-wrapper {
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
+  }
+} /* ← THIS WAS THE MISSING BRACE */
+
+
+/* ============================================================
+     SMALL PHONE (<= 400px)
+     ============================================================ */
 
 @media (max-width: 400px) {
   .next-steps {
-    font-size: 16px;        /* slightly smaller title */
-    margin-top: 12px;       /* breathing room above */
+    font-size: 16px;
+    margin-top: 12px;
     margin-bottom: 12px;
   }
 
   .next-steps .step {
-    font-size: 15px;        /* readable but compact */
-    line-height: 1.35;      /* more vertical breathing room */
-    margin-bottom: 6px;     /* spacing between steps */
-text-align: left;
+    font-size: 15px;
+    line-height: 1.35;
+    margin-bottom: 6px;
+    text-align: left;
   }
 }
 
 
+/* ============================================================
+     DESKTOP TIGHTENING
+     ============================================================ */
 
-
-
-
-/* ⭐ Desktop: tighten generated image padding */
 @media (min-width: 769px) {
   .mural-wrapper {
     padding-left: 0px !important;
@@ -1360,17 +1367,11 @@ text-align: left;
   }
 }
 
-
-
-  
-
-
-
-
 </style>
 
+
 <base target="_self">
-<meta name="Microsoft Border" content="none">
+
 </head>
 
 <body 
@@ -1385,48 +1386,41 @@ text-align: left;
 <div class="body-wrapper">
 
   <!-- ⭐ MODERN HEADER -->
-  <div class="header-bar">
+<div class="header-bar">
 
-    <!-- LEFT: LOGO -->
-    <div class="header-left">
-      <a href="index.html">
-        <img src="http://www.GOHW.net/images/HwRenewal-2017-350w.png">
-      </a>
-    </div>
+<div class="header-left">
+  <div class="header-phone">770-508-9596</div>
+  <h1 class="scenique-title">Scénique</h1>
+  <h1 class="scenique-subtitle">....murals</h1>
+</div>
 
-    <!-- RIGHT: PHONE + MURALIZER STACK -->
-    <div class="header-right">
 
-      <!-- PHONE NUMBER -->
-      <div>
-        <span class="header-phone">
-          770-508-9596
-        </span>
-      </div>
 
-      <!-- MURALIZER TITLE -->
-      <h1 class="muralizer-title">
-        Muralizer
-      </h1>
 
-    </div>
-
+  <!-- RIGHT: SMALL LOGO -->
+  <div class="header-right">
+    <a href="index.html">
+      <img src="http://www.GOHW.net/images/HwRenewal-2017-350w.png" class="header-logo">
+    </a>
   </div>
-  <!-- ⭐ END MODERN HEADER -->
+
+</div>
+<!-- ⭐ END MODERN HEADER -->
+
 
 
   <!-- ⭐ NAV COLOR BAR -->
   <div class="nav-color-row">
-    <div style="flex:1; height:8px; background:#F4C649;"></div>
+    <div style="flex:1; height:12px; background:#F4C649;"></div>
     <div style="width:6px;"></div>
 
-    <div style="flex:1; height:8px; background:#218FC9;"></div>
+    <div style="flex:1; height:12px; background:#218FC9;"></div>
     <div style="width:6px;"></div>
 
-    <div style="flex:1; height:8px; background:#3B9F3E;"></div>
+    <div style="flex:1; height:12px; background:#3B9F3E;"></div>
     <div style="width:6px;"></div>
 
-    <div style="flex:1; height:8px; background:#FFFFFF;"></div>
+    <div style="flex:1; height:12px; background:#FFFFFF;"></div>
   </div>
  <!-- ⭐ END NAV COLOR BAR -->
 
@@ -1624,7 +1618,7 @@ text-align: left;
     <p class="next-steps">
       <strong>What We Do Next:</strong><br>
       <span class="step">1. Capture your space boundaries</span>
-      <span class="step">2. Customize mural layout for your space</span>
+      <span class="step">2. Customize the mural for your space</span>
       <span class="step">3. Divide Panels & make print-ready</span>
       <span class="step">4. Print & Install</span>
     </p>
@@ -2499,14 +2493,15 @@ if (needsTwoHues && !secondaryWheel) {
   if (secEl) secEl.innerHTML = ""; // prevent stacked wheels
 
   secondaryWheel = new iro.ColorPicker("#secondaryHueWheel", {
-    width: 150,
-    color: secondaryHue.value || "#ccddee",
-    layout: [
-      { component: iro.ui.Wheel },
-      { component: iro.ui.Slider, options: { sliderType: "value" } },
-      { component: iro.ui.Slider, options: { sliderType: "saturation" } }
-    ]
-  });
+  width: Math.min(240, Math.floor(window.innerWidth * 0.45)),
+  color: secondaryHue.value || "#ccddee",
+  layout: [
+    { component: iro.ui.Wheel },
+    { component: iro.ui.Slider, options: { sliderType: "value" } },
+    { component: iro.ui.Slider, options: { sliderType: "saturation" } }
+  ]
+});
+
 
   updateSecondarySwatch(secondaryWheel.color);
 
@@ -2523,15 +2518,16 @@ if (needsHue && !primaryWheel) {
   const primEl = document.getElementById("primaryHueWheel");
   if (primEl) primEl.innerHTML = ""; // prevent stacked wheels
 
-  primaryWheel = new iro.ColorPicker("#primaryHueWheel", {
-    width: 150,
-    color: primaryHue.value || "#aabbcc",
-    layout: [
-      { component: iro.ui.Wheel },
-      { component: iro.ui.Slider, options: { sliderType: "value" } },
-      { component: iro.ui.Slider, options: { sliderType: "saturation" } }
-    ]
-  });
+primaryWheel = new iro.ColorPicker("#primaryHueWheel", {
+  width: Math.min(240, Math.floor(window.innerWidth * 0.45)),
+  color: primaryHue.value || "#aabbcc",
+  layout: [
+    { component: iro.ui.Wheel },
+    { component: iro.ui.Slider, options: { sliderType: "value" } },
+    { component: iro.ui.Slider, options: { sliderType: "saturation" } }
+  ]
+});
+
 
   updatePrimarySwatch(primaryWheel.color);
 
