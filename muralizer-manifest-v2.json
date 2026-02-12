@@ -3,7 +3,7 @@
   "short_name": "Muralizer",
   "description": "A mural design and atmospheric scene generator.",
   "start_url": "/muralmaker.html?source=pwa",
-  "scope": "/muralmaker.html",
+  "scope": "/",
   "background_color": "#C9CDD2",
   "theme_color": "#111111",
   "display": "standalone",
@@ -60,4 +60,5 @@
       "form_factor": "tablet"
     }
   ]
+
 }
