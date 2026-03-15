@@ -12,7 +12,7 @@ const app = express();
 
 // ⭐ Enable CORS so your frontend at gohw.net can call this backend
 app.use(cors({
-  origin: "https://gohw.net"
+  origin: ["https://gohw.net", "https://localhost"]
 }));
 
 app.use(express.json());
