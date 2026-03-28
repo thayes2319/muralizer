@@ -34,10 +34,15 @@ app.post("/generate", async (req, res) => {
 
     // ⭐ Build JSON payload for SD3.5
     const payload = {
-      prompt,
-      negative_prompt,
-      output_format: "png"
-    };
+      const payload = {
+  prompt,
+  output_format: "png"
+};
+
+if (negative_prompt) {
+  payload.negative_prompt = negative_prompt;
+}
+
 
     // ⭐ Use aspect_ratio OR width/height — not both
     if (aspect_ratio) {
