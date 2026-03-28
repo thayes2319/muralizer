@@ -35,7 +35,10 @@ app.post("/generate", async (req, res) => {
 
     // ⭐ Required fields
     form.append("prompt", prompt);
-    form.append("model", "sd3.5-large");     // ⭐ Model is chosen here, NOT in the URL
+    
+    // ⭐ Allow frontend to choose the model, default to sd3.5-large
+form.append("model", req.body.model || "sd3.5-large");
+
     form.append("output_format", "png");     // png, jpeg, webp
 
     // ⭐ Only include negative_prompt if valid
