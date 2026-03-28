@@ -55,7 +55,7 @@ app.post("/generate", async (req, res) => {
     }
 
     const response = await fetch(
-      "https://api.stability.ai/v2beta/stable-image/generate/sd3.5-large-turbo",
+      "https://api.stability.ai/v2beta/stable-image/generate/sd3.5-large",
       {
         method: "POST",
         headers: {
