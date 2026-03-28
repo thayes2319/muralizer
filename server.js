@@ -15,7 +15,6 @@ app.use(cors({
 }));
 
 app.use(express.json());
-app.use(express.static(".")); // harmless, fine to keep
 
 app.post("/generate", async (req, res) => {
   try {
@@ -34,15 +33,14 @@ app.post("/generate", async (req, res) => {
 
     // ⭐ Build JSON payload for SD3.5
     const payload = {
-      const payload = {
-  prompt,
-  output_format: "png"
-};
+      prompt,
+      output_format: "png"
+    };
 
-if (negative_prompt) {
-  payload.negative_prompt = negative_prompt;
-}
-
+    // ⭐ Only include negative_prompt if valid
+    if (negative_prompt && negative_prompt.trim() !== "") {
+      payload.negative_prompt = negative_prompt;
+    }
 
     // ⭐ Use aspect_ratio OR width/height — not both
     if (aspect_ratio) {
