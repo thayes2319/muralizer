@@ -1,9 +1,10 @@
-// redeploy-sd3.5
+// redeploy-sd3.5-multipart
 
 import express from "express";
 import fetch from "node-fetch";
 import dotenv from "dotenv";
 import cors from "cors";
+import FormData from "form-data";
 
 dotenv.config();
 
@@ -21,8 +22,6 @@ app.post("/generate", async (req, res) => {
     const {
       prompt,
       negative_prompt,
-      width,
-      height,
       aspect_ratio,
       seed
     } = req.body;
@@ -31,48 +30,66 @@ app.post("/generate", async (req, res) => {
     console.log("Incoming aspect ratio:", aspect_ratio);
     console.log("Incoming seed:", seed);
 
-    // ⭐ Build JSON payload for SD3.5
-    const payload = {
-      prompt,
-      output_format: "png"
-    };
+    // ⭐ Build multipart/form-data payload for SD3.5
+    const form = new FormData();
+
+    // ⭐ Required fields
+    form.append("prompt", prompt);
+    form.append("model", "sd3.5-large");     // ⭐ Model is chosen here, NOT in the URL
+    form.append("output_format", "png");     // png, jpeg, webp
 
     // ⭐ Only include negative_prompt if valid
     if (negative_prompt && negative_prompt.trim() !== "") {
-      payload.negative_prompt = negative_prompt;
+      form.append("negative_prompt", negative_prompt);
     }
 
-    // ⭐ Use aspect_ratio OR width/height — not both
+    // ⭐ Aspect ratio (only valid for text-to-image)
     if (aspect_ratio) {
-      payload.aspect_ratio = aspect_ratio;
-    } else {
-      payload.width = width;
-      payload.height = height;
+      form.append("aspect_ratio", aspect_ratio);
     }
 
+    // ⭐ Seed (0 = random)
     if (seed !== undefined) {
-      payload.seed = seed;
+      form.append("seed", seed);
     }
 
+    // ⭐ Stability requires a dummy file field for multipart/form-data
+    form.append("none", "");
+
+    // ⭐ Call the official SD3.5 endpoint (multipart/form-data)
     const response = await fetch(
-      "https://api.stability.ai/v2beta/stable-image/generate/sd3.5-large",
+      "https://api.stability.ai/v2beta/stable-image/generate/sd3",
       {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${process.env.STABILITY_API_KEY}`,
-          "Content-Type": "application/json",
-          "Accept": "application/json"
+          "Accept": "image/*"   // ⭐ Required: tells Stability to return raw image bytes
         },
-        body: JSON.stringify(payload)
+        body: form
       }
     );
 
     console.log("Stability raw response status:", response.status);
 
-    const result = await response.json();
-    console.log("Stability JSON:", result);
+    // ⭐ If successful, Stability returns raw image bytes (NOT JSON)
+    if (response.status === 200) {
+      const buffer = Buffer.from(await response.arrayBuffer());
+      const base64 = buffer.toString("base64");
 
-    res.json(result);
+      return res.json({
+        success: true,
+        image: base64
+      });
+    }
+
+    // ⭐ If error, Stability returns JSON
+    const errorJson = await response.json();
+    console.log("Stability error JSON:", errorJson);
+
+    return res.status(500).json({
+      success: false,
+      error: errorJson
+    });
 
   } catch (err) {
     console.error("Server error:", err);
