@@ -1,8 +1,7 @@
-// redeploy12
+// redeploy-sd3.5
 
 import express from "express";
 import fetch from "node-fetch";
-import FormData from "form-data";
 import dotenv from "dotenv";
 import cors from "cors";
 
@@ -16,26 +15,40 @@ app.use(cors({
 }));
 
 app.use(express.json());
-app.use(express.static(".")); // not required for backend-only, but harmless
+app.use(express.static(".")); // harmless, fine to keep
 
 app.post("/generate", async (req, res) => {
   try {
-    const { prompt, width, height, aspect_ratio } = req.body;
+    const {
+      prompt,
+      negative_prompt,
+      width,
+      height,
+      aspect_ratio,
+      seed
+    } = req.body;
 
     console.log("Incoming prompt:", prompt);
     console.log("Incoming aspect ratio:", aspect_ratio);
+    console.log("Incoming seed:", seed);
 
-    // Build multipart/form-data request
-    const form = new FormData();
-    form.append("prompt", prompt);
-    form.append("output_format", "png");
+    // ⭐ Build JSON payload for SD3.5
+    const payload = {
+      prompt,
+      negative_prompt,
+      output_format: "png"
+    };
 
     // ⭐ Use aspect_ratio OR width/height — not both
     if (aspect_ratio) {
-      form.append("aspect_ratio", aspect_ratio);
+      payload.aspect_ratio = aspect_ratio;
     } else {
-      form.append("width", width);
-      form.append("height", height);
+      payload.width = width;
+      payload.height = height;
+    }
+
+    if (seed !== undefined) {
+      payload.seed = seed;
     }
 
     const response = await fetch(
@@ -44,9 +57,10 @@ app.post("/generate", async (req, res) => {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${process.env.STABILITY_API_KEY}`,
+          "Content-Type": "application/json",
           "Accept": "application/json"
         },
-        body: form
+        body: JSON.stringify(payload)
       }
     );
 
@@ -68,6 +82,3 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
-
-
-
