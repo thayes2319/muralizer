@@ -76,21 +76,6 @@ const response = await fetch(
   }
 );
 
-
-
-    const response = await fetch(
-  `https://api.stability.ai/v2beta/stable-image/generate/${req.body.model || "sd3.5-large"}`,
-  {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${process.env.STABILITY_API_KEY}`,
-      "Accept": "image/*"
-    },
-    body: form
-  }
-);
-
-
     console.log("Stability raw response status:", response.status);
 
     // ⭐ If successful, Stability returns raw image bytes (NOT JSON)
