@@ -62,7 +62,6 @@ form.append("model", req.body.model || "sd3.5-large");
     // ⭐ Call the official SD3.5 endpoint (multipart/form-data)
     const response = await fetch(
       // NEW — honors selector, defaults to sd3.5-large
-"https://api.stability.ai/v2beta/stable-image/generate/${req.body.model || "sd3.5"}",
       `https://api.stability.ai/v2beta/stable-image/generate/${req.body.model || "sd3.5"}`
       {
         method: "POST",
