@@ -60,18 +60,22 @@ form.append("model", req.body.model || "sd3.5-large");
     form.append("none", "");
 
     // ⭐ Call the official SD3.5 endpoint (multipart/form-data)
-    const response = await fetch(
-      // NEW — honors selector, defaults to sd3.5-large
-      `https://api.stability.ai/v2beta/stable-image/generate/${req.body.model || "sd3.5"}`
-      {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${process.env.STABILITY_API_KEY}`,
-          "Accept": "image/*"   // ⭐ Required: tells Stability to return raw image bytes
-        },
-        body: form
-      }
-    );
+  const selectedModel = req.body.model || "sd3.5-large";
+
+console.log("🖼️ Using Stability model:", selectedModel);
+
+const response = await fetch(
+  `https://api.stability.ai/v2beta/stable-image/generate/${selectedModel}`,
+  {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${process.env.STABILITY_API_KEY}`,
+      "Accept": "image/*"
+    },
+    body: form
+  }
+);
+
 
 
     const response = await fetch(
