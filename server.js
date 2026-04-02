@@ -28,6 +28,7 @@ app.post("/generate", async (req, res) => {
     } = req.body;
 
     console.log("Incoming prompt:", prompt);
+    console.log("Incoming negative prompt:", negative_prompt);   // ⭐ ADDED HERE
     console.log("Incoming aspect ratio:", aspect_ratio);
     console.log("Incoming seed:", seed);
 
