@@ -23,62 +23,55 @@ app.post("/generate", async (req, res) => {
       prompt,
       negative_prompt,
       aspect_ratio,
-      seed
+      seed,
+      model
     } = req.body;
 
     console.log("Incoming prompt:", prompt);
     console.log("Incoming aspect ratio:", aspect_ratio);
     console.log("Incoming seed:", seed);
 
+    // ⭐ Determine model (default: sd3.5-large)
+    const selectedModel = model || "sd3.5-large";
+    console.log("🖼️ Using Stability model:", selectedModel);
+
     // ⭐ Build multipart/form-data payload for SD3.5
     const form = new FormData();
 
-    // ⭐ Required fields
     form.append("prompt", prompt);
-    
-    // ⭐ Allow frontend to choose the model, default to sd3.5-large
-form.append("model", req.body.model || "sd3.5-large");
+    form.append("model", selectedModel);   // <-- Correct place for model
+    form.append("output_format", "png");
 
-    form.append("output_format", "png");     // png, jpeg, webp
-
-    // ⭐ Only include negative_prompt if valid
     if (negative_prompt && negative_prompt.trim() !== "") {
       form.append("negative_prompt", negative_prompt);
     }
 
-    // ⭐ Aspect ratio (only valid for text-to-image)
     if (aspect_ratio) {
       form.append("aspect_ratio", aspect_ratio);
     }
 
-    // ⭐ Seed (0 = random)
     if (seed !== undefined) {
       form.append("seed", seed);
     }
 
-    // ⭐ Stability requires a dummy file field for multipart/form-data
+    // Required dummy field
     form.append("none", "");
 
-    // ⭐ Call the official SD3.5 endpoint (multipart/form-data)
-  const selectedModel = req.body.model || "sd3.5-large";
-
-console.log("🖼️ Using Stability model:", selectedModel);
-
-const response = await fetch(
-  `https://api.stability.ai/v2beta/stable-image/generate/${selectedModel}`,
-  {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${process.env.STABILITY_API_KEY}`,
-      "Accept": "image/*"
-    },
-    body: form
-  }
-);
+    // ⭐ Correct SD3.5 endpoint (fixed)
+    const response = await fetch(
+      "https://api.stability.ai/v2beta/stable-image/generate/sd3",
+      {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${process.env.STABILITY_API_KEY}`,
+          "Accept": "image/*"
+        },
+        body: form
+      }
+    );
 
     console.log("Stability raw response status:", response.status);
 
-    // ⭐ If successful, Stability returns raw image bytes (NOT JSON)
     if (response.status === 200) {
       const buffer = Buffer.from(await response.arrayBuffer());
       const base64 = buffer.toString("base64");
@@ -89,7 +82,7 @@ const response = await fetch(
       });
     }
 
-    // ⭐ If error, Stability returns JSON
+    // Error case
     const errorJson = await response.json();
     console.log("Stability error JSON:", errorJson);
 
