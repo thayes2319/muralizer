@@ -1,3 +1,4 @@
+
 // redeploy-sd3.5-multipart
 
 import express from "express";
@@ -10,20 +11,7 @@ dotenv.config();
 
 const app = express();
 
-// 🔒 Force CORS headers on ALL responses (including 502 errors from Render)
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "https://gohw.net");
-  res.header("Access-Control-Allow-Methods", "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS");
-  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  next();
-});
-
-// 🔧 Clean preflight handling (Express-safe catch-all)
-app.options(/.*/, (req, res) => {
-  res.sendStatus(204);
-});
-
-// ⭐ Existing CORS middleware
+// ⭐ Enable CORS so your frontend at gohw.net can call this backend
 app.use(cors({
   origin: ["https://gohw.net", "https://localhost"]
 }));
@@ -41,17 +29,19 @@ app.post("/generate", async (req, res) => {
     } = req.body;
 
     console.log("Incoming prompt:", prompt);
-    console.log("Incoming negative prompt:", negative_prompt);
+    console.log("Incoming negative prompt:", negative_prompt);   // ⭐ ADDED HERE
     console.log("Incoming aspect ratio:", aspect_ratio);
     console.log("Incoming seed:", seed);
 
+    // ⭐ Determine model (default: sd3.5-large)
     const selectedModel = model || "sd3.5-large";
     console.log("🖼️ Using Stability model:", selectedModel);
 
+    // ⭐ Build multipart/form-data payload for SD3.5
     const form = new FormData();
 
     form.append("prompt", prompt);
-    form.append("model", selectedModel);
+    form.append("model", selectedModel);   // <-- Correct place for model
     form.append("output_format", "png");
 
     if (negative_prompt && negative_prompt.trim() !== "") {
@@ -66,8 +56,10 @@ app.post("/generate", async (req, res) => {
       form.append("seed", seed);
     }
 
+    // Required dummy field
     form.append("none", "");
 
+    // ⭐ Correct SD3.5 endpoint (fixed)
     const response = await fetch(
       "https://api.stability.ai/v2beta/stable-image/generate/sd3",
       {
@@ -92,6 +84,7 @@ app.post("/generate", async (req, res) => {
       });
     }
 
+    // Error case
     const errorJson = await response.json();
     console.log("Stability error JSON:", errorJson);
 
