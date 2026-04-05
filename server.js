@@ -18,12 +18,12 @@ app.use((req, res, next) => {
   next();
 });
 
-// 🔧 Clean preflight handling
-app.options("*", (req, res) => {
+// 🔧 Clean preflight handling (Express-safe catch-all)
+app.options(/.*/, (req, res) => {
   res.sendStatus(204);
 });
 
-// ⭐ Existing CORS middleware (kept exactly as you had it)
+// ⭐ Existing CORS middleware
 app.use(cors({
   origin: ["https://gohw.net", "https://localhost"]
 }));
