@@ -8,7 +8,7 @@ Set these on the deployed backend service:
 
 - `PORT`
 - `MURALIZER_API_KEY` (preferred; `STABILITY_API_KEY` also supported for compatibility)
-- `MURALIZER_GENERATE_URL` (optional, defaults to `https://muralizer.onrender.com/generate`)
+- `MURALIZER_GENERATE_URL` (optional; only set when using an external generator service)
 - `SCENIQUE_DATA_DIR` (required on Render when using Persistent Disk)
 
 Example:
@@ -16,9 +16,11 @@ Example:
 ```bash
 PORT=8787
 MURALIZER_API_KEY=your_real_api_key_here
-MURALIZER_GENERATE_URL=https://muralizer.onrender.com/generate
 SCENIQUE_DATA_DIR=/var/data/scenique
 ```
+
+If `MURALIZER_GENERATE_URL` is not set, the backend will call Stability directly using `MURALIZER_API_KEY`.
+Do not point `MURALIZER_GENERATE_URL` to the same service URL unless that service actually exposes `/generate`.
 
 ## 1.1) Render Persistent Disk Setup
 
