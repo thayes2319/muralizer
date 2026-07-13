@@ -94,6 +94,83 @@ function normalizeMatchValue(value) {
   return String(value || '').trim().toLowerCase();
 }
 
+function normalizeConceptMatchValue(value) {
+  return normalizeMatchValue(value).replace(/\s+/g, '');
+}
+
+function toPositiveTimestamp(value) {
+  const stamp = Number(new Date(value || 0));
+  return Number.isFinite(stamp) && stamp > 0 ? stamp : 0;
+}
+
+function getRecordRank(record) {
+  const isSavedRecord = !!(record && record.savedConcept)
+    || String(record && record.id || '').toLowerCase().startsWith('cpc_saved_');
+  return isSavedRecord ? 2 : 1;
+}
+
+function resolveRecordImageFilePath(record) {
+  const storedPath = String(record && record.imagePath || '').trim();
+  if (storedPath) {
+    const resolved = resolveWithin(dataDir, storedPath);
+    if (resolved) return resolved;
+  }
+
+  const imageUrl = String(record && record.imageUrl || '').trim();
+  if (imageUrl.startsWith('/storage/')) {
+    const storageRelative = imageUrl.replace('/storage/', '/');
+    const resolved = resolveWithin(dataDir, storageRelative);
+    if (resolved) return resolved;
+  }
+
+  return null;
+}
+
+function pickTemplateConceptRecords(items, templateClient, templateProject, conceptNames) {
+  const desiredConcepts = new Set(
+    (Array.isArray(conceptNames) ? conceptNames : ['c1', 'c2', 'c3'])
+      .map((name) => normalizeConceptMatchValue(name))
+      .filter(Boolean)
+  );
+
+  const clientNorm = normalizeMatchValue(templateClient || 'EClient 3');
+  const projectNorm = normalizeMatchValue(templateProject || 'Project 1');
+  const bestByConcept = new Map();
+
+  items.forEach((item) => {
+    const context = item && item.context && typeof item.context === 'object' ? item.context : {};
+    const itemClient = normalizeMatchValue(context.client || item.client);
+    const itemProject = normalizeMatchValue(context.project || item.project);
+    const itemConcept = normalizeConceptMatchValue(item && item.concept);
+    if (!itemClient || !itemProject || !itemConcept) return;
+    if (itemClient !== clientNorm || itemProject !== projectNorm) return;
+    if (desiredConcepts.size && !desiredConcepts.has(itemConcept)) return;
+
+    const imageFilePath = resolveRecordImageFilePath(item);
+    if (!imageFilePath) return;
+
+    const nextScore = {
+      rank: getRecordRank(item),
+      createdAt: toPositiveTimestamp(item && item.createdAt)
+    };
+
+    const prev = bestByConcept.get(itemConcept);
+    if (!prev) {
+      bestByConcept.set(itemConcept, { item, imageFilePath, score: nextScore });
+      return;
+    }
+
+    const shouldReplace = nextScore.rank > prev.score.rank
+      || (nextScore.rank === prev.score.rank && nextScore.createdAt > prev.score.createdAt);
+
+    if (shouldReplace) {
+      bestByConcept.set(itemConcept, { item, imageFilePath, score: nextScore });
+    }
+  });
+
+  return Array.from(bestByConcept.entries()).map(([concept, payload]) => ({ concept, ...payload }));
+}
+
 function dataUrlToBuffer(imageBase64, imageDataUrl) {
   if (typeof imageBase64 === 'string' && imageBase64.trim()) {
     return Buffer.from(imageBase64, 'base64');
@@ -279,7 +356,7 @@ async function handleRenameConceptImages(req, res) {
   const project = normalizeMatchValue(filters.project);
   const conceptValues = (Array.isArray(filters.concepts) ? filters.concepts : [filters.concept])
     .flatMap((value) => String(value || '').split(','))
-    .map((value) => normalizeMatchValue(value).replace(/\s+/g, ''))
+    .map((value) => normalizeConceptMatchValue(value))
     .filter(Boolean);
   const conceptSet = new Set(conceptValues);
 
@@ -295,25 +372,58 @@ async function handleRenameConceptImages(req, res) {
   let renamed = 0;
   const nextItems = items.map((item) => {
     const itemOwnerId = normalizeOwnerId(item && item.ownerId);
-    const itemClient = normalizeMatchValue(item && item.context && item.context.client);
-    const itemProject = normalizeMatchValue(item && item.context && item.context.project);
-    const itemConcept = normalizeMatchValue(item && item.concept).replace(/\s+/g, '');
+    const itemContext = item && item.context && typeof item.context === 'object' ? item.context : {};
+    const currentClient = String(itemContext.client || item.client || '').trim();
+    const currentProject = String(itemContext.project || item.project || '').trim();
+    const currentConcept = String(item.concept || itemContext.concept || '').trim();
+
+    const itemClient = normalizeMatchValue(currentClient);
+    const itemProject = normalizeMatchValue(currentProject);
+    const itemConcept = normalizeConceptMatchValue(currentConcept);
 
     if (ownerId && itemOwnerId !== ownerId) return item;
     if (client && itemClient !== client) return item;
     if (project && itemProject !== project) return item;
     if (conceptSet.size && !conceptSet.has(itemConcept)) return item;
 
-    renamed += 1;
-    return {
-      ...item,
-      context: {
-        ...(item && item.context ? item.context : {}),
-        client: nextClient || (item && item.context && item.context.client) || '',
-        project: nextProject || (item && item.context && item.context.project) || ''
-      },
-      concept: nextConcept || (item && item.concept) || ''
+    const updatedClient = nextClient || currentClient;
+    const updatedProject = nextProject || currentProject;
+    const updatedConcept = nextConcept || currentConcept;
+
+    const updatedContext = {
+      ...itemContext,
+      client: updatedClient,
+      project: updatedProject
     };
+
+    const nextItem = {
+      ...item,
+      context: updatedContext,
+      concept: updatedConcept
+    };
+
+    // Keep compatibility for older records that also stored client/project at top level.
+    if (Object.prototype.hasOwnProperty.call(item, 'client') || nextClient) {
+      nextItem.client = updatedClient;
+    }
+
+    if (Object.prototype.hasOwnProperty.call(item, 'project') || nextProject) {
+      nextItem.project = updatedProject;
+    }
+
+    if (typeof item.imageKey === 'string' && item.imageKey.includes('::')) {
+      const parts = item.imageKey.split('::');
+      const variant = parts[2] || '';
+      if (variant) {
+        const keyClient = normalizeMatchValue(updatedClient);
+        const keyProject = normalizeMatchValue(updatedProject);
+        const keyConcept = normalizeConceptMatchValue(updatedConcept) || 'c1';
+        nextItem.imageKey = `${keyClient}|${keyProject}::${keyConcept}::${variant}`;
+      }
+    }
+
+    renamed += 1;
+    return nextItem;
   });
 
   if (!renamed) {
@@ -323,6 +433,109 @@ async function handleRenameConceptImages(req, res) {
 
   await writeJson(conceptIndexPath, nextItems);
   sendJson(res, 200, { ok: true, renamed, remaining: nextItems.length });
+}
+
+async function handleSeedDefaultConcepts(req, res) {
+  const body = await readBody(req);
+  const ownerId = normalizeOwnerId(body && body.ownerId);
+  if (!ownerId) {
+    sendJson(res, 400, { ok: false, error: 'ownerId is required' });
+    return;
+  }
+
+  const templateClient = String(body && body.templateClient || 'EClient 3').trim() || 'EClient 3';
+  const templateProject = String(body && body.templateProject || 'Project 1').trim() || 'Project 1';
+  const conceptNames = Array.isArray(body && body.concepts) && body.concepts.length
+    ? body.concepts
+    : ['c1', 'c2', 'c3'];
+
+  const items = await readJson(conceptIndexPath, []);
+  if (!Array.isArray(items)) {
+    sendJson(res, 500, { ok: false, error: 'Concept index is invalid' });
+    return;
+  }
+
+  const ownerClientNorm = normalizeMatchValue(templateClient);
+  const ownerProjectNorm = normalizeMatchValue(templateProject);
+  const ownerAlreadyHasTemplate = items.some((item) => {
+    const itemOwnerId = normalizeOwnerId(item && item.ownerId);
+    const context = item && item.context && typeof item.context === 'object' ? item.context : {};
+    const itemClient = normalizeMatchValue(context.client || item.client);
+    const itemProject = normalizeMatchValue(context.project || item.project);
+    return itemOwnerId === ownerId && itemClient === ownerClientNorm && itemProject === ownerProjectNorm;
+  });
+
+  if (ownerAlreadyHasTemplate) {
+    sendJson(res, 200, { ok: true, seeded: 0, skipped: true, reason: 'owner-template-exists' });
+    return;
+  }
+
+  const templateRecords = pickTemplateConceptRecords(items, templateClient, templateProject, conceptNames);
+  if (!templateRecords.length) {
+    sendJson(res, 404, { ok: false, seeded: 0, error: 'No template EClient 3 concept images found' });
+    return;
+  }
+
+  const createdAt = new Date().toISOString();
+  const nextItems = [...items];
+  let seeded = 0;
+
+  for (let i = 0; i < templateRecords.length; i += 1) {
+    const template = templateRecords[i];
+    const conceptName = String(template && template.concept || '').trim() || `c${i + 1}`;
+    const sourceFilePath = template && template.imageFilePath;
+    if (!sourceFilePath) continue;
+
+    const nextId = sanitizeName(`cpc_seed_${Date.now()}_${conceptName}_${crypto.randomUUID().slice(0, 6)}`);
+    const imageFileName = `${nextId}.png`;
+    const targetImagePath = path.join(conceptDir, imageFileName);
+    await fs.copyFile(sourceFilePath, targetImagePath);
+
+    let imageSizeBytes = null;
+    try {
+      const stat = await fs.stat(targetImagePath);
+      imageSizeBytes = Number.isFinite(stat.size) ? stat.size : null;
+    } catch {
+      imageSizeBytes = null;
+    }
+
+    const normalizedConcept = normalizeConceptMatchValue(conceptName) || conceptName;
+    const nextRecord = {
+      id: nextId,
+      createdAt,
+      ownerId,
+      context: {
+        client: templateClient,
+        project: templateProject
+      },
+      concept: normalizedConcept,
+      imageKey: `${normalizeMatchValue(templateClient)}|${normalizeMatchValue(templateProject)}::${normalizedConcept}::saved`,
+      saveAction: 'seed',
+      savedConcept: true,
+      seedTemplate: true,
+      imageUrl: `/storage/concept-images/${imageFileName}`,
+      imagePath: path.relative(dataDir, targetImagePath),
+      imageSizeBytes
+    };
+
+    nextItems.unshift(nextRecord);
+    seeded += 1;
+  }
+
+  if (!seeded) {
+    sendJson(res, 404, { ok: false, seeded: 0, error: 'Template copy failed (no source files)' });
+    return;
+  }
+
+  await writeJson(conceptIndexPath, nextItems.slice(0, 500));
+  sendJson(res, 200, {
+    ok: true,
+    seeded,
+    skipped: false,
+    ownerId,
+    templateClient,
+    templateProject
+  });
 }
 
 async function handleGenerateProxy(req, res) {
@@ -454,6 +667,11 @@ async function handleApi(req, res, url) {
 
   if (req.method === 'POST' && url.pathname === '/api/concept-images/rename') {
     await handleRenameConceptImages(req, res);
+    return true;
+  }
+
+  if (req.method === 'POST' && url.pathname === '/api/concept-images/seed-defaults') {
+    await handleSeedDefaultConcepts(req, res);
     return true;
   }
 
