@@ -52,7 +52,7 @@ function sendJson(res, statusCode, payload) {
     'Content-Type': 'application/json; charset=utf-8',
     'Cache-Control': 'no-store',
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
+    'Access-Control-Allow-Methods': 'GET,POST,DELETE,OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, x-api-key'
   });
   res.end(JSON.stringify(payload));
@@ -63,7 +63,7 @@ function sendText(res, statusCode, contentType, body) {
     'Content-Type': `${contentType}; charset=utf-8`,
     'Cache-Control': 'no-store',
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
+    'Access-Control-Allow-Methods': 'GET,POST,DELETE,OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, x-api-key'
   });
   res.end(body);
@@ -73,7 +73,7 @@ function sendNoContent(res, statusCode) {
   res.writeHead(statusCode, {
     'Cache-Control': 'no-store',
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
+    'Access-Control-Allow-Methods': 'GET,POST,DELETE,OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, x-api-key'
   });
   res.end();
@@ -88,6 +88,10 @@ function sanitizeName(name) {
 function normalizeOwnerId(value) {
   const normalized = String(value || '').trim();
   return normalized || null;
+}
+
+function normalizeMatchValue(value) {
+  return String(value || '').trim().toLowerCase();
 }
 
 function dataUrlToBuffer(imageBase64, imageDataUrl) {
@@ -187,6 +191,76 @@ async function handleMeasurementRequest(req, res) {
 
   await appendJsonItem(requestIndexPath, record);
   sendJson(res, 201, record);
+}
+
+async function handleDeleteConceptImages(req, res, url) {
+  const items = await readJson(conceptIndexPath, []);
+  if (!Array.isArray(items) || !items.length) {
+    sendJson(res, 200, { ok: true, deleted: 0, remaining: 0 });
+    return;
+  }
+
+  const ownerId = normalizeOwnerId(url.searchParams.get('ownerId'));
+  const client = normalizeMatchValue(url.searchParams.get('client'));
+  const project = normalizeMatchValue(url.searchParams.get('project'));
+  const conceptParams = url.searchParams.getAll('concept');
+  const conceptValues = conceptParams
+    .flatMap((value) => String(value || '').split(','))
+    .map((value) => normalizeMatchValue(value).replace(/\s+/g, ''))
+    .filter(Boolean);
+  const conceptSet = new Set(conceptValues);
+
+  const removed = [];
+  const kept = [];
+
+  items.forEach((item) => {
+    const itemOwnerId = normalizeOwnerId(item && item.ownerId);
+    const itemClient = normalizeMatchValue(item && item.context && item.context.client);
+    const itemProject = normalizeMatchValue(item && item.context && item.context.project);
+    const itemConcept = normalizeMatchValue(item && item.concept).replace(/\s+/g, '');
+
+    if (ownerId && itemOwnerId !== ownerId) {
+      kept.push(item);
+      return;
+    }
+
+    if (client && itemClient !== client) {
+      kept.push(item);
+      return;
+    }
+
+    if (project && itemProject !== project) {
+      kept.push(item);
+      return;
+    }
+
+    if (conceptSet.size && !conceptSet.has(itemConcept)) {
+      kept.push(item);
+      return;
+    }
+
+    removed.push(item);
+  });
+
+  if (!removed.length) {
+    sendJson(res, 200, { ok: true, deleted: 0, remaining: kept.length });
+    return;
+  }
+
+  await Promise.all(removed.map(async (item) => {
+    const storedPath = String(item && item.imagePath || '').trim();
+    if (!storedPath) return;
+    const filePath = resolveWithin(dataDir, storedPath);
+    if (!filePath) return;
+    try {
+      await fs.unlink(filePath);
+    } catch {
+      // Ignore file deletion failures for missing/locked files.
+    }
+  }));
+
+  await writeJson(conceptIndexPath, kept);
+  sendJson(res, 200, { ok: true, deleted: removed.length, remaining: kept.length });
 }
 
 async function handleGenerateProxy(req, res) {
@@ -313,6 +387,11 @@ async function handleApi(req, res, url) {
 
   if (req.method === 'POST' && url.pathname === '/api/concept-images') {
     await handleConceptImage(req, res);
+    return true;
+  }
+
+  if (req.method === 'DELETE' && url.pathname === '/api/concept-images') {
+    await handleDeleteConceptImages(req, res, url);
     return true;
   }
 
