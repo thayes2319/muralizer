@@ -1,11 +1,17 @@
 (function (global) {
   const hostname = global.location && global.location.hostname ? String(global.location.hostname).toLowerCase() : "";
   const isLocalHost = hostname === "localhost" || hostname === "127.0.0.1";
+  const isGohwHost = hostname === "gohw.net" || hostname.endsWith(".gohw.net");
   const isFileLikeOrigin = !global.location || global.location.protocol === "file:" || global.location.origin === "null";
+  const remoteDefaultBase = "https://muralizer.onrender.com";
+  const localDefaultBase = "http://127.0.0.1:8787";
+  const forceLocalBackend = Boolean(global.SCENIQUE_FORCE_LOCAL_API);
   const originBase = global.location && global.location.origin && global.location.origin !== "null"
     ? global.location.origin
-    : "https://muralizer.onrender.com";
-  const defaultBase = (isLocalHost || isFileLikeOrigin) ? "http://127.0.0.1:8787" : originBase;
+    : remoteDefaultBase;
+  const defaultBase = forceLocalBackend
+    ? localDefaultBase
+    : ((isLocalHost || isFileLikeOrigin || isGohwHost) ? remoteDefaultBase : originBase);
   const rawBase = global.SCENIQUE_API_BASE_URL || defaultBase;
   const baseUrl = rawBase.replace(/\/+$/, "");
   const ownerStorageKey = "sceniqueOwnerId";
@@ -98,6 +104,26 @@
     }
   }
 
+  async function del(path, params) {
+    try {
+      const response = await fetch(toUrlWithParams(path, params), {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const text = await response.text();
+      if (!text) return { ok: true };
+      return JSON.parse(text);
+    } catch (err) {
+      console.warn(`[SceniqueBackend] Failed to delete ${path}:`, err);
+      return null;
+    }
+  }
+
   function withOwner(payload) {
     const ownerId = getAnonymousOwnerId();
     return {
@@ -114,6 +140,7 @@
     toUrlWithParams,
     post,
     get,
+    del,
     saveConceptImage(payload) {
       return post("/api/concept-images", withOwner(payload));
     },
@@ -123,6 +150,9 @@
     loadConceptImages(ownerId) {
       const resolvedOwnerId = ownerId || getAnonymousOwnerId();
       return get("/api/concept-images", { ownerId: resolvedOwnerId });
+    },
+    deleteConceptImages(params) {
+      return del("/api/concept-images", params || {});
     },
     queueConceptImage(payload) {
       queue("/api/concept-images", withOwner(payload));
