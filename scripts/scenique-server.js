@@ -263,6 +263,68 @@ async function handleDeleteConceptImages(req, res, url) {
   sendJson(res, 200, { ok: true, deleted: removed.length, remaining: kept.length });
 }
 
+async function handleRenameConceptImages(req, res) {
+  const body = await readBody(req);
+  const items = await readJson(conceptIndexPath, []);
+  if (!Array.isArray(items) || !items.length) {
+    sendJson(res, 200, { ok: true, renamed: 0, remaining: 0 });
+    return;
+  }
+
+  const filters = body && typeof body === 'object' ? (body.filters || {}) : {};
+  const updates = body && typeof body === 'object' ? (body.updates || {}) : {};
+
+  const ownerId = normalizeOwnerId(filters.ownerId);
+  const client = normalizeMatchValue(filters.client);
+  const project = normalizeMatchValue(filters.project);
+  const conceptValues = (Array.isArray(filters.concepts) ? filters.concepts : [filters.concept])
+    .flatMap((value) => String(value || '').split(','))
+    .map((value) => normalizeMatchValue(value).replace(/\s+/g, ''))
+    .filter(Boolean);
+  const conceptSet = new Set(conceptValues);
+
+  const nextClient = String(updates.client || '').trim();
+  const nextProject = String(updates.project || '').trim();
+  const nextConcept = String(updates.concept || '').trim();
+
+  if (!nextClient && !nextProject && !nextConcept) {
+    sendJson(res, 400, { ok: false, error: 'No rename updates supplied' });
+    return;
+  }
+
+  let renamed = 0;
+  const nextItems = items.map((item) => {
+    const itemOwnerId = normalizeOwnerId(item && item.ownerId);
+    const itemClient = normalizeMatchValue(item && item.context && item.context.client);
+    const itemProject = normalizeMatchValue(item && item.context && item.context.project);
+    const itemConcept = normalizeMatchValue(item && item.concept).replace(/\s+/g, '');
+
+    if (ownerId && itemOwnerId !== ownerId) return item;
+    if (client && itemClient !== client) return item;
+    if (project && itemProject !== project) return item;
+    if (conceptSet.size && !conceptSet.has(itemConcept)) return item;
+
+    renamed += 1;
+    return {
+      ...item,
+      context: {
+        ...(item && item.context ? item.context : {}),
+        client: nextClient || (item && item.context && item.context.client) || '',
+        project: nextProject || (item && item.context && item.context.project) || ''
+      },
+      concept: nextConcept || (item && item.concept) || ''
+    };
+  });
+
+  if (!renamed) {
+    sendJson(res, 200, { ok: true, renamed: 0, remaining: items.length });
+    return;
+  }
+
+  await writeJson(conceptIndexPath, nextItems);
+  sendJson(res, 200, { ok: true, renamed, remaining: nextItems.length });
+}
+
 async function handleGenerateProxy(req, res) {
   const body = await readBody(req);
   const reqHost = String((req.headers && req.headers.host) || '').trim().toLowerCase();
@@ -387,6 +449,11 @@ async function handleApi(req, res, url) {
 
   if (req.method === 'POST' && url.pathname === '/api/concept-images') {
     await handleConceptImage(req, res);
+    return true;
+  }
+
+  if (req.method === 'POST' && url.pathname === '/api/concept-images/rename') {
+    await handleRenameConceptImages(req, res);
     return true;
   }
 
