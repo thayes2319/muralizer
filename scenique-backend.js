@@ -154,6 +154,9 @@
     deleteConceptImages(params) {
       return del("/api/concept-images", params || {});
     },
+    renameConceptImages(payload) {
+      return post("/api/concept-images/rename", payload || {});
+    },
     queueConceptImage(payload) {
       queue("/api/concept-images", withOwner(payload));
     },

@@ -13659,6 +13659,46 @@ document.addEventListener("DOMContentLoaded", () => {
     };
   }
 
+  async function renameRenderDiskConceptImages(payload) {
+    const safePayload = payload && typeof payload === "object" ? payload : {};
+    const filters = safePayload.filters && typeof safePayload.filters === "object" ? safePayload.filters : {};
+    const updates = safePayload.updates && typeof safePayload.updates === "object" ? safePayload.updates : {};
+
+    const normalizedPayload = {
+      filters: {
+        ownerId: String(filters.ownerId || "").trim(),
+        client: String(filters.client || "").trim(),
+        project: String(filters.project || "").trim(),
+        concepts: Array.isArray(filters.concepts)
+          ? filters.concepts.map((name) => String(name || "").trim()).filter(Boolean)
+          : []
+      },
+      updates: {
+        client: String(updates.client || "").trim(),
+        project: String(updates.project || "").trim(),
+        concept: String(updates.concept || "").trim()
+      }
+    };
+
+    let result = null;
+    let lastError = "";
+
+    if (window.SceniqueBackend?.renameConceptImages) {
+      result = await window.SceniqueBackend.renameConceptImages(normalizedPayload);
+      if (!result) {
+        lastError = "Rename endpoint unavailable or request failed.";
+      }
+    } else {
+      lastError = "Rename endpoint unavailable or request failed.";
+    }
+
+    const renamedCount = Number(result && result.renamed);
+    return {
+      renamed: Number.isFinite(renamedCount) && renamedCount > 0 ? renamedCount : 0,
+      error: lastError
+    };
+  }
+
   function createExploreFallbackContext(clientLabel, orderIndex) {
     const fallback = getDefaultContext(orderIndex);
     return normalizeContext({
@@ -14103,6 +14143,7 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
         <div class="cpc-session-actions">
           <button id="cpcLoadSelectedVersions" class="cpc-action-btn" type="button">Load Selected</button>
+          <button id="cpcRenameSelectedVersion" class="cpc-action-btn" type="button">Rename</button>
           <button id="cpcDeleteSelectedVersions" class="cpc-session-delete-btn" type="button">Delete Selected</button>
         </div>
       </div>
@@ -14220,6 +14261,63 @@ document.addEventListener("DOMContentLoaded", () => {
         renderSessionModalDetail(snapshot, targetCtx.client || activeModalClientName, projectItem.index);
       });
     }
+
+    const renameVersionBtn = document.getElementById("cpcRenameSelectedVersion");
+    if (renameVersionBtn) {
+      renameVersionBtn.addEventListener("click", async () => {
+        const selectedConceptIndexes = Array.from(sessionModalConcepts.querySelectorAll("[data-version-select-index]:checked"))
+          .map((el) => Number(el.dataset.versionSelectIndex))
+          .filter((idx) => Number.isInteger(idx) && idx >= 0 && idx < concepts.length);
+
+        if (selectedConceptIndexes.length !== 1) {
+          alert("Select exactly one version to rename.");
+          return;
+        }
+
+        const targetCtx = snapshot.contexts[projectItem.index];
+        if (!targetCtx) return;
+
+        const conceptIndex = selectedConceptIndexes[0];
+        const currentName = (concepts[conceptIndex] && concepts[conceptIndex].name) || `c${conceptIndex + 1}`;
+        const nextInput = prompt("Rename Version:", currentName);
+        if (nextInput === null) return;
+
+        const nextName = String(nextInput || "").trim();
+        if (!nextName) {
+          alert("Version name cannot be blank.");
+          return;
+        }
+
+        if (nextName === currentName) return;
+
+        if (isReadOnlySnapshot) {
+          const renameResult = await renameRenderDiskConceptImages({
+            filters: {
+              client: targetCtx.client,
+              project: targetCtx.project,
+              concepts: [currentName]
+            },
+            updates: {
+              concept: nextName
+            }
+          });
+
+          if (!renameResult.renamed) {
+            alert(renameResult.error || "No matching Render records were renamed.");
+            return;
+          }
+
+          await refreshRenderDiskSnapshot();
+          setSessionStatus(`Renamed version to ${nextName}.`);
+          renderSessionModalList("__render_disk__");
+          return;
+        }
+
+        targetCtx.concepts[conceptIndex] = { name: nextName };
+        persistSnapshotChanges(`Renamed version to ${nextName}.`);
+        renderSessionModalDetail(snapshot, targetCtx.client || activeModalClientName, projectItem.index);
+      });
+    }
   }
 
   function renderSessionModalDetail(snapshot, selectedClientName, selectedProjectIndex) {
@@ -14268,11 +14366,12 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
         <div class="cpc-session-actions">
           <button id="cpcLoadSelectedProjects" class="cpc-action-btn" type="button">Load Selected</button>
+          <button id="cpcRenameSelectedProject" class="cpc-action-btn" type="button">Rename</button>
           ${isCurrentOpenSnapshot
             ? '<button id="cpcDeleteSelectedProjects" class="cpc-session-delete-btn" type="button">Delete Selected</button>'
             : (isReadOnlySnapshot
               ? '<button id="cpcDeleteSelectedProjects" class="cpc-session-delete-btn" type="button">Delete Selected</button>'
-              : '<button id="cpcRenameSelectedProject" class="cpc-action-btn" type="button">Rename Project</button><button id="cpcDeleteSelectedProjects" class="cpc-session-delete-btn" type="button">Delete Selected</button>')}
+              : '<button id="cpcDeleteSelectedProjects" class="cpc-session-delete-btn" type="button">Delete Selected</button>')}
         </div>
       </div>
       ${projectRows}
@@ -14307,11 +14406,17 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
 
-    const renameProjectBtnInModal = isCurrentOpenSnapshot ? null : document.getElementById("cpcRenameSelectedProject");
+    const renameProjectBtnInModal = document.getElementById("cpcRenameSelectedProject");
     if (renameProjectBtnInModal) {
-      renameProjectBtnInModal.addEventListener("click", () => {
-        if (!activeProjectItem || !activeProjectItem.ctx) return;
-        const targetCtx = snapshot.contexts[activeProjectItem.index];
+      renameProjectBtnInModal.addEventListener("click", async () => {
+        const selectedProjectIndexes = Array.from(sessionModalDetail.querySelectorAll("[data-project-select-index]:checked"))
+          .map((el) => Number(el.dataset.projectSelectIndex))
+          .filter((idx) => Number.isInteger(idx) && idx >= 0 && idx < snapshot.contexts.length);
+
+        const targetIndex = selectedProjectIndexes.length === 1
+          ? selectedProjectIndexes[0]
+          : (activeProjectItem ? activeProjectItem.index : -1);
+        const targetCtx = snapshot.contexts[targetIndex];
         if (!targetCtx) return;
 
         const currentName = String(targetCtx.project || "").trim() || "Project";
@@ -14325,9 +14430,32 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         if (nextName === currentName) return;
+
+        if (isReadOnlySnapshot) {
+          const renameResult = await renameRenderDiskConceptImages({
+            filters: {
+              client: targetCtx.client,
+              project: currentName
+            },
+            updates: {
+              project: nextName
+            }
+          });
+
+          if (!renameResult.renamed) {
+            alert(renameResult.error || "No matching Render records were renamed.");
+            return;
+          }
+
+          await refreshRenderDiskSnapshot();
+          setSessionStatus(`Renamed project to ${nextName}.`);
+          renderSessionModalList("__render_disk__");
+          return;
+        }
+
         targetCtx.project = nextName;
         persistSnapshotChanges(`Renamed project to ${nextName}.`);
-        renderSessionModalDetail(snapshot, clientName, activeProjectItem.index);
+        renderSessionModalDetail(snapshot, clientName, targetIndex);
       });
     }
 
@@ -14452,6 +14580,7 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
         <div class="cpc-session-actions">
           <button id="cpcLoadSelectedClients" class="cpc-action-btn" type="button">Load Selected</button>
+          <button id="cpcRenameSelectedClient" class="cpc-action-btn" type="button">Rename</button>
           <button id="cpcDeleteSelectedClients" class="cpc-session-delete-btn" type="button">Delete Selected</button>
         </div>
       </div>
@@ -14562,6 +14691,65 @@ document.addEventListener("DOMContentLoaded", () => {
         persistSnapshotChanges(`Deleted ${selectedClients.length} client(s).`);
         activeModalClientName = "";
         activeModalProjectIndex = -1;
+        renderSessionModalList(selectedSnapshot.id);
+      });
+    }
+
+    const renameClientsBtn = document.getElementById("cpcRenameSelectedClient");
+    if (renameClientsBtn) {
+      renameClientsBtn.addEventListener("click", async () => {
+        const selectedClients = Array.from(sessionModalList.querySelectorAll("[data-client-select-name]:checked"))
+          .map((el) => (el.dataset.clientSelectName || "").trim())
+          .filter(Boolean);
+
+        const currentName = selectedClients.length === 1
+          ? selectedClients[0]
+          : (activeModalClientName || "");
+
+        if (!currentName) {
+          alert("Select exactly one client to rename.");
+          return;
+        }
+
+        const nextInput = prompt("Rename Client:", currentName);
+        if (nextInput === null) return;
+
+        const nextName = String(nextInput || "").trim();
+        if (!nextName) {
+          alert("Client name cannot be blank.");
+          return;
+        }
+
+        if (nextName === currentName) return;
+
+        if (isReadOnlySnapshot) {
+          const renameResult = await renameRenderDiskConceptImages({
+            filters: {
+              client: currentName
+            },
+            updates: {
+              client: nextName
+            }
+          });
+
+          if (!renameResult.renamed) {
+            alert(renameResult.error || "No matching Render records were renamed.");
+            return;
+          }
+
+          await refreshRenderDiskSnapshot();
+          activeModalClientName = nextName;
+          setSessionStatus(`Renamed client to ${nextName}.`);
+          renderSessionModalList("__render_disk__");
+          return;
+        }
+
+        const targetContexts = (selectedSnapshot.contexts || []).filter((ctx) => String((ctx && ctx.client) || "").trim() === currentName);
+        targetContexts.forEach((ctx) => {
+          ctx.client = nextName;
+        });
+        persistSnapshotChanges(`Renamed client to ${nextName}.`);
+        activeModalClientName = nextName;
         renderSessionModalList(selectedSnapshot.id);
       });
     }
