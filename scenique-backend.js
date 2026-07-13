@@ -132,6 +132,11 @@
     };
   }
 
+  function resolveOwnerId(candidateOwnerId) {
+    const provided = String(candidateOwnerId || "").trim();
+    return provided || getAnonymousOwnerId();
+  }
+
   global.SceniqueBackend = {
     baseUrl,
     ownerStorageKey,
@@ -148,14 +153,29 @@
       return post("/api/measurement-requests", withOwner(payload));
     },
     loadConceptImages(ownerId) {
-      const resolvedOwnerId = ownerId || getAnonymousOwnerId();
+      const resolvedOwnerId = resolveOwnerId(ownerId);
       return get("/api/concept-images", { ownerId: resolvedOwnerId });
     },
     deleteConceptImages(params) {
-      return del("/api/concept-images", params || {});
+      const safeParams = params && typeof params === "object" ? { ...params } : {};
+      safeParams.ownerId = resolveOwnerId(safeParams.ownerId);
+      return del("/api/concept-images", safeParams);
     },
     renameConceptImages(payload) {
-      return post("/api/concept-images/rename", payload || {});
+      const safePayload = payload && typeof payload === "object" ? payload : {};
+      const safeFilters = safePayload.filters && typeof safePayload.filters === "object"
+        ? { ...safePayload.filters }
+        : {};
+
+      safeFilters.ownerId = resolveOwnerId(safeFilters.ownerId);
+
+      return post("/api/concept-images/rename", {
+        ...safePayload,
+        filters: safeFilters
+      });
+    },
+    ensureDefaultConceptSeed(payload) {
+      return post("/api/concept-images/seed-defaults", withOwner(payload));
     },
     queueConceptImage(payload) {
       queue("/api/concept-images", withOwner(payload));

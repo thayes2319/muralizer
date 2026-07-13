@@ -1819,6 +1819,52 @@ margin-top: 15px;
   color: #ffffff;
 }
 
+.cpc-create-client-card {
+  width: min(440px, 94vw);
+  min-height: 0;
+  border-radius: 14px;
+}
+
+.cpc-create-client-body {
+  padding: 14px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cpc-create-client-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cpc-create-client-field label {
+  font-size: 12px;
+  color: #23485e;
+  font-weight: 700;
+}
+
+.cpc-create-client-field input {
+  border: 1px solid rgba(33,143,201,0.35);
+  border-radius: 8px;
+  padding: 7px 9px;
+  font-size: 13px;
+  color: #23485e;
+  background: rgba(255,255,255,0.92);
+}
+
+.cpc-create-client-error {
+  min-height: 16px;
+  font-size: 12px;
+  color: #9a2f2f;
+}
+
+.cpc-create-client-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .cpc-session-modal-body {
   display: grid;
   grid-template-columns: minmax(240px, 1.05fr) minmax(260px, 1.15fr) minmax(120px, 0.5fr);
@@ -5698,6 +5744,30 @@ select[multiple].collapsible-multi.expanded option:first-child {
           <button id="cpcSaveConceptReplace" class="cpc-save-choice-btn" type="button">Replace Current</button>
           <button id="cpcSaveConceptCreate" class="cpc-save-choice-btn primary" type="button">Create Next</button>
           <button id="cpcSaveConceptCancel" class="cpc-save-choice-btn" type="button">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="cpcCreateClientModal" class="cpc-session-modal" aria-hidden="true">
+    <div class="cpc-session-modal-card cpc-create-client-card" role="dialog" aria-modal="true" aria-labelledby="cpcCreateClientModalTitle">
+      <div class="cpc-session-modal-head">
+        <h3 id="cpcCreateClientModalTitle">Create Client</h3>
+        <button id="closeCpcCreateClientModal" class="cpc-session-close" type="button" aria-label="Close create client dialog">×</button>
+      </div>
+      <div class="cpc-create-client-body">
+        <div class="cpc-create-client-field">
+          <label for="cpcCreateClientNameInput">Client Name</label>
+          <input id="cpcCreateClientNameInput" type="text" maxlength="120" autocomplete="off">
+        </div>
+        <div class="cpc-create-client-field">
+          <label for="cpcCreateClientProjectInput">Initial Project Name</label>
+          <input id="cpcCreateClientProjectInput" type="text" maxlength="120" autocomplete="off">
+        </div>
+        <div id="cpcCreateClientError" class="cpc-create-client-error" aria-live="polite"></div>
+        <div class="cpc-create-client-actions">
+          <button id="cpcCreateClientSubmit" class="cpc-save-choice-btn primary" type="button">Create Client</button>
+          <button id="cpcCreateClientCancel" class="cpc-save-choice-btn" type="button">Cancel</button>
         </div>
       </div>
     </div>
@@ -10176,6 +10246,7 @@ function buildConceptImageKey(context, conceptName, variant) {
 const cpcBackendImageStore = {};
 const cpcBackendImageMeta = {};
 let cpcBackendImageHydratePromise = null;
+let cpcOwnerDefaultSeedPromise = null;
 const cpcConceptSessionCacheKey = "cpcConceptImagesByContextSession";
 let storagePruneNoticeShown = false;
 let storagePruneNoticeTimer = null;
@@ -10309,6 +10380,36 @@ async function hydrateBackendConceptImages() {
   })();
 
   return cpcBackendImageHydratePromise;
+}
+
+async function refreshBackendConceptImageHydration() {
+  cpcBackendImageHydratePromise = null;
+  await hydrateBackendConceptImages();
+}
+
+async function ensureOwnerDefaultConceptSeed() {
+  if (cpcOwnerDefaultSeedPromise) return cpcOwnerDefaultSeedPromise;
+
+  cpcOwnerDefaultSeedPromise = (async () => {
+    if (!window.SceniqueBackend?.ensureDefaultConceptSeed) {
+      return { ok: false, skipped: true, reason: "seed-endpoint-unavailable" };
+    }
+
+    const seedResult = await window.SceniqueBackend.ensureDefaultConceptSeed({
+      templateClient: "EClient 3",
+      templateProject: "Project 1",
+      concepts: ["c1", "c2", "c3"]
+    });
+
+    if (seedResult && Number(seedResult.seeded) > 0) {
+      await refreshRenderDiskSnapshot();
+      await refreshBackendConceptImageHydration();
+    }
+
+    return seedResult || { ok: false, skipped: true, reason: "seed-request-failed" };
+  })();
+
+  return cpcOwnerDefaultSeedPromise;
 }
 
 function getConceptImageSrc(context, conceptName) {
@@ -13363,6 +13464,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const saveConceptReplaceBtn = document.getElementById("cpcSaveConceptReplace");
   const saveConceptCreateBtn = document.getElementById("cpcSaveConceptCreate");
   const saveConceptCancelBtn = document.getElementById("cpcSaveConceptCancel");
+  const createClientModal = document.getElementById("cpcCreateClientModal");
+  const closeCreateClientModalBtn = document.getElementById("closeCpcCreateClientModal");
+  const createClientNameInput = document.getElementById("cpcCreateClientNameInput");
+  const createClientProjectInput = document.getElementById("cpcCreateClientProjectInput");
+  const createClientErrorEl = document.getElementById("cpcCreateClientError");
+  const createClientSubmitBtn = document.getElementById("cpcCreateClientSubmit");
+  const createClientCancelBtn = document.getElementById("cpcCreateClientCancel");
   const sessionModalList = document.getElementById("cpcSessionModalList");
   const sessionModalDetail = document.getElementById("cpcSessionModalDetail");
   const sessionModalConcepts = document.getElementById("cpcSessionModalConcepts");
@@ -13559,12 +13667,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function fetchRenderDiskRecords() {
     let records = null;
+    const ownerId = String(window.SceniqueBackend?.getAnonymousOwnerId?.() || "").trim();
 
-    try {
+    if (window.SceniqueBackend?.loadConceptImages) {
+      records = await Promise.race([
+        window.SceniqueBackend.loadConceptImages(ownerId),
+        new Promise((resolve) => setTimeout(() => resolve([]), 7000))
+      ]);
+    }
+
+    if (!Array.isArray(records)) {
+      try {
       const endpoint = window.SceniqueBackend?.toUrl ? window.SceniqueBackend.toUrl("/api/concept-images") : "";
       if (endpoint) {
+        const url = new URL(endpoint);
+        if (ownerId) {
+          url.searchParams.set("ownerId", ownerId);
+        }
         const response = await Promise.race([
-          fetch(endpoint, { method: "GET" }),
+          fetch(url.toString(), { method: "GET" }),
           new Promise((_, reject) => setTimeout(() => reject(new Error("Render disk fetch timeout")), 12000))
         ]);
         if (response.ok) {
@@ -13572,15 +13693,9 @@ document.addEventListener("DOMContentLoaded", () => {
           if (Array.isArray(payload)) records = payload;
         }
       }
-    } catch (err) {
-      // Fall back to owner-scoped load.
-    }
-
-    if (!Array.isArray(records) && window.SceniqueBackend?.loadConceptImages) {
-      records = await Promise.race([
-        window.SceniqueBackend.loadConceptImages(),
-        new Promise((resolve) => setTimeout(() => resolve([]), 7000))
-      ]);
+      } catch (err) {
+        // Return an empty list if render fetch fails.
+      }
     }
 
     return Array.isArray(records) ? records : [];
@@ -13610,7 +13725,7 @@ document.addEventListener("DOMContentLoaded", () => {
       ? safeFilters.concepts.map((name) => String(name || "").trim()).filter(Boolean)
       : [];
 
-    const ownerId = String(safeFilters.ownerId || "").trim();
+    const ownerId = String(safeFilters.ownerId || window.SceniqueBackend?.getAnonymousOwnerId?.() || "").trim();
     const client = String(safeFilters.client || "").trim();
     const project = String(safeFilters.project || "").trim();
 
@@ -13710,6 +13825,23 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function buildExploreConceptsFromRecords(records) {
+    function getExploreImageDedupToken(record) {
+      const imagePath = String((record && record.imagePath) || "").trim().toLowerCase();
+      if (imagePath) return `path:${imagePath}`;
+
+      const resolved = resolveBackendImageUrl(record && record.imageUrl);
+      if (!resolved) return "";
+
+      try {
+        const parsed = new URL(resolved, window.location && window.location.origin ? window.location.origin : undefined);
+        const origin = String(parsed.origin || "").toLowerCase();
+        const pathname = String(parsed.pathname || "").toLowerCase();
+        return `url:${origin}${pathname}`;
+      } catch (err) {
+        return `raw:${String(resolved).split("?")[0].split("#")[0].trim().toLowerCase()}`;
+      }
+    }
+
     const targetClients = ["EClient 3"];
     const targetClientSet = new Set(targetClients.map((name) => normalizeClientName(name)));
     const safeRecords = Array.isArray(records) ? records : [];
@@ -13727,7 +13859,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const project1Records = ec3Records.filter((record) => normalizeProjectName(record && record.context && record.context.project).toLowerCase() === "project 1");
     const sourceRecords = project1Records.length ? project1Records : ec3Records;
 
-    const usedImageUrls = new Set();
+    const usedImageTokens = new Set();
     const selectedConcepts = ["c1", "c2", "c3"].map((slotName) => {
       const candidates = sourceRecords
         .filter((record) => {
@@ -13751,21 +13883,18 @@ document.addEventListener("DOMContentLoaded", () => {
       let explicitRecord = null;
       for (let i = 0; i < candidates.length; i += 1) {
         const candidate = candidates[i];
-        const candidateUrl = resolveBackendImageUrl(candidate && candidate.imageUrl);
-        if (!candidateUrl) continue;
-        if (!usedImageUrls.has(candidateUrl)) {
+        const candidateToken = getExploreImageDedupToken(candidate);
+        if (!candidateToken) continue;
+        if (!usedImageTokens.has(candidateToken)) {
           explicitRecord = candidate;
           break;
         }
       }
 
-      if (!explicitRecord && candidates.length) {
-        explicitRecord = candidates[0];
-      }
-
       const selectedUrl = explicitRecord ? resolveBackendImageUrl(explicitRecord.imageUrl) : "";
-      if (selectedUrl) {
-        usedImageUrls.add(selectedUrl);
+      const selectedToken = explicitRecord ? getExploreImageDedupToken(explicitRecord) : "";
+      if (selectedToken) {
+        usedImageTokens.add(selectedToken);
       }
 
       return {
@@ -13796,12 +13925,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function fetchExploreRecords() {
     let records = null;
+    const ownerId = String(window.SceniqueBackend?.getAnonymousOwnerId?.() || "").trim();
 
-    try {
+    if (window.SceniqueBackend?.loadConceptImages) {
+      records = await Promise.race([
+        window.SceniqueBackend.loadConceptImages(ownerId),
+        new Promise((resolve) => setTimeout(() => resolve([]), 7000))
+      ]);
+    }
+
+    if (!Array.isArray(records)) {
+      try {
       const endpoint = window.SceniqueBackend?.toUrl ? window.SceniqueBackend.toUrl("/api/concept-images") : "";
       if (endpoint) {
+        const url = new URL(endpoint);
+        if (ownerId) {
+          url.searchParams.set("ownerId", ownerId);
+        }
         const response = await Promise.race([
-          fetch(endpoint, { method: "GET" }),
+          fetch(url.toString(), { method: "GET" }),
           new Promise((_, reject) => setTimeout(() => reject(new Error("Explore fetch timeout")), 14000))
         ]);
         if (response.ok) {
@@ -13811,137 +13953,46 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         }
       }
-    } catch (err) {
-      // Try owner-scoped fallback below.
-    }
-
-    if (!Array.isArray(records) && window.SceniqueBackend?.loadConceptImages) {
-      records = await Promise.race([
-        window.SceniqueBackend.loadConceptImages(),
-        new Promise((resolve) => setTimeout(() => resolve([]), 7000))
-      ]);
+      } catch (err) {
+        // Return an empty list if render fetch fails.
+      }
     }
 
     return Array.isArray(records) ? records : [];
   }
 
   async function loadExploreSamplesFromRender() {
-    const shouldProceed = confirm("Explore will clear the current client bar and replace it with EClient 3 from Render (using EClient 3 images). Continue?");
+    await ensureOwnerDefaultConceptSeed();
+
+    const sourceClientName = "EClient 3";
+    const shouldProceed = confirm(`Explore will clear the current client bar and load Render samples from ${sourceClientName}. Continue?`);
     if (!shouldProceed) return;
 
-    // Clear current session immediately after confirmation.
-    contexts = [normalizeContext({
-      client: "EClient 3",
-      project: "Project 1",
-      concepts: [{ name: "c1" }],
-      activeConceptIndex: 0
-    }, getDefaultContext(0))];
+    setSessionStatus("Explore loading from Render Disk...");
+
+    await refreshRenderDiskSnapshot();
+    await refreshBackendConceptImageHydration();
+
+    const snapshotContexts = Array.isArray(renderDiskSnapshot && renderDiskSnapshot.contexts)
+      ? renderDiskSnapshot.contexts
+      : [];
+    const selectedContexts = snapshotContexts
+      .filter((ctx) => normalizeName(ctx && ctx.client) === normalizeName(sourceClientName))
+      .map((ctx, idx) => normalizeContext(ctx, getDefaultContext(idx)));
+
+    if (!selectedContexts.length) {
+      alert(`No ${sourceClientName} records were found on your Render Disk.`);
+      return;
+    }
+
+    contexts = selectedContexts;
     compareSelections = [];
     compareSuppressedIds.clear();
     compareAutoFillPaused = false;
     setActiveContext(0);
 
-    setSessionStatus("Explore loading C1 from Render...");
-
-    await Promise.race([
-      hydrateBackendConceptImages(),
-      new Promise((resolve) => setTimeout(resolve, 5000))
-    ]);
-
-    let records = [];
-    try {
-      records = await fetchExploreRecords();
-    } catch (err) {
-      console.warn("Unable to fetch Explore records:", err);
-    }
-
-    const conceptPayload = buildExploreConceptsFromRecords(records) || {
-      client: "EClient 3",
-      project: "Project 1",
-      concepts: [
-        { conceptName: "c1", imageUrl: "", createdAt: 0 },
-        { conceptName: "c2", imageUrl: "", createdAt: 0 },
-        { conceptName: "c3", imageUrl: "", createdAt: 0 }
-      ]
-    };
-
-    const stagedContext = normalizeContext({
-      client: conceptPayload.client,
-      project: conceptPayload.project,
-      concepts: [{ name: conceptPayload.concepts[0].conceptName || "c1" }],
-      activeConceptIndex: 0
-    }, getDefaultContext(0));
-
-    ["c1", "c2", "c3"].forEach((name) => {
-      const savedKey = buildConceptImageKey(stagedContext, name, "saved");
-      const draftKey = buildConceptImageKey(stagedContext, name, "draft");
-      const projectDraftKey = buildConceptImageKey(stagedContext, "_projectDraft", "draft");
-      delete cpcRuntimeImageStore[savedKey];
-      delete cpcRuntimeImageStore[draftKey];
-      delete cpcRuntimeImageStore[projectDraftKey];
-      delete cpcBackendImageStore[savedKey];
-      delete cpcBackendImageMeta[savedKey];
-
-      removeConceptSessionCacheEntries([
-        savedKey,
-        draftKey,
-        projectDraftKey
-      ], "Unable to clear stale Explore session cache entries:");
-    });
-
-    function wait(ms) {
-      return new Promise((resolve) => setTimeout(resolve, ms));
-    }
-
-    function preloadImage(url) {
-      if (!url) return Promise.resolve(false);
-      return new Promise((resolve) => {
-        const img = new Image();
-        const done = (ok) => resolve(ok);
-        const timeoutId = setTimeout(() => done(false), 6000);
-        img.onload = () => {
-          clearTimeout(timeoutId);
-          done(true);
-        };
-        img.onerror = () => {
-          clearTimeout(timeoutId);
-          done(false);
-        };
-        img.src = url;
-      });
-    }
-
-    const c1ImageUrl = (conceptPayload.concepts[0] && conceptPayload.concepts[0].imageUrl) || "";
-    await preloadImage(c1ImageUrl);
-    stageExploreConceptInStores(stagedContext, conceptPayload.concepts[0]);
-    contexts = [stagedContext];
-    setActiveContext(0);
-    const c1Name = (conceptPayload.concepts[0] && conceptPayload.concepts[0].conceptName) || "c1";
-    const c1Loaded = !!getConceptImageSrc(stagedContext, c1Name);
-    setSessionStatus(c1Loaded ? "Explore: C1 loaded. Loading C2..." : "Explore: C1 has no image. Loading C2...");
-    await wait(700);
-
-    const c2 = conceptPayload.concepts[1] || { conceptName: "c2", imageUrl: "", createdAt: 0 };
-    await preloadImage(c2.imageUrl || "");
-    stagedContext.concepts.push({ name: c2.conceptName || "c2" });
-    stageExploreConceptInStores(stagedContext, c2);
-    stagedContext.activeConceptIndex = 1;
-    setActiveContext(0);
-    const c2Name = c2.conceptName || "c2";
-    const c2Loaded = !!getConceptImageSrc(stagedContext, c2Name);
-    setSessionStatus(c2Loaded ? "Explore: C2 loaded. Loading C3..." : "Explore: C2 has no image. Loading C3...");
-    await wait(700);
-
-    const c3 = conceptPayload.concepts[2] || { conceptName: "c3", imageUrl: "", createdAt: 0 };
-    await preloadImage(c3.imageUrl || "");
-    stagedContext.concepts.push({ name: c3.conceptName || "c3" });
-    stageExploreConceptInStores(stagedContext, c3);
-    stagedContext.activeConceptIndex = 2;
-    setActiveContext(0);
-    const c3Name = c3.conceptName || "c3";
-    const c3Loaded = !!getConceptImageSrc(stagedContext, c3Name);
-    const loadedCount = [c1Loaded, c2Loaded, c3Loaded].filter(Boolean).length;
-    setSessionStatus(`Explore complete: ${loadedCount}/3 concepts loaded.`);
+    const metrics = getSessionMetrics(selectedContexts);
+    setSessionStatus(`Explore complete: loaded ${metrics.projects} project(s), ${metrics.concepts} concept(s) from ${sourceClientName}.`);
   }
 
   function formatSessionTime(isoValue) {
@@ -14118,6 +14169,31 @@ document.addEventListener("DOMContentLoaded", () => {
     if (message) setSessionStatus(message);
   }
 
+  function upsertContextsIntoSession(incomingContexts) {
+    const safeIncoming = Array.isArray(incomingContexts)
+      ? incomingContexts
+        .map((ctx, idx) => normalizeContext(ctx, getDefaultContext(idx)))
+        .filter(Boolean)
+      : [];
+    if (!safeIncoming.length) return -1;
+
+    let firstAffectedIndex = -1;
+
+    safeIncoming.forEach((nextCtx) => {
+      const existingIndex = findContextIndex(nextCtx.client, nextCtx.project);
+      if (existingIndex >= 0) {
+        contexts[existingIndex] = nextCtx;
+        if (firstAffectedIndex < 0) firstAffectedIndex = existingIndex;
+        return;
+      }
+
+      contexts.push(nextCtx);
+      if (firstAffectedIndex < 0) firstAffectedIndex = contexts.length - 1;
+    });
+
+    return firstAffectedIndex;
+  }
+
   function renderSessionConceptsPane(snapshot, projectItem) {
     if (!sessionModalConcepts) return;
     if (!snapshot || !projectItem || !projectItem.ctx) {
@@ -14153,29 +14229,35 @@ document.addEventListener("DOMContentLoaded", () => {
     const loadVersionsBtn = document.getElementById("cpcLoadSelectedVersions");
     if (loadVersionsBtn) {
       loadVersionsBtn.addEventListener("click", () => {
-        const selectedConceptIndexes = Array.from(sessionModalConcepts.querySelectorAll("[data-version-select-index]:checked"))
+        let selectedConceptIndexes = Array.from(sessionModalConcepts.querySelectorAll("[data-version-select-index]:checked"))
           .map((el) => Number(el.dataset.versionSelectIndex))
           .filter((idx) => Number.isInteger(idx) && idx >= 0 && idx < concepts.length);
 
+        if (!selectedConceptIndexes.length && Number.isInteger(activeIdx) && activeIdx >= 0 && activeIdx < concepts.length) {
+          selectedConceptIndexes = [activeIdx];
+        }
+
         if (!selectedConceptIndexes.length) {
-          alert("Select one or more versions to load.");
+          alert("Select or highlight a version to load.");
           return;
         }
 
-        const ok = loadSnapshotById(snapshot.id, projectItem.index);
-        if (!ok) return;
-
-        const safeProjectIndex = Math.max(0, Math.min(projectItem.index, contexts.length - 1));
-        const targetCtx = contexts[safeProjectIndex];
-        if (!targetCtx) return;
-
         const selectedSet = new Set(selectedConceptIndexes);
-        targetCtx.concepts = concepts
+        const loadedConcepts = concepts
           .filter((_, idx) => selectedSet.has(idx))
           .map((concept, idx) => ({ name: (concept && concept.name) || `c${idx + 1}` }));
-        targetCtx.activeConceptIndex = 0;
 
-        setActiveContext(safeProjectIndex);
+        const loadedContext = normalizeContext({
+          client: ctx.client,
+          project: ctx.project,
+          concepts: loadedConcepts,
+          activeConceptIndex: 0
+        }, getDefaultContext(0));
+
+        const targetIndex = upsertContextsIntoSession([loadedContext]);
+        if (targetIndex < 0) return;
+
+        setActiveContext(targetIndex);
         setSessionStatus(`Loaded ${selectedConceptIndexes.length} version(s).`);
         closeSessionModal();
       });
@@ -14308,6 +14390,7 @@ document.addEventListener("DOMContentLoaded", () => {
           }
 
           await refreshRenderDiskSnapshot();
+          await refreshBackendConceptImageHydration();
           setSessionStatus(`Renamed version to ${nextName}.`);
           renderSessionModalList("__render_disk__");
           return;
@@ -14380,12 +14463,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const loadProjectsBtn = document.getElementById("cpcLoadSelectedProjects");
     if (loadProjectsBtn) {
       loadProjectsBtn.addEventListener("click", () => {
-        const selectedProjectIndexes = Array.from(sessionModalDetail.querySelectorAll("[data-project-select-index]:checked"))
+        let selectedProjectIndexes = Array.from(sessionModalDetail.querySelectorAll("[data-project-select-index]:checked"))
           .map((el) => Number(el.dataset.projectSelectIndex))
           .filter((idx) => Number.isInteger(idx) && idx >= 0 && idx < snapshot.contexts.length);
 
+        if (!selectedProjectIndexes.length && activeProjectItem && Number.isInteger(activeProjectItem.index)) {
+          selectedProjectIndexes = [activeProjectItem.index];
+        }
+
         if (!selectedProjectIndexes.length) {
-          alert("Select one or more projects to load.");
+          alert("Select or highlight a project to load.");
           return;
         }
 
@@ -14399,8 +14486,10 @@ document.addEventListener("DOMContentLoaded", () => {
           return;
         }
 
-        contexts = selectedContexts;
-        setActiveContext(0);
+        const targetIndex = upsertContextsIntoSession(selectedContexts);
+        if (targetIndex < 0) return;
+
+        setActiveContext(targetIndex);
         setSessionStatus(`Loaded ${selectedProjectIndexes.length} project(s).`);
         closeSessionModal();
       });
@@ -14448,6 +14537,7 @@ document.addEventListener("DOMContentLoaded", () => {
           }
 
           await refreshRenderDiskSnapshot();
+          await refreshBackendConceptImageHydration();
           setSessionStatus(`Renamed project to ${nextName}.`);
           renderSessionModalList("__render_disk__");
           return;
@@ -14593,12 +14683,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const loadClientsBtn = document.getElementById("cpcLoadSelectedClients");
     if (loadClientsBtn) {
       loadClientsBtn.addEventListener("click", () => {
-        const selectedClients = Array.from(sessionModalList.querySelectorAll("[data-client-select-name]:checked"))
+        let selectedClients = Array.from(sessionModalList.querySelectorAll("[data-client-select-name]:checked"))
           .map((el) => (el.dataset.clientSelectName || "").trim())
           .filter(Boolean);
 
+        if (!selectedClients.length && activeModalClientName) {
+          selectedClients = [activeModalClientName];
+        }
+
         if (!selectedClients.length) {
-          alert("Select one or more clients to load.");
+          alert("Select or highlight a client to load.");
           return;
         }
 
@@ -14612,8 +14706,10 @@ document.addEventListener("DOMContentLoaded", () => {
           return;
         }
 
-        contexts = selectedContexts;
-        setActiveContext(0);
+        const targetIndex = upsertContextsIntoSession(selectedContexts);
+        if (targetIndex < 0) return;
+
+        setActiveContext(targetIndex);
         setSessionStatus(`Loaded ${selectedClients.length} client(s).`);
         closeSessionModal();
       });
@@ -14738,6 +14834,7 @@ document.addEventListener("DOMContentLoaded", () => {
           }
 
           await refreshRenderDiskSnapshot();
+          await refreshBackendConceptImageHydration();
           activeModalClientName = nextName;
           setSessionStatus(`Renamed client to ${nextName}.`);
           renderSessionModalList("__render_disk__");
@@ -14790,6 +14887,60 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!saveConceptModal) return;
     saveConceptModal.classList.remove("open");
     saveConceptModal.setAttribute("aria-hidden", "true");
+  }
+
+  function closeCreateClientModal() {
+    if (!createClientModal) return;
+    createClientModal.classList.remove("open");
+    createClientModal.setAttribute("aria-hidden", "true");
+    if (createClientErrorEl) createClientErrorEl.textContent = "";
+  }
+
+  function openCreateClientModal() {
+    if (!createClientModal || !createClientNameInput || !createClientProjectInput) return;
+    createClientNameInput.value = getNextClientName();
+    createClientProjectInput.value = "Project 1";
+    if (createClientErrorEl) createClientErrorEl.textContent = "";
+    createClientModal.classList.add("open");
+    createClientModal.setAttribute("aria-hidden", "false");
+    requestAnimationFrame(() => {
+      createClientNameInput.focus();
+      createClientNameInput.select();
+    });
+  }
+
+  function submitCreateClientFromModal() {
+    if (!createClientNameInput || !createClientProjectInput || !createClientErrorEl) return;
+
+    const clientName = String(createClientNameInput.value || "").trim();
+    const projectName = String(createClientProjectInput.value || "").trim() || "Project 1";
+
+    if (!clientName) {
+      createClientErrorEl.textContent = "Client name is required.";
+      createClientNameInput.focus();
+      return;
+    }
+
+    const existingClientIndex = findFirstContextIndexByClient(clientName);
+    if (existingClientIndex >= 0) {
+      createClientErrorEl.textContent = `Client \"${clientName}\" already exists. Choose a unique client name.`;
+      setSessionStatus(`Client ${clientName} already exists. Select a unique client name.`);
+      setActiveContext(existingClientIndex);
+      createClientNameInput.focus();
+      createClientNameInput.select();
+      return;
+    }
+
+    contexts.push({
+      client: clientName,
+      project: projectName,
+      concepts: [{ name: "c1" }],
+      activeConceptIndex: 0
+    });
+
+    const newIndex = contexts.length - 1;
+    closeCreateClientModal();
+    setActiveContext(newIndex);
   }
 
   function resolveSaveConceptDecision(choice) {
@@ -14868,7 +15019,11 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const concepts = Array.isArray(activeCtx.concepts) && activeCtx.concepts.length ? activeCtx.concepts : [{ name: "c1" }];
-    for (let idx = 0; idx < concepts.length && renderSelections.length < 3; idx += 1) {
+    const activeConceptIndex = Number.isInteger(activeCtx.activeConceptIndex) ? activeCtx.activeConceptIndex : 0;
+    const windowStart = Math.floor(Math.max(0, activeConceptIndex) / 3) * 3;
+    const windowEnd = Math.min(concepts.length, windowStart + 3);
+
+    for (let idx = windowStart; idx < windowEnd && renderSelections.length < 3; idx += 1) {
       const conceptName = (concepts[idx] && concepts[idx].name) || `c${idx + 1}`;
       const id = getCompareSelectionId(activeCtx, conceptName);
       if (compareSuppressedIds.has(id)) continue;
@@ -14899,8 +15054,38 @@ document.addEventListener("DOMContentLoaded", () => {
       resumeCompareTrayBtn.disabled = !compareAutoFillPaused;
     }
 
-    const slotHtml = [];
-    renderSelections.slice(0, 3).forEach((item) => {
+    const slotEntries = [null, null, null];
+    const overflowEntries = [];
+
+    const orderedSelections = renderSelections.slice(0, 3).sort((a, b) => {
+      const aCtxIndex = contexts.findIndex((ctx) => buildCpcContextKey(ctx) === a.contextKey);
+      const bCtxIndex = contexts.findIndex((ctx) => buildCpcContextKey(ctx) === b.contextKey);
+      const aCtx = aCtxIndex >= 0 ? contexts[aCtxIndex] : null;
+      const bCtx = bCtxIndex >= 0 ? contexts[bCtxIndex] : null;
+      const aConcepts = Array.isArray(aCtx && aCtx.concepts) && aCtx.concepts.length ? aCtx.concepts : [{ name: "c1" }];
+      const bConcepts = Array.isArray(bCtx && bCtx.concepts) && bCtx.concepts.length ? bCtx.concepts : [{ name: "c1" }];
+
+      const aIdx = aConcepts.findIndex((concept, idx) => {
+        const name = (concept && concept.name) || `c${idx + 1}`;
+        return String(name).toLowerCase() === String(a.conceptName || "c1").toLowerCase();
+      });
+      const bIdx = bConcepts.findIndex((concept, idx) => {
+        const name = (concept && concept.name) || `c${idx + 1}`;
+        return String(name).toLowerCase() === String(b.conceptName || "c1").toLowerCase();
+      });
+
+      const aRank = getConceptRank(a.conceptName, aIdx >= 0 ? aIdx : 0);
+      const bRank = getConceptRank(b.conceptName, bIdx >= 0 ? bIdx : 0);
+      if (aRank !== bRank) return aRank - bRank;
+
+      const aPinnedAt = Number(a && a.pinnedAt) || 0;
+      const bPinnedAt = Number(b && b.pinnedAt) || 0;
+      if (aPinnedAt !== bPinnedAt) return aPinnedAt - bPinnedAt;
+
+      return String(a && a.id || "").localeCompare(String(b && b.id || ""));
+    });
+
+    orderedSelections.forEach((item) => {
       const ctxIndex = contexts.findIndex((ctx) => buildCpcContextKey(ctx) === item.contextKey);
       if (ctxIndex < 0) return;
 
@@ -14918,22 +15103,42 @@ document.addEventListener("DOMContentLoaded", () => {
       const thumbSrc = getConceptImageSrc(ctx, conceptName);
       const label = `${ctx.client} -> ${ctx.project} • ${conceptBadge}`;
 
-      slotHtml.push(`
-        <div class="cpc-compare-slot">
-          <div class="cpc-compare-card" role="button" tabindex="0" data-compare-activate-index="${ctxIndex}" data-compare-activate-concept="${escapeHtml(conceptName)}" aria-label="Activate ${escapeHtml(label)}">
-            <div class="cpc-compare-card-top">
-              <span class="cpc-compare-card-label">${escapeHtml(label)}</span>
-              <span class="cpc-compare-remove" role="button" data-compare-remove-id="${escapeHtml(item.id)}" aria-label="Remove ${escapeHtml(label)}">×</span>
-            </div>
-            ${thumbSrc ? `<div class="cpc-compare-thumb-viewport"><img class="cpc-compare-thumb" src="${thumbSrc}" alt="${escapeHtml(label)} preview" draggable="false"><div class="cpc-compare-zoom-controls"><button class="cpc-compare-zoom-btn" type="button" data-zoom-action="out" aria-label="Zoom out">-</button><button class="cpc-compare-zoom-btn" type="button" data-zoom-action="reset" aria-label="Reset zoom to 1:1">1:1</button><button class="cpc-compare-zoom-btn" type="button" data-zoom-action="fit-width" aria-label="Auto fit to remove whitespace">↔</button><button class="cpc-compare-zoom-btn" type="button" data-zoom-action="in" aria-label="Zoom in">+</button></div></div>` : `<div class="cpc-compare-thumb-empty">No image</div>`}
-          </div>
-        </div>
-      `);
+      const entry = {
+        ctxIndex,
+        conceptName,
+        label,
+        thumbSrc,
+        itemId: item.id
+      };
+
+      const preferredSlot = Math.max(0, Math.min(2, conceptIndex % 3));
+      if (!slotEntries[preferredSlot]) {
+        slotEntries[preferredSlot] = entry;
+      } else {
+        overflowEntries.push(entry);
+      }
     });
 
-    while (slotHtml.length < 3) {
-      slotHtml.push('<div class="cpc-compare-slot empty">Select Concept</div>');
+    for (let i = 0; i < slotEntries.length && overflowEntries.length; i += 1) {
+      if (!slotEntries[i]) {
+        slotEntries[i] = overflowEntries.shift();
+      }
     }
+
+    const slotHtml = slotEntries.map((entry) => {
+      if (!entry) return '<div class="cpc-compare-slot empty">Select Concept</div>';
+      return `
+        <div class="cpc-compare-slot">
+          <div class="cpc-compare-card" role="button" tabindex="0" data-compare-activate-index="${entry.ctxIndex}" data-compare-activate-concept="${escapeHtml(entry.conceptName)}" aria-label="Activate ${escapeHtml(entry.label)}">
+            <div class="cpc-compare-card-top">
+              <span class="cpc-compare-card-label">${escapeHtml(entry.label)}</span>
+              <span class="cpc-compare-remove" role="button" data-compare-remove-id="${escapeHtml(entry.itemId)}" aria-label="Remove ${escapeHtml(entry.label)}">×</span>
+            </div>
+            ${entry.thumbSrc ? `<div class="cpc-compare-thumb-viewport"><img class="cpc-compare-thumb" src="${entry.thumbSrc}" alt="${escapeHtml(entry.label)} preview" draggable="false"><div class="cpc-compare-zoom-controls"><button class="cpc-compare-zoom-btn" type="button" data-zoom-action="out" aria-label="Zoom out">-</button><button class="cpc-compare-zoom-btn" type="button" data-zoom-action="reset" aria-label="Reset zoom to 1:1">1:1</button><button class="cpc-compare-zoom-btn" type="button" data-zoom-action="fit-width" aria-label="Auto fit to remove whitespace">↔</button><button class="cpc-compare-zoom-btn" type="button" data-zoom-action="in" aria-label="Zoom in">+</button></div></div>` : `<div class="cpc-compare-thumb-empty">No image</div>`}
+          </div>
+        </div>
+      `;
+    });
 
     compareTrayEl.innerHTML = slotHtml.join("");
 
@@ -15690,8 +15895,53 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  if (closeCreateClientModalBtn) {
+    closeCreateClientModalBtn.addEventListener("click", closeCreateClientModal);
+  }
+
+  if (createClientCancelBtn) {
+    createClientCancelBtn.addEventListener("click", closeCreateClientModal);
+  }
+
+  if (createClientSubmitBtn) {
+    createClientSubmitBtn.addEventListener("click", submitCreateClientFromModal);
+  }
+
+  if (createClientModal) {
+    createClientModal.addEventListener("click", (event) => {
+      if (event.target === createClientModal) {
+        closeCreateClientModal();
+      }
+    });
+  }
+
+  if (createClientNameInput) {
+    createClientNameInput.addEventListener("input", () => {
+      if (createClientErrorEl) createClientErrorEl.textContent = "";
+    });
+    createClientNameInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        submitCreateClientFromModal();
+      }
+    });
+  }
+
+  if (createClientProjectInput) {
+    createClientProjectInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        submitCreateClientFromModal();
+      }
+    });
+  }
+
   document.addEventListener("keydown", (event) => {
     if (event.key !== "Escape") return;
+    if (createClientModal && createClientModal.classList.contains("open")) {
+      closeCreateClientModal();
+      return;
+    }
     if (saveConceptModal && saveConceptModal.classList.contains("open")) {
       resolveSaveConceptDecision("cancel");
       return;
@@ -15715,51 +15965,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (addClientBtn) {
     addClientBtn.addEventListener("click", () => {
-      const defaultClientName = getNextClientName();
-      const clientInput = prompt("New Client Name:", defaultClientName);
-      const clientName = (clientInput && clientInput.trim()) ? clientInput.trim() : defaultClientName;
-
-      const existingClientIndex = findFirstContextIndexByClient(clientName);
-      if (existingClientIndex >= 0) {
-        const defaultProjectNameForExisting = getNextProjectName(clientName);
-        const projectInputForExisting = prompt(`Client \"${clientName}\" exists. New Project Name:`, defaultProjectNameForExisting);
-        const projectNameForExisting = (projectInputForExisting && projectInputForExisting.trim())
-          ? projectInputForExisting.trim()
-          : defaultProjectNameForExisting;
-
-        const duplicateExistingProjectIndex = findContextIndex(clientName, projectNameForExisting);
-        if (duplicateExistingProjectIndex >= 0) {
-          setSessionStatus(`${clientName} / ${projectNameForExisting} already exists. Opened existing project.`);
-          setActiveContext(duplicateExistingProjectIndex);
-          return;
-        }
-
-        contexts.push({
-          client: clientName,
-          project: projectNameForExisting,
-          concepts: [{ name: "c1" }],
-          activeConceptIndex: 0
-        });
-
-        const addedIndex = contexts.length - 1;
-        setSessionStatus(`Added ${clientName} / ${projectNameForExisting}.`);
-        setActiveContext(addedIndex);
-        return;
-      }
-
-      const defaultProjectName = "Project 1";
-      const projectInput = prompt("Initial Project Name:", defaultProjectName);
-      const projectName = (projectInput && projectInput.trim()) ? projectInput.trim() : defaultProjectName;
-
-      contexts.push({
-        client: clientName,
-        project: projectName,
-        concepts: [{ name: "c1" }],
-        activeConceptIndex: 0
-      });
-
-      const newIndex = contexts.length - 1;
-      setActiveContext(newIndex);
+      openCreateClientModal();
     });
   }
 
@@ -15818,7 +16024,7 @@ document.addEventListener("DOMContentLoaded", () => {
   cpcSnapshots = readCpcSnapshots();
   renderSnapshotSelector();
 
-  void hydrateBackendConceptImages().then(() => {
+  void ensureOwnerDefaultConceptSeed().then(() => hydrateBackendConceptImages()).then(() => {
     const activeIndex = getActiveProjectIndex();
     const ctx = contexts[activeIndex];
     if (!ctx) return;
