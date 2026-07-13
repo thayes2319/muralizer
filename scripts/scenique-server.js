@@ -15,7 +15,7 @@ const conceptIndexPath = path.join(dataDir, 'concept-images.json');
 const requestIndexPath = path.join(dataDir, 'measurement-requests.json');
 const port = Number(process.env.PORT || 8787);
 const host = String(process.env.HOST || '0.0.0.0').trim() || '0.0.0.0';
-const generateUpstream = process.env.MURALIZER_GENERATE_URL || 'https://muralizer.onrender.com/generate';
+const generateUpstream = String(process.env.MURALIZER_GENERATE_URL || '').trim();
 const upstreamApiKey = String(
   process.env.MURALIZER_API_KEY
   || process.env.STABILITY_API_KEY
@@ -191,24 +191,93 @@ async function handleMeasurementRequest(req, res) {
 
 async function handleGenerateProxy(req, res) {
   const body = await readBody(req);
-  const response = await fetch(generateUpstream, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': upstreamApiKey
-    },
-    body: JSON.stringify(body)
-  });
+  const reqHost = String((req.headers && req.headers.host) || '').trim().toLowerCase();
+  let useExternalUpstream = Boolean(generateUpstream);
 
-  const text = await response.text();
-  let parsed = null;
-  try {
-    parsed = text ? JSON.parse(text) : {};
-  } catch {
-    parsed = { ok: false, raw: text };
+  if (useExternalUpstream) {
+    try {
+      const upstreamUrl = new URL(generateUpstream);
+      const upstreamHost = String(upstreamUrl.host || '').trim().toLowerCase();
+      const upstreamPath = String(upstreamUrl.pathname || '').trim();
+      // Avoid proxying back to this same service and triggering 405 loops.
+      if (upstreamHost && reqHost && upstreamHost === reqHost && upstreamPath === '/generate') {
+        useExternalUpstream = false;
+      }
+    } catch {
+      useExternalUpstream = false;
+    }
   }
 
-  sendJson(res, response.status, parsed);
+  if (useExternalUpstream) {
+    const response = await fetch(generateUpstream, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': upstreamApiKey
+      },
+      body: JSON.stringify(body)
+    });
+
+    const text = await response.text();
+    let parsed = null;
+    try {
+      parsed = text ? JSON.parse(text) : {};
+    } catch {
+      parsed = { ok: false, raw: text };
+    }
+
+    sendJson(res, response.status, parsed);
+    return;
+  }
+
+  const form = new FormData();
+  const prompt = String(body.prompt || '').trim();
+  const negativePrompt = String(body.negative_prompt || '').trim();
+  const aspectRatio = String(body.aspect_ratio || '').trim();
+  const model = String(body.model || 'sd3.5-large').trim() || 'sd3.5-large';
+
+  form.append('prompt', prompt);
+  form.append('model', model);
+  form.append('output_format', 'png');
+  if (negativePrompt) form.append('negative_prompt', negativePrompt);
+  if (aspectRatio) form.append('aspect_ratio', aspectRatio);
+  if (body.seed !== undefined && body.seed !== null && body.seed !== '') {
+    form.append('seed', String(body.seed));
+  }
+  form.append('none', '');
+
+  const response = await fetch('https://api.stability.ai/v2beta/stable-image/generate/sd3', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${upstreamApiKey}`,
+      'Accept': 'image/*'
+    },
+    body: form
+  });
+
+  if (response.status === 200) {
+    const buffer = Buffer.from(await response.arrayBuffer());
+    sendJson(res, 200, {
+      ok: true,
+      success: true,
+      image: buffer.toString('base64')
+    });
+    return;
+  }
+
+  let errorPayload = null;
+  try {
+    errorPayload = await response.json();
+  } catch {
+    const raw = await response.text().catch(() => '');
+    errorPayload = { raw };
+  }
+
+  sendJson(res, response.status || 500, {
+    ok: false,
+    error: 'Generation failed',
+    details: errorPayload
+  });
 }
 
 async function handleApi(req, res, url) {
