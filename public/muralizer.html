@@ -2997,6 +2997,56 @@ button, select {
    SCENE ACTIONS + SAVED ROWS
 ============================================================ */
 
+/* Saved Scenes modal — mirrors the session modal's crystal card */
+.scenes-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(7,16,26,0.46);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+
+.scenes-modal.open {
+  display: flex;
+}
+
+.scenes-modal-card {
+  width: min(560px, 94vw);
+  max-height: 86vh;
+  position: relative;
+  overflow: hidden;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.52);
+  background: rgba(248,252,255,0.92);
+  box-shadow: 0 14px 42px rgba(0,0,0,0.24);
+  display: flex;
+  flex-direction: column;
+}
+
+.scenes-modal-head {
+  display: flex;
+  align-items: center;
+  padding: 8px 42px 8px 14px;
+  border-bottom: 1px solid rgba(33,143,201,0.18);
+}
+
+.scenes-modal-head h3 {
+  margin: 0;
+  font-size: 17px;
+  color: #203a4a;
+  font-family: Candara, sans-serif;
+}
+
+.scenes-modal-body {
+  padding: 12px 14px 14px;
+  overflow-y: auto;
+}
+
 .scene-actions {
   display:flex;
   justify-content:center;
@@ -3286,36 +3336,30 @@ button, select {
 }
 
 .concept-lightbox.open #conceptLightboxImage.kb-drift-a {
-  animation: kbDriftA 26s ease-in-out infinite alternate;
+  animation: kbDriftA 10.2s ease-in-out infinite alternate;
 }
 
 .concept-lightbox.open #conceptLightboxImage.kb-drift-b {
-  animation: kbDriftB 30s ease-in-out infinite alternate;
+  animation: kbDriftB 11.9s ease-in-out infinite alternate;
 }
 
 .concept-lightbox.open #conceptLightboxImage.kb-drift-c {
-  animation: kbDriftC 28s ease-in-out infinite alternate;
+  animation: kbDriftC 10.6s ease-in-out infinite alternate;
 }
 
 @keyframes kbDriftA {
-  from { transform: scale(1.06) translate(-1.4%, 1%); }
-  to   { transform: scale(1.18) translate(1.6%, -1.2%); }
+  from { transform: scale(1.08) translate(-2.6%, 1.8%); }
+  to   { transform: scale(1.26) translate(2.8%, -2.2%); }
 }
 
 @keyframes kbDriftB {
-  from { transform: scale(1.16) translate(1.4%, -0.8%); }
-  to   { transform: scale(1.05) translate(-1.2%, 1.2%); }
+  from { transform: scale(1.24) translate(2.6%, -1.6%); }
+  to   { transform: scale(1.07) translate(-2.2%, 2.2%); }
 }
 
 @keyframes kbDriftC {
-  from { transform: scale(1.08) translate(0.8%, 1.4%); }
-  to   { transform: scale(1.2) translate(-1%, -1.4%); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .concept-lightbox.open #conceptLightboxImage {
-    animation: none !important;
-  }
+  from { transform: scale(1.1) translate(1.8%, 2.6%); }
+  to   { transform: scale(1.28) translate(-2%, -2.6%); }
 }
 
 .concept-lightbox-watermark {
@@ -3324,6 +3368,39 @@ button, select {
 }
 
 /* Base .mural-watermark hides until has-image; out-specify it here. */
+
+/* Floating Share pill on the concept image — appears with the image */
+.concept-share-btn {
+  display: none;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 6;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid rgba(255,255,255,0.55);
+  background: rgba(12,26,36,0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  color: #ffffff;
+  font-family: Candara, sans-serif;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  border-radius: 999px;
+  padding: 5px 12px;
+  cursor: pointer;
+}
+
+.concept-share-btn:hover {
+  background: rgba(19,111,159,0.8);
+  border-color: rgba(255,255,255,0.8);
+}
+
+#imageWrapper.has-image .concept-share-btn {
+  display: inline-flex;
+}
+
 .concept-lightbox.open .concept-lightbox-watermark {
   display: block;
 }
@@ -3348,6 +3425,142 @@ button, select {
 
 .concept-lightbox-close:hover {
   background: rgba(255,255,255,0.24);
+}
+
+
+/* ============================================================
+   CONCEPT PRESENTATION — chrome-free client view (Share target)
+============================================================ */
+
+.concept-present {
+  position: fixed;
+  inset: 0;
+  z-index: 10001;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  overflow: auto;
+  background: linear-gradient(165deg, #0c1a24 0%, #10222e 55%, #0a161f 100%);
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.concept-present.open {
+  display: flex;
+}
+
+.concept-present-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  width: min(1080px, 94vw);
+  padding: 40px 0 28px;
+}
+
+.concept-present-title {
+  font-family: Candara, sans-serif;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  color: #ffffff;
+  text-align: center;
+}
+
+.concept-present-sub {
+  font-family: Candara, sans-serif;
+  font-size: 13px;
+  letter-spacing: 2.2px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.55);
+  text-align: center;
+  margin-top: 4px;
+}
+
+.concept-present-stage {
+  position: relative;
+  max-width: 100%;
+}
+
+#conceptPresentImage {
+  display: block;
+  max-width: 100%;
+  max-height: 66vh;
+  border-radius: 10px;
+  box-shadow: 0 18px 60px rgba(0,0,0,0.5);
+  pointer-events: none;
+}
+
+.concept-present.open .concept-present-watermark {
+  display: block;
+  font-size: 7vmin;
+  color: rgba(255,255,255,0.22);
+}
+
+.concept-present-palette {
+  margin-bottom: 0;
+}
+
+.concept-present-scene {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 5px;
+  max-width: min(860px, 92vw);
+}
+
+.concept-present-scene .cpc-scene-kv {
+  background: rgba(255,255,255,0.1);
+  border-color: rgba(255,255,255,0.18);
+  color: rgba(255,255,255,0.85);
+  font-size: 10.5px;
+}
+
+.concept-present-scene .cpc-scene-kv b {
+  color: #7cc4e8;
+}
+
+.concept-present-footer {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-top: 8px;
+}
+
+.concept-present-share {
+  border: 1px solid rgba(255,255,255,0.35);
+  background: rgba(255,255,255,0.1);
+  color: #ffffff;
+  font-family: Candara, sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  border-radius: 999px;
+  padding: 7px 18px;
+  cursor: pointer;
+}
+
+.concept-present-share:hover {
+  background: rgba(255,255,255,0.2);
+}
+
+.concept-present-share.copied::after {
+  content: " \2713";
+  color: #7fd8a4;
+}
+
+.concept-present-share[disabled] {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.concept-present-wordmark {
+  font-family: Candara, sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  color: rgba(255,255,255,0.5);
 }
 
 
@@ -6435,6 +6648,8 @@ select[multiple].collapsible-multi.expanded option:first-child {
 
   <div class="menu-item" onclick="toggleScenesPanelFromMenu()">Saved Scenes</div>
 
+  <div class="menu-item" onclick="openConceptPresentation()">Present Concept</div>
+
   <div id="menuViewSuggestions" class="menu-item hidden" onclick="openSuggestionsViewer()">
     Pro: Suggestions
   </div>
@@ -7414,6 +7629,10 @@ If you’re exploring a new direction, try adjusting just 1-2 elements at a time
 
       <div id="imageWrapper" class="mural-wrapper">
         <div id="muralPaletteStrip" class="palette-strip" style="display:none;" aria-label="Dominant mural colors for paint transfer"></div>
+        <button id="conceptShareBtn" class="concept-share-btn" type="button" title="Present &amp; share this concept" onclick="openConceptPresentation()">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+          Share
+        </button>
         <img id="muralImage">
         <div class="mural-watermark">Scénique Murals</div>
       </div>
@@ -7423,6 +7642,27 @@ If you’re exploring a new direction, try adjusting just 1-2 elements at a time
         <button id="conceptLightboxClose" class="concept-lightbox-close" type="button" aria-label="Close full view">×</button>
         <img id="conceptLightboxImage" alt="Concept full view" draggable="false">
         <div class="mural-watermark concept-lightbox-watermark">Scénique Murals</div>
+      </div>
+
+      <!-- ⭐ CONCEPT PRESENTATION (chrome-free client view / share target) -->
+      <div id="conceptPresent" class="concept-present" role="dialog" aria-label="Concept presentation" aria-hidden="true">
+        <button id="conceptPresentClose" class="concept-lightbox-close" type="button" aria-label="Close presentation">×</button>
+        <div class="concept-present-inner">
+          <div class="concept-present-titles">
+            <div id="conceptPresentTitle" class="concept-present-title"></div>
+            <div id="conceptPresentSub" class="concept-present-sub"></div>
+          </div>
+          <div class="concept-present-stage">
+            <img id="conceptPresentImage" alt="Concept" draggable="false">
+            <div class="mural-watermark concept-present-watermark">Scénique Murals</div>
+          </div>
+          <div id="conceptPresentPalette" class="palette-strip concept-present-palette" style="display:none;"></div>
+          <div id="conceptPresentScene" class="concept-present-scene"></div>
+          <div class="concept-present-footer">
+            <button id="conceptPresentShareBtn" class="concept-present-share" type="button">Copy share link</button>
+            <div class="concept-present-wordmark">Scénique</div>
+          </div>
+        </div>
       </div>
 
       <div id="nextStepsBlock" style="display:none;">
@@ -7463,37 +7703,37 @@ If you’re exploring a new direction, try adjusting just 1-2 elements at a time
 
 
 
-       <section class="mzr-panel mural-scenes collapsed" id="scenesPanel" style="display:none;">
+       <!-- SAVED SCENES MODAL (opened from the ⋯ menu) -->
+       <div id="scenesModal" class="scenes-modal" aria-hidden="true">
+         <div class="scenes-modal-card" role="dialog" aria-modal="true" aria-labelledby="scenesModalTitle">
+           <button id="scenesModalClose" class="cpc-session-close" type="button" aria-label="Close saved scenes">×</button>
+           <div class="scenes-modal-head">
+             <h3 id="scenesModalTitle">Saved Scenes</h3>
+           </div>
+           <div class="scenes-modal-body">
 
-  <h2 class="mzr-panel-title" id="scenesPanelToggle">
-    Saved Scenes
-  </h2>
+             <div class="scene-actions">
+               <button id="saveSceneBtn">Save Current Scene</button>
+             </div>
 
-  <div class="mzr-panel-body">
+             <div id="saveCurrentScenePanel" class="save-panel collapsed">
+               <div class="save-panel-inner">
+                 <div class="save-panel-label">Suggested name:</div>
+                 <input type="text" id="sceneNameInput">
+                 <div class="save-panel-actions">
+                   <button id="cancelSaveSceneButton" type="button">Cancel</button>
+                   <button id="confirmSaveSceneButton" type="button">Confirm Save</button>
+                 </div>
+               </div>
+             </div>
 
-    <div class="scene-actions">
-      <button id="saveSceneBtn">Save Current Scene</button>
-    </div>
+             <div id="savedScenesList" class="saved-scenes-list"></div>
 
-    <div id="saveCurrentScenePanel" class="save-panel collapsed">
-      <div class="save-panel-inner">
-        <div class="save-panel-label">Suggested name:</div>
-        <input type="text" id="sceneNameInput">
-        <div class="save-panel-actions">
-          <button id="cancelSaveSceneButton" type="button">Cancel</button>
-          <button id="confirmSaveSceneButton" type="button">Confirm Save</button>
-        </div>
-      </div>
-    </div>
+             <pre id="jsonOutput" class="json-output" style="display:none;"></pre>
 
-    <div id="savedScenesList" class="saved-scenes-list"></div>
-
-<pre id="jsonOutput" class="json-output" style="display:none;"></pre>
-
-
-  </div> <!-- /.mzr-panel-body -->
-
-</section>
+           </div>
+         </div>
+       </div>
 
 
       </div> <!-- end mural-output-grid -->
@@ -8221,22 +8461,38 @@ function deleteScene(name) {
   populateSavedScenes();
 }
 
-// Saved Scenes panel stays hidden until invoked from the ⋯ main menu.
+// Saved Scenes now lives in a themed modal, invoked from the ⋯ main menu.
 function toggleScenesPanelFromMenu() {
-  const panel = document.getElementById("scenesPanel");
-  if (!panel) return;
+  const modal = document.getElementById("scenesModal");
+  if (!modal) return;
 
-  const isHidden = getComputedStyle(panel).display === "none";
-  if (isHidden) {
-    panel.style.display = "block";
-    panel.classList.remove("collapsed");
-    panel.classList.add("expanded", "user-expanded");
-    populateSavedScenes();
-    setTimeout(() => panel.scrollIntoView({ behavior: "smooth", block: "center" }), 60);
+  if (modal.classList.contains("open")) {
+    closeScenesModal();
   } else {
-    panel.style.display = "none";
+    populateSavedScenes();
+    modal.classList.add("open");
+    modal.setAttribute("aria-hidden", "false");
   }
 }
+
+function closeScenesModal() {
+  const modal = document.getElementById("scenesModal");
+  if (!modal) return;
+  modal.classList.remove("open");
+  modal.setAttribute("aria-hidden", "true");
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const modal = document.getElementById("scenesModal");
+  if (!modal) return;
+  document.getElementById("scenesModalClose")?.addEventListener("click", closeScenesModal);
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) closeScenesModal();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && modal.classList.contains("open")) closeScenesModal();
+  });
+});
 
 
 // ============================================================
@@ -11268,6 +11524,163 @@ document.addEventListener("DOMContentLoaded", () => {
   lightbox.addEventListener("dragstart", (e) => {
     if (!proUnlocked) e.preventDefault();
   });
+});
+
+// ============================================================
+// CONCEPT PRESENTATION — "Share with client" chrome-free view
+// Invoked from the ⋯ menu, or auto-opened via a ?share= link.
+// Saved (backend-hosted) concepts get a copyable cross-device link.
+// ============================================================
+function presentEsc(value) {
+  return String(value == null ? "" : value)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+
+function buildPresentSceneChips(scene) {
+  if (!scene) return "";
+  const rows = [];
+  const push = (label, value) => {
+    if (value === null || value === undefined || value === "") return;
+    rows.push(`<span class="cpc-scene-kv"><b>${presentEsc(label)}</b>${presentEsc(String(value))}</span>`);
+  };
+  push("Scene", scene.category);
+  push("Sub", scene.subScene);
+  push("Feel", scene.feel);
+  push("Color mode", scene.colorMode);
+  push("Primary", scene.primaryHueName || scene.primaryHueHex || scene.primaryHue);
+  push("Secondary", scene.secondaryHueName || scene.secondaryHueHex || scene.secondaryHue);
+  push("Background", scene.backgroundHueName || scene.backgroundName || scene.backgroundColor);
+  push("Fog", scene.fog);
+  push("Substrate", scene.substrate);
+  push("Application", scene.applicationStyle);
+  return rows.join("");
+}
+
+let conceptPresentShareUrl = "";
+
+function openConceptPresentationFromData(data) {
+  const overlay = document.getElementById("conceptPresent");
+  if (!overlay || !data || !data.img) return;
+
+  document.getElementById("conceptPresentTitle").textContent = data.title || "Concept";
+  document.getElementById("conceptPresentSub").textContent = data.sub || "";
+  document.getElementById("conceptPresentImage").src = data.img;
+  document.getElementById("conceptPresentScene").innerHTML = buildPresentSceneChips(data.scene);
+
+  const paletteEl = document.getElementById("conceptPresentPalette");
+  paletteEl.innerHTML = "";
+  paletteEl.style.display = "none";
+  renderPaletteStrip(paletteEl, data.img, false);
+
+  const shareBtn = document.getElementById("conceptPresentShareBtn");
+  conceptPresentShareUrl = data.shareUrl || "";
+  if (conceptPresentShareUrl) {
+    shareBtn.removeAttribute("disabled");
+    shareBtn.textContent = "Copy share link";
+    shareBtn.title = "Copy a link that opens this presentation on any device";
+  } else {
+    shareBtn.setAttribute("disabled", "disabled");
+    shareBtn.textContent = "Save Concept to enable share link";
+    shareBtn.title = "Share links are available once the concept is saved to the client library";
+  }
+
+  overlay.classList.add("open");
+  overlay.setAttribute("aria-hidden", "false");
+  document.body.style.overflow = "hidden";
+}
+
+function openConceptPresentation() {
+  const muralImage = document.getElementById("muralImage");
+  if (!muralImage || !muralImage.src) {
+    alert("Generate or load a concept first.");
+    return;
+  }
+
+  const active = getActiveCpcContextForStage();
+  const ctx = active && active.context;
+  const conceptName = (active && active.conceptName) || "c1";
+
+  const savedKey = ctx ? buildConceptImageKey(ctx, conceptName, "saved") : "";
+  const draftKey = ctx ? buildConceptImageKey(ctx, conceptName, "draft") : "";
+  const scene = (savedKey && getConceptSceneForKey(savedKey)) || (draftKey && getConceptSceneForKey(draftKey)) || null;
+
+  // Cross-device share requires a real (backend-hosted) image URL — data: URLs can't travel.
+  const backendUrl = savedKey && typeof cpcBackendImageStore === "object" ? cpcBackendImageStore[savedKey] : "";
+  let shareUrl = "";
+  if (backendUrl && /^https?:\/\//i.test(backendUrl)) {
+    const payload = {
+      img: backendUrl,
+      title: ctx ? `${ctx.client} — ${ctx.project}` : "Concept",
+      sub: `Concept ${conceptName}`.toUpperCase(),
+      scene: scene || undefined
+    };
+    try {
+      const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(payload))))
+        .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+      shareUrl = `${location.origin}${location.pathname}?share=${encoded}`;
+    } catch (err) {
+      shareUrl = "";
+    }
+  }
+
+  openConceptPresentationFromData({
+    img: muralImage.src,
+    title: ctx ? `${ctx.client} — ${ctx.project}` : "Concept",
+    sub: `Concept ${conceptName}`.toUpperCase(),
+    scene,
+    shareUrl
+  });
+}
+
+function closeConceptPresentation() {
+  const overlay = document.getElementById("conceptPresent");
+  if (!overlay) return;
+  overlay.classList.remove("open");
+  overlay.setAttribute("aria-hidden", "true");
+  document.getElementById("conceptPresentImage")?.removeAttribute("src");
+  document.body.style.overflow = "";
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const overlay = document.getElementById("conceptPresent");
+  if (!overlay) return;
+
+  document.getElementById("conceptPresentClose")?.addEventListener("click", closeConceptPresentation);
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && overlay.classList.contains("open")) closeConceptPresentation();
+  });
+
+  document.getElementById("conceptPresentShareBtn")?.addEventListener("click", (e) => {
+    if (!conceptPresentShareUrl || !navigator.clipboard) return;
+    navigator.clipboard.writeText(conceptPresentShareUrl).then(() => {
+      e.target.classList.add("copied");
+      setTimeout(() => e.target.classList.remove("copied"), 1200);
+    }).catch(() => {});
+  });
+
+  // Capture protection, mirroring the main image rules.
+  overlay.addEventListener("contextmenu", (e) => {
+    if (!proUnlocked) e.preventDefault();
+  });
+  overlay.addEventListener("dragstart", (e) => {
+    if (!proUnlocked) e.preventDefault();
+  });
+
+  // ?share= links open straight into the presentation, workbench hidden behind it.
+  try {
+    const encoded = new URLSearchParams(location.search).get("share");
+    if (encoded) {
+      const json = decodeURIComponent(escape(atob(encoded.replace(/-/g, "+").replace(/_/g, "/"))));
+      const data = JSON.parse(json);
+      if (data && typeof data.img === "string" && /^https?:\/\//i.test(data.img)) {
+        openConceptPresentationFromData({ ...data, shareUrl: location.href });
+      }
+    }
+  } catch (err) {
+    console.warn("Share link could not be opened:", err);
+  }
 });
 
 // ============================================================
