@@ -3256,7 +3256,7 @@ button, select {
   justify-content: center;
   flex: 1 1 auto;
   min-width: 0;
-  max-width: 340px;
+  max-width: 560px;
   overflow: hidden;
   white-space: nowrap;
 }
@@ -3273,15 +3273,15 @@ button, select {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  gap: 4px;
   border: none;
   background: transparent;
-  color: rgba(26,93,128,0.5);
+  color: rgba(26,93,128,0.55);
   font-family: Candara, sans-serif;
-  font-size: 8.5px;
+  font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.2px;
-  padding: 0 2px;
+  letter-spacing: 0.25px;
+  padding: 0 4px;
   line-height: 1;
   cursor: pointer;
   white-space: nowrap;
@@ -3291,10 +3291,10 @@ button, select {
 .stage-chip::after {
   content: "";
   order: -1;
-  width: 9px;
-  height: 9px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
-  border: 2px solid rgba(33,143,201,0.35);
+  border: 2.5px solid rgba(33,143,201,0.35);
   background: #ffffff;
   box-sizing: border-box;
   transition: background 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease;
@@ -3304,11 +3304,11 @@ button, select {
 .stage-chip + .stage-chip::before {
   content: "";
   position: absolute;
-  top: 3.5px;
-  left: calc(-50% + 7px);
-  width: calc(100% - 14px);
-  height: 2px;
-  border-radius: 2px;
+  top: 5.5px;
+  left: calc(-50% + 10px);
+  width: calc(100% - 20px);
+  height: 3px;
+  border-radius: 3px;
   background: rgba(33,143,201,0.18);
   transition: background 0.45s ease;
 }
@@ -3325,7 +3325,7 @@ button, select {
 }
 
 .stage-chip.active::after {
-  box-shadow: 0 0 0 3px rgba(33,143,201,0.22);
+  box-shadow: 0 0 0 4px rgba(33,143,201,0.22);
 }
 
 /* Fill the connector leading into any reached stage */
@@ -3344,7 +3344,26 @@ button, select {
     max-width: none;
     order: 99;
     justify-content: center;
-    padding-top: 2px;
+    padding-top: 4px;
+  }
+
+  .stage-chip {
+    font-size: 9.5px;
+    padding: 0 1px;
+    min-width: 0;
+  }
+
+  .stage-chip::after {
+    width: 12px;
+    height: 12px;
+    border-width: 2px;
+  }
+
+  .stage-chip + .stage-chip::before {
+    top: 4.5px;
+    left: calc(-50% + 9px);
+    width: calc(100% - 18px);
+    height: 2.5px;
   }
 }
 
