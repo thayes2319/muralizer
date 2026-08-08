@@ -3004,6 +3004,29 @@ button, select {
   margin-bottom:10px;
 }
 
+#saveSceneBtn {
+  border: 1px solid rgba(33,143,201,0.35);
+  background: rgba(33,143,201,0.12);
+  color: #136f9f;
+  font-family: Candara, sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  border-radius: 999px;
+  padding: 6px 14px;
+  cursor: pointer;
+}
+
+#saveSceneBtn:hover {
+  background: rgba(33,143,201,0.2);
+  border-color: rgba(33,143,201,0.55);
+}
+
+.saved-scenes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
 .saved-row {
   display:flex !important;
   flex-direction:row !important;
@@ -3011,7 +3034,17 @@ button, select {
   align-items:center !important;
   width:100% !important;
   gap:8px;
-  margin-bottom:6px;
+  margin-bottom:0;
+  box-sizing: border-box;
+  padding: 2px 4px;
+  border-radius: 10px;
+  border: 1px solid rgba(33,143,201,0.22);
+  background: rgba(255,255,255,0.76);
+}
+
+.saved-row.selected {
+  border-color: rgba(33,143,201,0.55);
+  background: rgba(33,143,201,0.12);
 }
 
 .saved-row .load-btn {
@@ -3019,18 +3052,39 @@ button, select {
   width:auto !important;
   display:inline-block !important;
   padding:6px 8px !important;
+  text-align: left;
+  border: none;
+  background: transparent;
+  color: #274656;
+  font-family: Candara, sans-serif;
+  font-size: 13px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.saved-row .load-btn:hover {
+  background: rgba(33,143,201,0.08);
 }
 
 .saved-row .delete-btn {
   flex:0 0 auto !important;
-  min-width:40px !important;
-  height:30px !important;
-  padding:4px 8px !important;
-  background:#c62828 !important;
-  color:white !important;
-  border:none !important;
-  border-radius:4px !important;
+  min-width:22px !important;
+  width:22px;
+  height:22px !important;
+  padding:0 !important;
+  background:rgba(182,53,53,0.12) !important;
+  color:#8f2626 !important;
+  border:1px solid rgba(182,53,53,0.38) !important;
+  border-radius:999px !important;
+  font-size:11px;
+  font-weight:700;
+  line-height:1;
   cursor:pointer !important;
+}
+
+.saved-row .delete-btn:hover {
+  background:rgba(182,53,53,0.22) !important;
+  border-color:rgba(182,53,53,0.6) !important;
 }
 
 /* ============================================================
@@ -3072,12 +3126,37 @@ button, select {
   max-width: 260px;
   text-align: center;
   margin-bottom: 8px;
+  border: 1px solid rgba(33,143,201,0.35);
+  border-radius: 8px;
+  padding: 7px 9px;
+  font-size: 13px;
+  color: #23485e;
+  background: rgba(255,255,255,0.92);
 }
 
 .save-panel-label {
   margin-bottom:6px;
-  color:#218FC9;
-  font-weight:bold;
+  color:#1f648b;
+  font-weight:700;
+  font-size:12px;
+}
+
+.save-panel-actions button {
+  border: 1px solid rgba(33,143,201,0.35);
+  background: rgba(33,143,201,0.12);
+  color: #136f9f;
+  font-family: Candara, sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  border-radius: 999px;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.save-panel-actions #confirmSaveSceneButton {
+  background: rgba(19,111,159,0.9);
+  border-color: rgba(19,111,159,0.9);
+  color: #ffffff;
 }
 
 
@@ -5949,6 +6028,8 @@ select[multiple].collapsible-multi.expanded option:first-child {
     Terms & Privacy
   </div>
 
+  <div class="menu-item" onclick="toggleScenesPanelFromMenu()">Saved Scenes</div>
+
   <div id="menuViewSuggestions" class="menu-item hidden" onclick="openSuggestionsViewer()">
     Pro: Suggestions
   </div>
@@ -7725,6 +7806,23 @@ function deleteScene(name) {
 
   selectedSceneName = null;
   populateSavedScenes();
+}
+
+// Saved Scenes panel stays hidden until invoked from the ⋯ main menu.
+function toggleScenesPanelFromMenu() {
+  const panel = document.getElementById("scenesPanel");
+  if (!panel) return;
+
+  const isHidden = getComputedStyle(panel).display === "none";
+  if (isHidden) {
+    panel.style.display = "block";
+    panel.classList.remove("collapsed");
+    panel.classList.add("expanded", "user-expanded");
+    populateSavedScenes();
+    setTimeout(() => panel.scrollIntoView({ behavior: "smooth", block: "center" }), 60);
+  } else {
+    panel.style.display = "none";
+  }
 }
 
 
@@ -10520,6 +10618,62 @@ function removeConceptSessionCacheEntries(keys, warningLabel) {
   return writeConceptSessionCacheMap(sessionMap, warningLabel);
 }
 
+// ============================================================
+// SCENE-WITH-IMAGE STORE
+// Every generated/saved concept image keeps the full Saved
+// Scene settings that produced it, keyed by the same image key.
+// ============================================================
+const cpcConceptSceneCacheKey = "cpcConceptSceneByKey";
+
+function captureCurrentSceneData() {
+  let data = {};
+  try {
+    data = JSON.parse(document.getElementById("jsonOutput")?.textContent || "{}") || {};
+  } catch (err) {
+    data = {};
+  }
+  data.feel = (typeof selectedFeel !== "undefined" && selectedFeel) || null;
+  data.description = document.getElementById("imagePrompt")?.value || "";
+  data.primaryHue =
+    document.getElementById("primary-swatch-inline")?.style.backgroundColor || null;
+  data.secondaryHue =
+    document.getElementById("secondary-swatch-inline")?.style.backgroundColor || null;
+  return data;
+}
+
+function readConceptSceneMap() {
+  try {
+    const raw = localStorage.getItem(cpcConceptSceneCacheKey);
+    return raw ? (JSON.parse(raw) || {}) : {};
+  } catch (err) {
+    return {};
+  }
+}
+
+function mergeConceptSceneEntries(updates) {
+  try {
+    const map = readConceptSceneMap();
+    Object.entries(updates || {}).forEach(([key, value]) => {
+      if (key && value) map[key] = value;
+    });
+
+    // Bound growth: keep the most recently written entries.
+    const keys = Object.keys(map);
+    const MAX_SCENE_ENTRIES = 80;
+    if (keys.length > MAX_SCENE_ENTRIES) {
+      keys.slice(0, keys.length - MAX_SCENE_ENTRIES).forEach((k) => delete map[k]);
+    }
+
+    localStorage.setItem(cpcConceptSceneCacheKey, JSON.stringify(map));
+  } catch (err) {
+    console.warn("Scene-with-image persistence skipped:", err);
+  }
+}
+
+function getConceptSceneForKey(key) {
+  return key ? (readConceptSceneMap()[key] || null) : null;
+}
+
 function resolveBackendImageUrl(imageUrl) {
   if (!imageUrl) return "";
   if (/^https?:\/\//i.test(imageUrl) || imageUrl.startsWith("data:")) return imageUrl;
@@ -10695,7 +10849,8 @@ function persistGeneratedConceptImage(imgBase64) {
     aspectRatio: document.getElementById("aspectRatioSelect")?.value || null,
     model: document.getElementById("imageModelSelector")?.value || null,
     prompt: document.getElementById("imagePrompt")?.value || "",
-    imageKey: `cpc/latest/${Date.now()}`
+    imageKey: `cpc/latest/${Date.now()}`,
+    scene: captureCurrentSceneData()
   };
 
   try {
@@ -10716,6 +10871,11 @@ function persistGeneratedConceptImage(imgBase64) {
     [buildConceptImageKey(activeContext, activeConceptName, "draft")]: imageDataUrl,
     [buildConceptImageKey(activeContext, "_projectDraft", "draft")]: imageDataUrl
   }, "Session concept image cache skipped:");
+
+  mergeConceptSceneEntries({
+    [buildConceptImageKey(activeContext, activeConceptName, "draft")]: record.scene,
+    [buildConceptImageKey(activeContext, "_projectDraft", "draft")]: record.scene
+  });
 
   if (window.SceniqueBackend?.queueConceptImage) {
     window.SceniqueBackend.queueConceptImage({
@@ -12064,19 +12224,16 @@ document.addEventListener("DOMContentLoaded", () => {
     cancelSaveBtn.addEventListener("click", hideSavePanel);
   }
 
+  // Save Scene is available outside pro mode now (panel invoked from the ⋯ menu).
+  if (saveSceneBtn) {
+    saveSceneBtn.addEventListener("click", () => {
+      showSavePanel(generateSceneName(captureCurrentSceneData()));
+    });
+  }
+
   if (confirmSaveBtn) {
     confirmSaveBtn.addEventListener("click", () => {
-      const raw = document.getElementById("jsonOutput").textContent;
-      const data = JSON.parse(raw || "{}");
-
-      data.feel = selectedFeel || null;
-      data.description = document.getElementById("imagePrompt").value || "";
-
-      data.primaryHue =
-        document.getElementById("primary-swatch-inline")?.style.backgroundColor || null;
-
-      data.secondaryHue =
-        document.getElementById("secondary-swatch-inline")?.style.backgroundColor || null;
+      const data = captureCurrentSceneData();
 
       const name = saveNameInput.value.trim() || generateSceneName(data);
 
@@ -12157,30 +12314,11 @@ function unlockPro() {
   const wrapper = document.getElementById("imageWrapper");
   if (wrapper) wrapper.classList.remove("has-image");
 
-  // ⭐ Reveal Saved Scenes panel
-  const scenesPanel = document.getElementById("scenesPanel");
-  if (scenesPanel) scenesPanel.style.display = "block";
+  // Saved Scenes is no longer pro-gated — it lives in the ⋯ menu for everyone.
 
   // ⭐ Reveal Mural Description panel (contains jsonOutput)
   const descPanel = document.querySelector(".mzr-panel.mural-description");
   if (descPanel) descPanel.style.display = "block";
-
-  // ⭐ REBIND Save Scene button AFTER panels are visible
-  const saveSceneBtn = document.getElementById("saveSceneBtn");
-  if (saveSceneBtn) {
-    saveSceneBtn.onclick = () => {
-      const jsonEl = document.getElementById("jsonOutput");
-      if (!jsonEl) return;
-
-      const raw = jsonEl.textContent || "{}";
-      const data = JSON.parse(raw);
-
-      if (typeof generateSceneName === "function" &&
-          typeof showSavePanel === "function") {
-        showSavePanel(generateSceneName(data));
-      }
-    };
-  }
 }
 
 function lockPro() {
@@ -12194,9 +12332,6 @@ function lockPro() {
 
   const modelSel = document.getElementById("modelSelectorContainer");
   if (modelSel) modelSel.style.display = "none";
-
-  const scenesPanel = document.getElementById("scenesPanel");
-  if (scenesPanel) scenesPanel.style.display = "none";
 
   const descPanel = document.querySelector(".mzr-panel.mural-description");
   if (descPanel) descPanel.style.display = "none";
@@ -15978,6 +16113,14 @@ document.addEventListener("DOMContentLoaded", () => {
     const savedKey = buildConceptImageKey(ctx, savedConceptName, "saved");
     cpcRuntimeImageStore[savedKey] = imageSrc;
 
+    // Carry the scene settings that produced this image onto the saved slot.
+    const savedScene =
+      getConceptSceneForKey(buildConceptImageKey(ctx, currentConceptName, "draft")) ||
+      getConceptSceneForKey(buildConceptImageKey(ctx, "_projectDraft", "draft"));
+    if (savedScene) {
+      mergeConceptSceneEntries({ [savedKey]: savedScene });
+    }
+
     mergeConceptSessionCacheEntries({
       [savedKey]: imageSrc
     }, "Unable to persist saved concept image in session cache:");
@@ -16006,6 +16149,7 @@ document.addEventListener("DOMContentLoaded", () => {
         imageKey: savedKey,
         saveAction: choice,
         savedConcept: true,
+        scene: savedScene || null,
         imageDataUrl: imageSrc,
         imageBase64
       });
