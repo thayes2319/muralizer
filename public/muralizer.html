@@ -3225,10 +3225,10 @@ button, select {
 .palette-strip.mini {
   gap: 4px;
   margin: 0 auto 4px;
-  background: #ffffff;
-  border-radius: 6px;
-  padding: 2px 5px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+  background: transparent;
+  border-radius: 0;
+  padding: 0;
+  box-shadow: none;
 }
 
 .palette-strip.mini .palette-swatch {
@@ -3256,7 +3256,8 @@ button, select {
   justify-content: center;
   flex: 1 1 auto;
   min-width: 0;
-  max-width: 560px;
+  max-width: 600px;
+  margin-top: 14px;
   overflow: hidden;
   white-space: nowrap;
 }
@@ -3273,12 +3274,12 @@ button, select {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
   border: none;
   background: transparent;
   color: rgba(26,93,128,0.55);
   font-family: Candara, sans-serif;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.25px;
   padding: 0 4px;
@@ -3291,10 +3292,10 @@ button, select {
 .stage-chip::after {
   content: "";
   order: -1;
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
-  border: 2.5px solid rgba(33,143,201,0.35);
+  border: 3px solid rgba(33,143,201,0.35);
   background: #ffffff;
   box-sizing: border-box;
   transition: background 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease;
@@ -3304,9 +3305,9 @@ button, select {
 .stage-chip + .stage-chip::before {
   content: "";
   position: absolute;
-  top: 5.5px;
-  left: calc(-50% + 10px);
-  width: calc(100% - 20px);
+  top: 6.5px;
+  left: calc(-50% + 11px);
+  width: calc(100% - 22px);
   height: 3px;
   border-radius: 3px;
   background: rgba(33,143,201,0.18);
@@ -3342,6 +3343,7 @@ button, select {
   .concept-stage-ribbon {
     flex: 0 0 100%;
     max-width: none;
+    margin-top: 0;
     order: 99;
     justify-content: center;
     padding-top: 4px;
@@ -10959,9 +10961,18 @@ function getConceptSceneForKey(key) {
 // ============================================================
 const palettePromiseCache = new Map();
 
+function buildPaletteCacheId(src) {
+  if (src.length <= 256) return src;
+  // Sample characters across the whole string so equal-length data URLs don't collide.
+  let sampled = "";
+  const step = Math.floor(src.length / 48);
+  for (let i = 0; i < src.length; i += step) sampled += src[i];
+  return `${src.slice(0, 64)}|${sampled}|${src.length}`;
+}
+
 function extractPaletteFromSrc(src, count = 5) {
   if (!src) return Promise.resolve([]);
-  const cacheId = src.length > 256 ? `${src.slice(0, 128)}|${src.length}` : src;
+  const cacheId = buildPaletteCacheId(src);
   if (palettePromiseCache.has(cacheId)) return palettePromiseCache.get(cacheId);
 
   const promise = new Promise((resolve) => {
@@ -11025,6 +11036,11 @@ function extractPaletteFromSrc(src, count = 5) {
   });
 
   palettePromiseCache.set(cacheId, promise);
+  // Never cache failures: a thumb that wasn't hydrated (or 404'd) on first
+  // attempt must be retried on the next render instead of staying blank.
+  promise.then((colors) => {
+    if (!colors.length) palettePromiseCache.delete(cacheId);
+  });
   return promise;
 }
 
@@ -16057,6 +16073,11 @@ document.addEventListener("DOMContentLoaded", () => {
       strip.style.display = "none";
       card.insertBefore(strip, viewport);
       renderPaletteStrip(strip, thumb.getAttribute("src"), true);
+      // If the thumb finishes loading after the first attempt (late backend
+      // hydration), retry so the strip isn't left blank.
+      thumb.addEventListener("load", () => {
+        if (!strip.childElementCount) renderPaletteStrip(strip, thumb.currentSrc || thumb.src, true);
+      });
     });
 
     const initCompareThumbPanning = (scopeEl) => {
