@@ -3161,6 +3161,142 @@ button, select {
 
 
 /* ============================================================
+   PALETTE STRIP — dominant colors for paint transfer
+============================================================ */
+
+.palette-strip {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 0 auto 8px;
+}
+
+.palette-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  border: none;
+  background: transparent;
+  padding: 2px 4px;
+  cursor: pointer;
+  border-radius: 8px;
+}
+
+.palette-chip:hover {
+  background: rgba(33,143,201,0.08);
+}
+
+.palette-chip.copied .palette-hex::after {
+  content: " \2713";
+  color: #2e8b57;
+}
+
+.palette-swatch {
+  width: 34px;
+  height: 22px;
+  border-radius: 6px;
+  border: 1px solid rgba(0,0,0,0.18);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.14);
+}
+
+.palette-hex {
+  font-family: Candara, sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  color: #274656;
+  letter-spacing: 0.2px;
+}
+
+.palette-rgb {
+  font-family: Candara, sans-serif;
+  font-size: 9px;
+  color: rgba(39,70,86,0.75);
+}
+
+.palette-strip.mini {
+  gap: 4px;
+  margin: 0 0 4px;
+}
+
+.palette-strip.mini .palette-swatch {
+  width: 18px;
+  height: 12px;
+  border-radius: 4px;
+}
+
+.palette-strip.mini .palette-hex {
+  font-size: 8px;
+}
+
+#imageWrapper.compare-mode .palette-strip {
+  display: none !important;
+}
+
+
+/* ============================================================
+   CONCEPT STAGE RIBBON (in eyebrow, between theme control and ⋯)
+============================================================ */
+
+.concept-stage-ribbon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.concept-stage-ribbon.idle {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.stage-chip {
+  border: 1px solid rgba(33,143,201,0.3);
+  background: rgba(255,255,255,0.6);
+  color: #1a5d80;
+  font-family: Candara, sans-serif;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  border-radius: 999px;
+  padding: 2px 7px;
+  line-height: 1;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.stage-chip.done {
+  background: rgba(33,143,201,0.16);
+  border-color: rgba(33,143,201,0.45);
+}
+
+.stage-chip.active {
+  background: rgba(19,111,159,0.9);
+  border-color: rgba(19,111,159,0.9);
+  color: #ffffff;
+}
+
+@media (max-width: 640px) {
+  .bg-eyebrow {
+    flex-wrap: wrap;
+  }
+
+  .concept-stage-ribbon {
+    flex: 0 0 100%;
+    order: 99;
+    justify-content: center;
+    padding-top: 2px;
+  }
+}
+
+
+/* ============================================================
    IMAGE + WATERMARK + OUTPUT GRID
 ============================================================ */
 
@@ -6015,6 +6151,15 @@ select[multiple].collapsible-multi.expanded option:first-child {
         </div>
       </div>
 
+      <!-- CENTER: CONCEPT STAGE RIBBON (quiet pipeline status) -->
+      <div id="conceptStageRibbon" class="concept-stage-ribbon" aria-label="Concept pipeline stage">
+        <button class="stage-chip" type="button" data-stage="Concept">Concept</button>
+        <button class="stage-chip" type="button" data-stage="Measured">Measured</button>
+        <button class="stage-chip" type="button" data-stage="Proofed">Proofed</button>
+        <button class="stage-chip" type="button" data-stage="Printing">Printing</button>
+        <button class="stage-chip" type="button" data-stage="Installed">Installed</button>
+      </div>
+
       <!-- RIGHT: ⋯ MAIN MENU -->
       <div class="menu-wrapper">
         <button id="menuButton" class="menu-button">⋯</button>
@@ -7008,6 +7153,7 @@ If you’re exploring a new direction, try adjusting just 1-2 elements at a time
       <div id="cpcCompareTray" class="cpc-compare-tray" aria-label="Concept compare tray"></div>
 
       <div id="imageWrapper" class="mural-wrapper">
+        <div id="muralPaletteStrip" class="palette-strip" style="display:none;" aria-label="Dominant mural colors for paint transfer"></div>
         <img id="muralImage">
         <div class="mural-watermark">Scénique Murals</div>
       </div>
@@ -10674,6 +10820,200 @@ function getConceptSceneForKey(key) {
   return key ? (readConceptSceneMap()[key] || null) : null;
 }
 
+// ============================================================
+// PALETTE EXTRACTION — dominant colors with hex + RGB
+// for paint transfer (main image strip + comparator minis)
+// ============================================================
+const palettePromiseCache = new Map();
+
+function extractPaletteFromSrc(src, count = 5) {
+  if (!src) return Promise.resolve([]);
+  const cacheId = src.length > 256 ? `${src.slice(0, 128)}|${src.length}` : src;
+  if (palettePromiseCache.has(cacheId)) return palettePromiseCache.get(cacheId);
+
+  const promise = new Promise((resolve) => {
+    const img = new Image();
+    if (!src.startsWith("data:")) img.crossOrigin = "anonymous";
+    img.decoding = "async";
+    img.onload = () => {
+      try {
+        const size = 72;
+        const canvas = document.createElement("canvas");
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext("2d", { willReadFrequently: true });
+        ctx.drawImage(img, 0, 0, size, size);
+        const { data } = ctx.getImageData(0, 0, size, size);
+
+        const buckets = new Map();
+        for (let i = 0; i < data.length; i += 4) {
+          if (data[i + 3] < 200) continue;
+          const r = data[i], g = data[i + 1], b = data[i + 2];
+          const key = `${r >> 4}_${g >> 4}_${b >> 4}`;
+          const bucket = buckets.get(key) || { count: 0, r: 0, g: 0, b: 0 };
+          bucket.count += 1;
+          bucket.r += r; bucket.g += g; bucket.b += b;
+          buckets.set(key, bucket);
+        }
+
+        const ranked = Array.from(buckets.values())
+          .map((b) => ({
+            count: b.count,
+            rgb: [Math.round(b.r / b.count), Math.round(b.g / b.count), Math.round(b.b / b.count)]
+          }))
+          .sort((a, b) => b.count - a.count);
+
+        // Pick top colors, skipping near-duplicates so the strip reads as a palette.
+        const picked = [];
+        const minDist = 40;
+        for (const cand of ranked) {
+          if (picked.length >= count) break;
+          const tooClose = picked.some((p) => {
+            const dr = p.rgb[0] - cand.rgb[0];
+            const dg = p.rgb[1] - cand.rgb[1];
+            const db = p.rgb[2] - cand.rgb[2];
+            return Math.sqrt(dr * dr + dg * dg + db * db) < minDist;
+          });
+          if (!tooClose) picked.push(cand);
+        }
+
+        resolve(picked.map((p) => {
+          const [r, g, b] = p.rgb;
+          const hex = `#${[r, g, b].map((v) => v.toString(16).padStart(2, "0")).join("").toUpperCase()}`;
+          return { hex, rgb: p.rgb };
+        }));
+      } catch (err) {
+        // Canvas tainted (remote image without CORS) or read failure — skip quietly.
+        resolve([]);
+      }
+    };
+    img.onerror = () => resolve([]);
+    img.src = src;
+  });
+
+  palettePromiseCache.set(cacheId, promise);
+  return promise;
+}
+
+async function renderPaletteStrip(container, src, mini) {
+  if (!container) return;
+  const colors = await extractPaletteFromSrc(src, 5);
+  if (!colors.length) {
+    container.innerHTML = "";
+    container.style.display = "none";
+    return;
+  }
+  container.style.display = "";
+  container.innerHTML = colors.map(({ hex, rgb }) => `
+    <button class="palette-chip" type="button" data-hex="${hex}" title="Click to copy ${hex}">
+      <span class="palette-swatch" style="background:${hex}"></span>
+      <span class="palette-hex">${hex}</span>
+      ${mini ? "" : `<span class="palette-rgb">${rgb.join(" \u00b7 ")}</span>`}
+    </button>
+  `).join("");
+}
+
+// Copy hex to clipboard on chip click (delegated)
+document.addEventListener("click", (e) => {
+  const chip = e.target.closest(".palette-chip");
+  if (!chip) return;
+  const hex = chip.dataset.hex;
+  if (!hex || !navigator.clipboard) return;
+  navigator.clipboard.writeText(hex).then(() => {
+    chip.classList.add("copied");
+    setTimeout(() => chip.classList.remove("copied"), 900);
+  }).catch(() => {});
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+  const muralImage = document.getElementById("muralImage");
+  const strip = document.getElementById("muralPaletteStrip");
+  if (!muralImage || !strip) return;
+  muralImage.addEventListener("load", () => renderPaletteStrip(strip, muralImage.src, false));
+  if (muralImage.complete && muralImage.src) renderPaletteStrip(strip, muralImage.src, false);
+});
+
+// ============================================================
+// CONCEPT STAGE RIBBON
+// Concept → Measured → Proofed → Printing → Installed
+// Quiet placement in the eyebrow; stage stored per concept key.
+// ============================================================
+const cpcConceptStageStoreKey = "cpcConceptStageByKey";
+const CONCEPT_STAGE_ORDER = ["Concept", "Measured", "Proofed", "Printing", "Installed"];
+let conceptStageActiveKey = "";
+
+function readConceptStageMap() {
+  try {
+    const raw = localStorage.getItem(cpcConceptStageStoreKey);
+    return raw ? (JSON.parse(raw) || {}) : {};
+  } catch (err) {
+    return {};
+  }
+}
+
+function getActiveCpcContextForStage() {
+  try {
+    const raw = localStorage.getItem("muralizerCpcState");
+    const state = raw ? JSON.parse(raw) : null;
+    const contexts = state && Array.isArray(state.contexts) ? state.contexts : [];
+    const ctx = contexts[Number(state && state.activeIndex)] || contexts[0] || null;
+    if (!ctx) return null;
+    return { context: ctx, conceptName: getActiveConceptName(ctx) };
+  } catch (err) {
+    return null;
+  }
+}
+
+function updateConceptStageRibbon(context, conceptName) {
+  const ribbon = document.getElementById("conceptStageRibbon");
+  if (!ribbon) return;
+
+  let ctx = context || null;
+  let name = conceptName || null;
+  if (!ctx) {
+    const active = getActiveCpcContextForStage();
+    if (active) { ctx = active.context; name = active.conceptName; }
+  }
+
+  if (!ctx) {
+    conceptStageActiveKey = "";
+    ribbon.classList.add("idle");
+    ribbon.querySelectorAll(".stage-chip").forEach((chip) => chip.classList.remove("active", "done"));
+    return;
+  }
+
+  ribbon.classList.remove("idle");
+  conceptStageActiveKey = `${buildCpcContextKey(ctx)}::${String(name || "c1").toLowerCase()}`;
+  const stage = readConceptStageMap()[conceptStageActiveKey] || "Concept";
+  const stageIdx = Math.max(0, CONCEPT_STAGE_ORDER.indexOf(stage));
+
+  ribbon.querySelectorAll(".stage-chip").forEach((chip) => {
+    const idx = CONCEPT_STAGE_ORDER.indexOf(chip.dataset.stage);
+    chip.classList.toggle("active", idx === stageIdx);
+    chip.classList.toggle("done", idx > -1 && idx < stageIdx);
+  });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const ribbon = document.getElementById("conceptStageRibbon");
+  if (!ribbon) return;
+
+  ribbon.addEventListener("click", (e) => {
+    const chip = e.target.closest(".stage-chip");
+    if (!chip || !conceptStageActiveKey) return;
+    try {
+      const map = readConceptStageMap();
+      map[conceptStageActiveKey] = chip.dataset.stage;
+      localStorage.setItem(cpcConceptStageStoreKey, JSON.stringify(map));
+    } catch (err) {
+      console.warn("Stage persistence skipped:", err);
+    }
+    updateConceptStageRibbon();
+  });
+
+  updateConceptStageRibbon();
+});
+
 function resolveBackendImageUrl(imageUrl) {
   if (!imageUrl) return "";
   if (/^https?:\/\//i.test(imageUrl) || imageUrl.startsWith("data:")) return imageUrl;
@@ -10807,6 +11147,8 @@ function hasSavedConceptImage(context, conceptName) {
 function applyConceptImageForContext(context, conceptName) {
   const muralImage = document.getElementById("muralImage");
   if (!muralImage) return;
+
+  updateConceptStageRibbon(context, conceptName);
 
   const imageDataUrl = getConceptImageSrc(context, conceptName);
 
@@ -15503,6 +15845,18 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     compareTrayEl.innerHTML = slotHtml.join("");
+
+    // Mini palette strips above each comparator card (hex only, for paint transfer).
+    Array.from(compareTrayEl.querySelectorAll(".cpc-compare-card")).forEach((card) => {
+      const thumb = card.querySelector(".cpc-compare-thumb");
+      const viewport = card.querySelector(".cpc-compare-thumb-viewport");
+      if (!thumb || !thumb.getAttribute("src") || !viewport) return;
+      const strip = document.createElement("div");
+      strip.className = "palette-strip mini";
+      strip.style.display = "none";
+      card.insertBefore(strip, viewport);
+      renderPaletteStrip(strip, thumb.getAttribute("src"), true);
+    });
 
     const initCompareThumbPanning = (scopeEl) => {
       Array.from(scopeEl.querySelectorAll(".cpc-compare-thumb-viewport")).forEach((viewport) => {
