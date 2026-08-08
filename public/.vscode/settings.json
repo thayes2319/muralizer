@@ -1,0 +1,9 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "/^Add-Type -AssemblyName System\\.IO\\.Compression\\.FileSystem; \\$path='C:\\\\muralizer-app\\\\android\\\\app\\\\release\\\\app-release\\.aab'; \\$zip=\\[System\\.IO\\.Compression\\.ZipFile\\]::OpenRead\\(\\$path\\); \\$zip\\.Entries \\| Sort-Object Length -Descending \\| Select-Object -First 60 @\\{Name='MB';Expression=\\{\\[math\\]::Round\\(\\$_\\.Length/1MB,2\\)\\}\\}, @\\{Name='CompressedMB';Expression=\\{\\[math\\]::Round\\(\\$_\\.CompressedLength/1MB,2\\)\\}\\}, FullName \\| Format-Table -AutoSize; \\$zip\\.Dispose\\(\\)$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "ForEach-Object": true
+    }
+}

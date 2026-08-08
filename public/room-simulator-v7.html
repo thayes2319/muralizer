@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="shortcut icon" href="../../favicon.ico">
+
+  <!-- OLD COLOR WHEEL FOR APP <script src="libs/iro.min.js"></script> -->
+  <!-- OLD COLOR WHEEL FOR WEB  <script src="https://cdn.jsdelivr.net/npm/@jaames/iro@5"></script> -->
+
+  <meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+  <title>Scenique – Room Simulator</title>
+
+  <link rel="manifest" href="muralizer-manifest-v2.json">
+  <meta name="theme-color" content="#111111">
+  <link rel="apple-touch-icon" href="icons/icon-512-scenique.png">
+
+  <!-- PWA NAME OVERRIDES -->
+  <meta name="application-name" content="Scénique">
+  <meta name="apple-mobile-web-app-title" content="Scénique">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+
+<style>
+
+  /* Override the main app’s side panel width ONLY for Room Simulator */
+  .side-panel {
+    width: 95vw !important;
+    max-width: 95vw !important;
+    right: -95vw !important;
+  }
+
+  .side-panel.open {
+    right: 0 !important;
+  }
+
+
+
+/* ============================================================
+   GLOBAL OVERRIDES
+   ============================================================ */
+
+html, body {
+  background: #ffffff !important;
+  background-image: none !important;
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  padding-left: 6px;
+  padding-right: 6px;
+}
+
+#room-simulator {
+  width: 100%;
+  max-width: 100%;
+  background: #ffffff;
+}
+
+/* iOS background override */
+@supports (-webkit-touch-callout: none) {
+  body {
+    background: none !important;
+  }
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background-image: var(--ios-bg);
+    background-size: cover;
+    background-position: center top;
+    background-repeat: no-repeat;
+    will-change: transform;
+  }
+}
+
+/* ============================================================
+   TYPOGRAPHY & HEADINGS
+   ============================================================ */
+
+h2 {
+  margin-bottom: 10px;
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.units {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.instruction-image img {
+  width: 100%;
+  max-width: 700px;
+  display: block;
+  margin: 0 auto 5px;
+}
+
+/* ============================================================
+   TOP BAR
+   ============================================================ */
+
+.sidepanel-header {
+  background: #ffffff;
+  border-bottom: 1px solid #ddd;
+  padding: 12px 16px;
+  font-size: 1.2rem;
+  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sidepanel-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+/* ============================================================
+   WALL BLOCKS
+   ============================================================ */
+
+#walls-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.wall-block {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 14px;
+  background: #fafafa;
+}
+
+.wall-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.wall-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.wall-fields {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.wall-fields label {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.wall-fields input {
+  padding: 6px;
+  border: 1px solid #bbb;
+  border-radius: 4px;
+  min-width: 0;
+}
+
+/* ============================================================
+   FEATURE LIST & FEATURE ROWS
+   ============================================================ */
+
+.feature-list {
+  margin-top: 12px;
+  padding-left: 10px;
+  border-left: 3px solid #ddd;
+}
+
+.feature-row {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+/* NEW: Make feature fields behave exactly like wall fields */
+.feature-row label {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.85rem;
+  min-width: 0;
+}
+
+.feature-row label input,
+.feature-row label select {
+  padding: 6px;
+  border: 1px solid #bbb;
+  border-radius: 4px;
+  width: 100%;
+  min-width: 0;
+}
+
+/* ============================================================
+   BUTTONS
+   ============================================================ */
+
+.add-feature-btn {
+  margin-top: 8px;
+  padding: 6px 10px;
+  font-size: 0.9rem;
+  border: none;
+  background: #e8e8e8;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.primary-btn {
+  margin-top: 20px;
+  padding: 10px 16px;
+  background: #0078ff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.delete-wall-btn,
+.delete-feature-btn {
+  background: #b30000;
+  color: white;
+  border: none;
+  border-radius: 4px;
+}
+
+.delete-wall-btn {
+  padding: 4px 8px;
+  margin-left: 10px;
+}
+
+.delete-feature-btn {
+  padding: 2px 6px;
+  margin-left: 6px;
+}
+
+/* ============================================================
+   SUMMARY
+   ============================================================ */
+
+#summary-row {
+  margin-top: 20px;
+  padding-top: 12px;
+  border-top: 1px solid #ccc;
+  display: flex;
+  gap: 20px;
+}
+
+.summary-item label {
+  font-weight: 600;
+}
+
+/* ============================================================
+   FEATURE INSTRUCTIONS BLOCK
+   ============================================================ */
+
+.feature-instructions {
+  background: #fff8c6;
+  border-left: 4px solid #e0c200;
+  padding: 8px 10px;
+  margin-bottom: 10px;
+  font-size: 0.85rem;
+  line-height: 1.3;
+  border-radius: 4px;
+}
+
+.feature-instructions div {
+  margin-bottom: 4px;
+}
+
+.feature-instructions div:last-child {
+  margin-bottom: 0;
+}
+
+
+
+/* Fullscreen modal for zooming the instruction image */
+.image-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 999999;
+  touch-action: pinch-zoom; /* pinch zoom works inside modal */
+}
+
+.image-modal img {
+  max-width: 100%;
+  max-height: 100%;
+}
+
+
+/* ============================================================
+   MOBILE COMPRESSION
+   ============================================================ */
+
+@media (max-width: 600px) {
+
+  /* FEATURE ROWS — tighter grid + smaller gaps */
+  .feature-row {
+    grid-template-columns: repeat(6, 1fr); /* keep 6 columns but shrink them */
+    gap: 2px;
+  }
+
+  .feature-row label {
+    font-size: 0.7rem;
+    min-width: 0; /* REQUIRED for shrinking */
+  }
+
+  .feature-row label input,
+  .feature-row label select {
+    padding: 2px 3px;
+    font-size: 0.75rem;
+    border-radius: 2px;
+    min-width: 0; /* REQUIRED for shrinking */
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* WALL FIELDS — tighter grid + smaller gaps */
+  .wall-fields {
+    grid-template-columns: repeat(3, 1fr); /* 3 equal columns */
+    gap: 2px; /* was 4px — tighter now */
+  }
+
+  .wall-fields label {
+    font-size: 0.7rem;
+    min-width: 0;
+  }
+
+  .wall-fields input {
+    padding: 2px 3px;
+    font-size: 0.75rem;
+    border-radius: 2px;
+    min-width: 0; /* REQUIRED for shrinking */
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+/* ============================================================
+   INSTRUCTION IMAGE ZOOM MODAL
+   ============================================================ */
+
+.image-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 999999;
+  overflow: hidden;
+}
+
+/* Zoom container (transformable) */
+#zoom-container {
+  touch-action: none; /* required for custom pinch + pan */
+  transform-origin: center center;
+}
+
+/* Image inside modal */
+#zoom-container img {
+  max-width: 100%;
+  max-height: 100%;
+  user-select: none;
+  pointer-events: none; /* gestures handled by container */
+}
+
+
+
+
+
+  </style>
+
+</head>
+
+<body>
+
+  <!-- Top Bar for Side Panel -->
+  <div class="sidepanel-header"></div>
+
+
+  <div id="room-simulator">
+
+    <!-- Instruction Diagram -->
+    <section id="instruction-block">
+      <h2>How to Measure a Wall</h2>
+      <div class="instruction-image">
+        <img id="instruction-img" src="roomsim.png" alt="Wall measurement diagram">
+      </div>
+    </section>
+
+    <!-- Wall List -->
+    <section id="walls-section">
+      <h2>Wall Data Input <span class="units">(Inches)</span></h2>
+
+
+
+      <div id="walls-container">
+        <!-- JS will inject wall blocks here -->
+      </div>
+
+     <button id="add-wall-btn" class="primary-btn" onclick="addWall()">
+  + Add Wall
+</button>
+
+
+<!-- Summary -->
+<div id="summary-row">
+  <div class="summary-item">
+    <label>Total Walls:</label>
+    <span id="summary-wall-count">0</span>
+  </div>
+
+  <div class="summary-item">
+    <label>Total Perimeter:</label>
+    <span id="summary-perimeter">0 in</span>
+  </div>
+</div>
+
+<!-- Submit Button -->
+<button id="submit-room-data" class="primary-btn" onclick="submitRoomData()">
+  Submit Room Data
+</button>
+
+
+
+<!-- Fullscreen Zoom Modal -->
+
+<div id="image-modal" class="image-modal">
+  <div id="zoom-container">
+    <img id="modal-img" src="roomsim.png" alt="Zoomed diagram">
+  </div>
+</div>
+
+
+<!-- JS MODULE (Option C will go here) -->
+
+  <script src="room-simulator-v7.js"></script>
+
+</style>
+
+</body>
+</html>

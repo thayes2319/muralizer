@@ -1,0 +1,1993 @@
+[
+  {
+    "id": "cpc_saved_1783897160902",
+    "createdAt": "2026-07-12T22:59:20.902Z",
+    "context": {
+      "client": "Client 4",
+      "project": "Project 1"
+    },
+    "concept": "c3",
+    "imageKey": "client 4|project 1::c3::saved",
+    "saveAction": "create",
+    "savedConcept": true,
+    "imageUrl": "/storage/concept-images/cpc_saved_1783897160902.png",
+    "imagePath": "concept-images\\cpc_saved_1783897160902.png",
+    "imageSizeBytes": 2338436
+  },
+  {
+    "id": "cpc_img_1783897151788",
+    "createdAt": "2026-07-12T22:59:11.788Z",
+    "context": {
+      "client": "Client 4",
+      "project": "Project 1",
+      "concepts": [
+        {
+          "name": "c1"
+        },
+        {
+          "name": "c2"
+        },
+        {
+          "name": "c3"
+        }
+      ],
+      "activeConceptIndex": 2
+    },
+    "concept": "c3",
+    "aspectRatio": "3:2",
+    "model": "sd3.5-large",
+    "prompt": "a wallpaper‑style hand‑painted Scenic mural in the Small Town Nostalgia sub‑scene, rendered in hand-painted oils.",
+    "imageKey": "cpc/latest/1783897151788",
+    "imageUrl": "/storage/concept-images/cpc_img_1783897151788.png",
+    "imagePath": "concept-images\\cpc_img_1783897151788.png",
+    "imageSizeBytes": 2338436
+  },
+  {
+    "id": "cpc_saved_1783897105890",
+    "createdAt": "2026-07-12T22:58:25.890Z",
+    "context": {
+      "client": "Client 4",
+      "project": "Project 1"
+    },
+    "concept": "c2",
+    "imageKey": "client 4|project 1::c2::saved",
+    "saveAction": "create",
+    "savedConcept": true,
+    "imageUrl": "/storage/concept-images/cpc_saved_1783897105890.png",
+    "imagePath": "concept-images\\cpc_saved_1783897105890.png",
+    "imageSizeBytes": 2246224
+  },
+  {
+    "id": "cpc_img_1783897093507",
+    "createdAt": "2026-07-12T22:58:13.507Z",
+    "context": {
+      "client": "Client 4",
+      "project": "Project 1",
+      "concepts": [
+        {
+          "name": "c1"
+        },
+        {
+          "name": "c2"
+        },
+        {
+          "name": "c3"
+        }
+      ],
+      "activeConceptIndex": 1
+    },
+    "concept": "c2",
+    "aspectRatio": "3:2",
+    "model": "sd3.5-large",
+    "prompt": "a wallpaper‑style hand‑painted Scenic mural in the Small Town Nostalgia sub‑scene, rendered in hand-painted oils.",
+    "imageKey": "cpc/latest/1783897093507",
+    "imageUrl": "/storage/concept-images/cpc_img_1783897093507.png",
+    "imagePath": "concept-images\\cpc_img_1783897093507.png",
+    "imageSizeBytes": 2246224
+  },
+  {
+    "id": "cpc_img_1783897076296",
+    "createdAt": "2026-07-12T22:57:56.296Z",
+    "context": {
+      "client": "Client 4",
+      "project": "Project 1",
+      "concepts": [
+        {
+          "name": "c1"
+        },
+        {
+          "name": "c2"
+        },
+        {
+          "name": "c3"
+        }
+      ],
+      "activeConceptIndex": 1
+    },
+    "concept": "c2",
+    "aspectRatio": "9:16",
+    "model": "sd3.5-large",
+    "prompt": "a wallpaper‑style hand‑painted Scenic mural in the Small Town Nostalgia sub‑scene, rendered in hand-painted oils.",
+    "imageKey": "cpc/latest/1783897076296",
+    "imageUrl": "/storage/concept-images/cpc_img_1783897076296.png",
+    "imagePath": "concept-images\\cpc_img_1783897076296.png",
+    "imageSizeBytes": 2391206
+  },
+  {
+    "id": "cpc_img_1783897060469",
+    "createdAt": "2026-07-12T22:57:40.469Z",
+    "context": {
+      "client": "Client 4",
+      "project": "Project 1",
+      "concepts": [
+        {
+          "name": "c1"
+        },
+        {
+          "name": "c2"
+        },
+        {
+          "name": "c3"
+        }
+      ],
+      "activeConceptIndex": 1
+    },
+    "concept": "c2",
+    "aspectRatio": "9:16",
+    "model": "sd3.5-large",
+    "prompt": "a wallpaper‑style hand‑painted Scenic mural in the Meadow Flatlands sub‑scene, rendered in hand-painted oils.",
+    "imageKey": "cpc/latest/1783897060469",
+    "imageUrl": "/storage/concept-images/cpc_img_1783897060469.png",
+    "imagePath": "concept-images\\cpc_img_1783897060469.png",
+    "imageSizeBytes": 2001068
+  },
+  {
+    "id": "cpc_saved_1783896991601",
+    "createdAt": "2026-07-12T22:56:31.601Z",
+    "context": {
+      "client": "Client 4",
+      "project": "Project 1"
+    },
+    "concept": "c2",
+    "imageKey": "client 4|project 1::c2::saved",
+    "saveAction": "create",
+    "savedConcept": true,
+    "imageUrl": "/storage/concept-images/cpc_saved_1783896991601.png",
+    "imagePath": "concept-images\\cpc_saved_1783896991601.png",
+    "imageSizeBytes": 2169841
+  },
+  {
+    "id": "cpc_img_1783896979579",
+    "createdAt": "2026-07-12T22:56:19.579Z",
+    "context": {
+      "client": "Client 4",
+      "project": "Project 1",
+      "concepts": [
+        {
+          "name": "c1"
+        },
+        {
+          "name": "c2"
+        },
+        {
+          "name": "c3"
+        }
+      ],
+      "activeConceptIndex": 1
+    },
+    "concept": "c2",
+    "aspectRatio": "3:2",
+    "model": "sd3.5-large",
+    "prompt": "a wallpaper‑style hand‑painted Scenic mural in the Small Town Nostalgia sub‑scene, rendered in dense pencil‑inspired sketchwork with heavier graphite pressure and more filled‑in shading.",
+    "imageKey": "cpc/latest/1783896979579",
+    "imageUrl": "/storage/concept-images/cpc_img_1783896979579.png",
+    "imagePath": "concept-images\\cpc_img_1783896979579.png",
+    "imageSizeBytes": 2169841
+  },
+  {
+    "id": "cpc_saved_1783896891019",
+    "createdAt": "2026-07-12T22:54:51.019Z",
+    "context": {
+      "client": "Client 4",
+      "project": "Project 1"
+    },
+    "concept": "c2",
+    "imageKey": "client 4|project 1::c2::saved",
+    "saveAction": "replace",
+    "savedConcept": true,
+    "imageUrl": "/storage/concept-images/cpc_saved_1783896891019.png",
+    "imagePath": "concept-images\\cpc_saved_1783896891019.png",
+    "imageSizeBytes": 2219210
+  },
+  {
+    "id": "cpc_img_1783896885278",
+    "createdAt": "2026-07-12T22:54:45.278Z",
+    "context": {
+      "client": "Client 4",
+      "project": "Project 1",
+      "concepts": [
+        {
+          "name": "c1"
+        },
+        {
+          "name": "c2"
+        },
+        {
+          "name": "c3"
+        }
+      ],
+      "activeConceptIndex": 1
+    },
+    "concept": "c2",
+    "aspectRatio": "9:16",
+    "model": "sd3.5-large",
+    "prompt": "a wallpaper‑style hand‑painted Scenic mural in the Small Town Nostalgia sub‑scene, rendered in dense pencil‑inspired sketchwork with heavier graphite pressure and more filled‑in shading.",
+    "imageKey": "cpc/latest/1783896885278",
+    "imageUrl": "/storage/concept-images/cpc_img_1783896885278.png",
+    "imagePath": "concept-images\\cpc_img_1783896885278.png",
+    "imageSizeBytes": 2219210
+  },
+  {
+    "id": "cpc_saved_1783896713758",
+    "createdAt": "2026-07-12T22:51:53.758Z",
+    "context": {
+      "client": "Client 4",
+      "project": "Project 1"
+    },
+    "concept": "c2",
+    "imageKey": "client 4|project 1::c2::saved",
+    "saveAction": "create",
+    "savedConcept": true,
+    "imageUrl": "/storage/concept-images/cpc_saved_1783896713758.png",
+    "imagePath": "concept-images\\cpc_saved_1783896713758.png",
+    "imageSizeBytes": 2010509
+  },
+  {
+    "id": "cpc_img_1783896698307",
+    "createdAt": "2026-07-12T22:51:38.307Z",
+    "context": {
+      "client": "Client 4",
+      "project": "Project 1",
+      "concepts": [
+        {
+          "name": "c1"
+        },
+        {
+          "name": "c2"
+        },
+        {
+          "name": "c3"
+        }
+      ],
+      "activeConceptIndex": 1
+    },
+    "concept": "c2",
+    "aspectRatio": "9:16",
+    "model": "sd3.5-large",
+    "prompt": "a wallpaper‑style hand‑painted Scenic mural in the Meadow Flatlands sub‑scene, rendered in hand-painted oils.",
+    "imageKey": "cpc/latest/1783896698307",
+    "imageUrl": "/storage/concept-images/cpc_img_1783896698307.png",
+    "imagePath": "concept-images\\cpc_img_1783896698307.png",
+    "imageSizeBytes": 2010509
+  },
+  {
+    "id": "cpc_img_1783896617896",
+    "createdAt": "2026-07-12T22:50:17.896Z",
+    "context": {
+      "client": "Client 4",
+      "project": "Project 1",
+      "concepts": [
+        {
+          "name": "c1"
+        },
+        {
+          "name": "c2"
+        },
+        {
+          "name": "c3"
+        }
+      ],
+      "activeConceptIndex": 1
+    },
+    "concept": "c2",
+    "aspectRatio": "3:2",
+    "model": "sd3.5-large",
+    "prompt": "a wallpaper‑style hand‑painted Scenic mural in the Small Town Nostalgia sub‑scene, rendered in light pencil‑inspired sketchwork with delicate graphite linework and minimal pigment fill, with cat.",
+    "imageKey": "cpc/latest/1783896617896",
+    "imageUrl": "/storage/concept-images/cpc_img_1783896617896.png",
+    "imagePath": "concept-images\\cpc_img_1783896617896.png",
+    "imageSizeBytes": 2038747
+  },
+  {
+    "id": "cpc_saved_1783896601047",
+    "createdAt": "2026-07-12T22:50:01.047Z",
+    "context": {
+      "client": "Client 4",
+      "project": "Project 1"
+    },
+    "concept": "c2",
+    "imageKey": "client 4|project 1::c2::saved",
+    "saveAction": "create",
+    "savedConcept": true,
+    "imageUrl": "/storage/concept-images/cpc_saved_1783896601047.png",
+    "imagePath": "concept-images\\cpc_saved_1783896601047.png",
+    "imageSizeBytes": 2004293
+  },
+  {
+    "id": "cpc_img_1783896590765",
+    "createdAt": "2026-07-12T22:49:50.765Z",
+    "context": {
+      "client": "Client 4",
+      "project": "Project 1",
+      "concepts": [
+        {
+          "name": "c1"
+        },
+        {
+          "name": "c2"
+        }
+      ],
+      "activeConceptIndex": 1
+    },
+    "concept": "c2",
+    "aspectRatio": "3:2",
+    "model": "sd3.5-large",
+    "prompt": "a wallpaper‑style hand‑painted Scenic mural in the Small Town Nostalgia sub‑scene, rendered in light pencil‑inspired sketchwork with delicate graphite linework and minimal pigment fill, with cat.",
+    "imageKey": "cpc/latest/1783896590765",
+    "imageUrl": "/storage/concept-images/cpc_img_1783896590765.png",
+    "imagePath": "concept-images\\cpc_img_1783896590765.png",
+    "imageSizeBytes": 2004293
+  },
+  {
+    "id": "cpc_saved_1783896567016",
+    "createdAt": "2026-07-12T22:49:27.016Z",
+    "context": {
+      "client": "Client 4",
+      "project": "Project 1"
+    },
+    "concept": "c1",
+    "imageKey": "client 4|project 1::c1::saved",
+    "saveAction": "create",
+    "savedConcept": true,
+    "imageUrl": "/storage/concept-images/cpc_saved_1783896567016.png",
+    "imagePath": "concept-images\\cpc_saved_1783896567016.png",
+    "imageSizeBytes": 2137040
+  },
+  {
+    "id": "cpc_img_1783896563740",
+    "createdAt": "2026-07-12T22:49:23.740Z",
+    "context": {
+      "client": "Client 4",
+      "project": "Project 1",
+      "concepts": [
+        {
+          "name": "c1"
+        }
+      ],
+      "activeConceptIndex": 0
+    },
+    "concept": "c1",
+    "aspectRatio": "3:2",
+    "model": "sd3.5-large",
+    "prompt": "a wallpaper‑style hand‑painted Scenic mural in the Small Town Nostalgia sub‑scene, rendered in light pencil‑inspired sketchwork with delicate graphite linework and minimal pigment fill, with cat.",
+    "imageKey": "cpc/latest/1783896563740",
+    "imageUrl": "/storage/concept-images/cpc_img_1783896563740.png",
+    "imagePath": "concept-images\\cpc_img_1783896563740.png",
+    "imageSizeBytes": 2137040
+  },
+  {
+    "id": "cpc_saved_1783896389057",
+    "createdAt": "2026-07-12T22:46:29.057Z",
+    "context": {
+      "client": "Client 16",
+      "project": "Project 1"
+    },
+    "concept": "c3",
+    "imageKey": "client 16|project 1::c3::saved",
+    "saveAction": "create",
+    "savedConcept": true,
+    "imageUrl": "/storage/concept-images/cpc_saved_1783896389057.png",
+    "imagePath": "concept-images\\cpc_saved_1783896389057.png",
+    "imageSizeBytes": 1955012
+  },
+  {
+    "id": "cpc_img_1783896384213",
+    "createdAt": "2026-07-12T22:46:24.213Z",
+    "context": {
+      "client": "Client 16",
+      "project": "Project 1",
+      "concepts": [
+        {
+          "name": "c1"
+        },
+        {
+          "name": "c2"
+        },
+        {
+          "name": "c3"
+        }
+      ],
+      "activeConceptIndex": 2
+    },
+    "concept": "c3",
+    "aspectRatio": "9:16",
+    "model": "sd3.5-large",
+    "prompt": "a wallpaper‑style hand‑painted Scenic mural in the Small Town Nostalgia sub‑scene, rendered in light pencil‑inspired sketchwork with delicate graphite linework and minimal pigment fill, with cat.",
+    "imageKey": "cpc/latest/1783896384213",
+    "imageUrl": "/storage/concept-images/cpc_img_1783896384213.png",
+    "imagePath": "concept-images\\cpc_img_1783896384213.png",
+    "imageSizeBytes": 1955012
+  },
+  {
+    "id": "cpc_img_1783896321737",
+    "createdAt": "2026-07-12T22:45:21.737Z",
+    "context": {
+      "client": "Client 16",
+      "project": "Project 1",
+      "concepts": [
+        {
+          "name": "c1"
+        },
+        {
+          "name": "c2"
+        },
+        {
+          "name": "c3"
+        }
+      ],
+      "activeConceptIndex": 1
+    },
+    "concept": "c2",
+    "aspectRatio": "9:16",
+    "model": "sd3.5-large",
+    "prompt": "a wallpaper‑style hand‑painted Scenic mural in the Small Town Nostalgia sub‑scene, rendered in light pencil‑inspired sketchwork with delicate graphite linework and minimal pigment fill, with cat.",
+    "imageKey": "cpc/latest/1783896321737",
+    "imageUrl": "/storage/concept-images/cpc_img_1783896321737.png",
+    "imagePath": "concept-images\\cpc_img_1783896321737.png",
+    "imageSizeBytes": 2315798
+  },
+  {
+    "id": "cpc_saved_1783896236977",
+    "createdAt": "2026-07-12T22:43:56.977Z",
+    "context": {
+      "client": "Client 16",
+      "project": "Project 1"
+    },
+    "concept": "c2",
+    "imageKey": "client 16|project 1::c2::saved",
+    "saveAction": "create",
+    "savedConcept": true,
+    "imageUrl": "/storage/concept-images/cpc_saved_1783896236977.png",
+    "imagePath": "concept-images\\cpc_saved_1783896236977.png",
+    "imageSizeBytes": 2125172
+  },
+  {
+    "id": "cpc_img_1783896227711",
+    "createdAt": "2026-07-12T22:43:47.711Z",
+    "context": {
+      "client": "Client 16",
+      "project": "Project 1",
+      "concepts": [
+        {
+          "name": "c1"
+        },
+        {
+          "name": "c2"
+        }
+      ],
+      "activeConceptIndex": 1
+    },
+    "concept": "c2",
+    "aspectRatio": "9:16",
+    "model": "sd3.5-large",
+    "prompt": "a wallpaper‑style hand‑painted Scenic mural in the Small Town Nostalgia sub‑scene, rendered in light pencil‑inspired sketchwork with delicate graphite linework and minimal pigment fill.",
+    "imageKey": "cpc/latest/1783896227711",
+    "imageUrl": "/storage/concept-images/cpc_img_1783896227711.png",
+    "imagePath": "concept-images\\cpc_img_1783896227711.png",
+    "imageSizeBytes": 2125172
+  },
+  {
+    "id": "cpc_saved_1783896188013",
+    "createdAt": "2026-07-12T22:43:08.013Z",
+    "context": {
+      "client": "Client 16",
+      "project": "Project 1"
+    },
+    "concept": "c1",
+    "imageKey": "client 16|project 1::c1::saved",
+    "saveAction": "create",
+    "savedConcept": true,
+    "imageUrl": "/storage/concept-images/cpc_saved_1783896188013.png",
+    "imagePath": "concept-images\\cpc_saved_1783896188013.png",
+    "imageSizeBytes": 2429084
+  },
+  {
+    "id": "cpc_img_1783896176763",
+    "createdAt": "2026-07-12T22:42:56.763Z",
+    "context": {
+      "client": "Client 16",
+      "project": "Project 1",
+      "concepts": [
+        {
+          "name": "c1"
+        }
+      ],
+      "activeConceptIndex": 0
+    },
+    "concept": "c1",
+    "aspectRatio": "9:16",
+    "model": "sd3.5-large",
+    "prompt": "a wallpaper‑style hand‑painted Scenic mural in the Small Town Nostalgia sub‑scene, rendered in hand-painted oils.",
+    "imageKey": "cpc/latest/1783896176763",
+    "imageUrl": "/storage/concept-images/cpc_img_1783896176763.png",
+    "imagePath": "concept-images\\cpc_img_1783896176763.png",
+    "imageSizeBytes": 2429084
+  },
+  {
+    "id": "cpc_saved_1783894405335",
+    "createdAt": "2026-07-12T22:13:25.335Z",
+    "context": {
+      "client": "Client 15",
+      "project": "Project 1"
+    },
+    "concept": "c3",
+    "imageKey": "client 15|project 1::c3::saved",
+    "saveAction": "create",
+    "savedConcept": true,
+    "imageUrl": "/storage/concept-images/cpc_saved_1783894405335.png",
+    "imagePath": "concept-images\\cpc_saved_1783894405335.png",
+    "imageSizeBytes": 2019152
+  },
+  {
+    "id": "cpc_img_1783894391692",
+    "createdAt": "2026-07-12T22:13:11.692Z",
+    "context": {
+      "client": "Client 15",
+      "project": "Project 1",
+      "concepts": [
+        {
+          "name": "c1"
+        },
+        {
+          "name": "c2"
+        },
+        {
+          "name": "c3"
+        }
+      ],
+      "activeConceptIndex": 2
+    },
+    "concept": "c3",
+    "aspectRatio": "3:2",
+    "model": "sd3.5-large",
+    "prompt": "a Bird & Thistle traditional patterned wallpaper print on soft neutral background printed in hand-painted oils.",
+    "imageKey": "cpc/latest/1783894391692",
+    "imageUrl": "/storage/concept-images/cpc_img_1783894391692.png",
+    "imagePath": "concept-images\\cpc_img_1783894391692.png",
+    "imageSizeBytes": 2019152
+  },
+  {
+    "id": "cpc_img_1783894342352",
+    "createdAt": "2026-07-12T22:12:22.352Z",
+    "context": {
+      "client": "Client 15",
+      "project": "Project 1",
+      "concepts": [
+        {
+          "name": "c1"
+        },
+        {
+          "name": "c2"
+        },
+        {
+          "name": "c3"
+        }
+      ],
+      "activeConceptIndex": 1
+    },
+    "concept": "c2",
+    "aspectRatio": "3:2",
+    "model": "sd3.5-large",
+    "prompt": "a Bird & Thistle traditional patterned wallpaper print on soft neutral background printed in hand-painted oils.",
+    "imageKey": "cpc/latest/1783894342352",
+    "imageUrl": "/storage/concept-images/cpc_img_1783894342352.png",
+    "imagePath": "concept-images\\cpc_img_1783894342352.png",
+    "imageSizeBytes": 1876658
+  },
+  {
+    "id": "cpc_saved_1783894288615",
+    "createdAt": "2026-07-12T22:11:28.615Z",
+    "context": {
+      "client": "Client 15",
+      "project": "Project 1"
+    },
+    "concept": "c2",
+    "imageKey": "client 15|project 1::c2::saved",
+    "saveAction": "create",
+    "savedConcept": true,
+    "imageUrl": "/storage/concept-images/cpc_saved_1783894288615.png",
+    "imagePath": "concept-images\\cpc_saved_1783894288615.png",
+    "imageSizeBytes": 1864756
+  },
+  {
+    "id": "cpc_img_1783894285362",
+    "createdAt": "2026-07-12T22:11:25.362Z",
+    "context": {
+      "client": "Client 15",
+      "project": "Project 1",
+      "concepts": [
+        {
+          "name": "c1"
+        },
+        {
+          "name": "c2"
+        }
+      ],
+      "activeConceptIndex": 1
+    },
+    "concept": "c2",
+    "aspectRatio": "3:2",
+    "model": "sd3.5-large",
+    "prompt": "a Bird & Thistle traditional patterned wallpaper print on soft neutral background printed in hand-painted oils.",
+    "imageKey": "cpc/latest/1783894285362",
+    "imageUrl": "/storage/concept-images/cpc_img_1783894285362.png",
+    "imagePath": "concept-images\\cpc_img_1783894285362.png",
+    "imageSizeBytes": 1864756
+  },
+  {
+    "id": "cpc_saved_1783894271865",
+    "createdAt": "2026-07-12T22:11:11.865Z",
+    "context": {
+      "client": "Client 15",
+      "project": "Project 1"
+    },
+    "concept": "c1",
+    "imageKey": "client 15|project 1::c1::saved",
+    "saveAction": "create",
+    "savedConcept": true,
+    "imageUrl": "/storage/concept-images/cpc_saved_1783894271865.png",
+    "imagePath": "concept-images\\cpc_saved_1783894271865.png",
+    "imageSizeBytes": 1966389
+  },
+  {
+    "id": "cpc_img_1783894252805",
+    "createdAt": "2026-07-12T22:10:52.805Z",
+    "context": {
+      "client": "Client 15",
+      "project": "Project 1",
+      "concepts": [
+        {
+          "name": "c1"
+        }
+      ],
+      "activeConceptIndex": 0
+    },
+    "concept": "c1",
+    "aspectRatio": "3:2",
+    "model": "sd3.5-large",
+    "prompt": "a Bird & Thistle traditional patterned wallpaper print on soft neutral background printed in hand-painted oils.",
+    "imageKey": "cpc/latest/1783894252805",
+    "imageUrl": "/storage/concept-images/cpc_img_1783894252805.png",
+    "imagePath": "concept-images\\cpc_img_1783894252805.png",
+    "imageSizeBytes": 1966389
+  },
+  {
+    "id": "cpc_saved_1783894069777",
+    "createdAt": "2026-07-12T22:07:49.777Z",
+    "context": {
+      "client": "Client 14",
+      "project": "Project 1"
+    },
+    "concept": "c3",
+    "imageKey": "client 14|project 1::c3::saved",
+    "saveAction": "create",
+    "savedConcept": true,
+    "imageUrl": "/storage/concept-images/cpc_saved_1783894069777.png",
+    "imagePath": "concept-images\\cpc_saved_1783894069777.png",
+    "imageSizeBytes": 1852844
+  },
+  {
+    "id": "cpc_img_1783894057325",
+    "createdAt": "2026-07-12T22:07:37.325Z",
+    "context": {
+      "client": "Client 14",
+      "project": "Project 1",
+      "concepts": [
+        {
+          "name": "c1"
+        },
+        {
+          "name": "c2"
+        },
+        {
+          "name": "c3"
+        }
+      ],
+      "activeConceptIndex": 2
+    },
+    "concept": "c3",
+    "aspectRatio": "3:2",
+    "model": "sd3.5-large",
+    "prompt": "a Vines & Tendrils traditional patterned wallpaper print on soft neutral background printed in hand-painted oils.",
+    "imageKey": "cpc/latest/1783894057325",
+    "imageUrl": "/storage/concept-images/cpc_img_1783894057325.png",
+    "imagePath": "concept-images\\cpc_img_1783894057325.png",
+    "imageSizeBytes": 1852844
+  },
+  {
+    "id": "cpc_saved_1783894008331",
+    "createdAt": "2026-07-12T22:06:48.331Z",
+    "context": {
+      "client": "Client 14",
+      "project": "Project 1"
+    },
+    "concept": "c1",
+    "imageKey": "client 14|project 1::c1::saved",
+    "saveAction": "replace",
+    "savedConcept": true,
+    "imageUrl": "/storage/concept-images/cpc_saved_1783894008331.png",
+    "imagePath": "concept-images\\cpc_saved_1783894008331.png",
+    "imageSizeBytes": 1820711
+  },
+  {
+    "id": "cpc_img_1783893994286",
+    "createdAt": "2026-07-12T22:06:34.286Z",
+    "context": {
+      "client": "Client 14",
+      "project": "Project 1",
+      "concepts": [
+        {
+          "name": "c1"
+        },
+        {
+          "name": "c2"
+        },
+        {
+          "name": "c3"
+        }
+      ],
+      "activeConceptIndex": 0
+    },
+    "concept": "c1",
+    "aspectRatio": "3:2",
+    "model": "sd3.5-large",
+    "prompt": "a Vines & Tendrils traditional patterned wallpaper print on soft neutral background printed in hand-painted oils.",
+    "imageKey": "cpc/latest/1783893994286",
+    "imageUrl": "/storage/concept-images/cpc_img_1783893994286.png",
+    "imagePath": "concept-images\\cpc_img_1783893994286.png",
+    "imageSizeBytes": 1820711
+  },
+  {
+    "id": "cpc_saved_1783893954026",
+    "createdAt": "2026-07-12T22:05:54.026Z",
+    "context": {
+      "client": "Client 14",
+      "project": "Project 1"
+    },
+    "concept": "c2",
+    "imageKey": "client 14|project 1::c2::saved",
+    "saveAction": "create",
+    "savedConcept": true,
+    "imageUrl": "/storage/concept-images/cpc_saved_1783893954026.png",
+    "imagePath": "concept-images\\cpc_saved_1783893954026.png",
+    "imageSizeBytes": 1892236
+  },
+  {
+    "id": "cpc_saved_1783893885994",
+    "createdAt": "2026-07-12T22:04:45.994Z",
+    "context": {
+      "client": "Client 14",
+      "project": "Project 1"
+    },
+    "concept": "c1",
+    "imageKey": "client 14|project 1::c1::saved",
+    "saveAction": "create",
+    "savedConcept": true,
+    "imageUrl": "/storage/concept-images/cpc_saved_1783893885994.png",
+    "imagePath": "concept-images\\cpc_saved_1783893885994.png",
+    "imageSizeBytes": 1892236
+  },
+  {
+    "id": "cpc_img_1783893871182",
+    "createdAt": "2026-07-12T22:04:31.182Z",
+    "context": {
+      "client": "Client 14",
+      "project": "Project 1",
+      "concepts": [
+        {
+          "name": "c1"
+        }
+      ],
+      "activeConceptIndex": 0
+    },
+    "concept": "c1",
+    "aspectRatio": "3:2",
+    "model": "sd3.5-large",
+    "prompt": "a Vines & Tendrils traditional patterned wallpaper print on soft neutral background printed in hand-painted oils.",
+    "imageKey": "cpc/latest/1783893871182",
+    "imageUrl": "/storage/concept-images/cpc_img_1783893871182.png",
+    "imagePath": "concept-images\\cpc_img_1783893871182.png",
+    "imageSizeBytes": 1892236
+  },
+  {
+    "id": "cpc_img_1783893805875",
+    "createdAt": "2026-07-12T22:03:25.875Z",
+    "context": {
+      "client": "Client 14",
+      "project": "Project 1",
+      "concepts": [
+        {
+          "name": "c1"
+        }
+      ],
+      "activeConceptIndex": 0
+    },
+    "concept": "c1",
+    "aspectRatio": "3:2",
+    "model": "sd3.5-large",
+    "prompt": "a Vines & Tendrils traditional patterned wallpaper print on soft neutral background printed in hand-painted oils.",
+    "imageKey": "cpc/latest/1783893805875",
+    "imageUrl": "/storage/concept-images/cpc_img_1783893805875.png",
+    "imagePath": "concept-images\\cpc_img_1783893805875.png",
+    "imageSizeBytes": 1839927
+  },
+  {
+    "id": "cpc_saved_1783893723843",
+    "createdAt": "2026-07-12T22:02:03.843Z",
+    "context": {
+      "client": "Client 13",
+      "project": "Project 1"
+    },
+    "concept": "c3",
+    "imageKey": "client 13|project 1::c3::saved",
+    "saveAction": "replace",
+    "savedConcept": true,
+    "imageUrl": "/storage/concept-images/cpc_saved_1783893723843.png",
+    "imagePath": "concept-images\\cpc_saved_1783893723843.png",
+    "imageSizeBytes": 1530187
+  },
+  {
+    "id": "cpc_img_1783893711040",
+    "createdAt": "2026-07-12T22:01:51.040Z",
+    "context": {
+      "client": "Client 13",
+      "project": "Project 1",
+      "concepts": [
+        {
+          "name": "c1"
+        },
+        {
+          "name": "c2"
+        },
+        {
+          "name": "c3"
+        },
+        {
+          "name": "c4"
+        }
+      ],
+      "activeConceptIndex": 2
+    },
+    "concept": "c3",
+    "aspectRatio": "3:2",
+    "model": "sd3.5-large",
+    "prompt": "a wallpaper‑style hand‑painted Kids mural in the Kids – Planes, Trains, Automobiles sub‑scene, rendered in null.",
+    "imageKey": "cpc/latest/1783893711040",
+    "imageUrl": "/storage/concept-images/cpc_img_1783893711040.png",
+    "imagePath": "concept-images\\cpc_img_1783893711040.png",
+    "imageSizeBytes": 1530187
+  },
+  {
+    "id": "cpc_saved_1783893184647",
+    "createdAt": "2026-07-12T21:53:04.647Z",
+    "context": {
+      "client": "Client 13",
+      "project": "Project 1"
+    },
+    "concept": "c3",
+    "imageKey": "client 13|project 1::c3::saved",
+    "saveAction": "create",
+    "savedConcept": true,
+    "imageUrl": "/storage/concept-images/cpc_saved_1783893184647.png",
+    "imagePath": "concept-images\\cpc_saved_1783893184647.png",
+    "imageSizeBytes": 1665763
+  },
+  {
+    "id": "cpc_img_1783893175963",
+    "createdAt": "2026-07-12T21:52:55.963Z",
+    "context": {
+      "client": "Client 13",
+      "project": "Project 1",
+      "concepts": [
+        {
+          "name": "c1"
+        },
+        {
+          "name": "c2"
+        },
+        {
+          "name": "c3"
+        }
+      ],
+      "activeConceptIndex": 2
+    },
+    "concept": "c3",
+    "aspectRatio": "3:2",
+    "model": "sd3.5-large",
+    "prompt": "a wallpaper‑style hand‑painted Kids mural in the Kids – Planes, Trains, Automobiles sub‑scene, rendered in null.",
+    "imageKey": "cpc/latest/1783893175963",
+    "imageUrl": "/storage/concept-images/cpc_img_1783893175963.png",
+    "imagePath": "concept-images\\cpc_img_1783893175963.png",
+    "imageSizeBytes": 1665763
+  },
+  {
+    "id": "cpc_img_1783893111267",
+    "createdAt": "2026-07-12T21:51:51.267Z",
+    "context": {
+      "client": "Client 13",
+      "project": "Project 1",
+      "concepts": [
+        {
+          "name": "c1"
+        },
+        {
+          "name": "c2"
+        },
+        {
+          "name": "c3"
+        }
+      ],
+      "activeConceptIndex": 2
+    },
+    "concept": "c3",
+    "aspectRatio": "3:2",
+    "model": "sd3.5-large",
+    "prompt": "a wallpaper‑style hand‑painted Kids mural in the Kids – Space & Rockets sub‑scene, rendered in null, with friendly astronauts.",
+    "imageKey": "cpc/latest/1783893111267",
+    "imageUrl": "/storage/concept-images/cpc_img_1783893111267.png",
+    "imagePath": "concept-images\\cpc_img_1783893111267.png",
+    "imageSizeBytes": 1603907
+  },
+  {
+    "id": "cpc_img_1783893095251",
+    "createdAt": "2026-07-12T21:51:35.251Z",
+    "context": {
+      "client": "Client 13",
+      "project": "Project 1",
+      "concepts": [
+        {
+          "name": "c1"
+        },
+        {
+          "name": "c2"
+        },
+        {
+          "name": "c3"
+        }
+      ],
+      "activeConceptIndex": 2
+    },
+    "concept": "c3",
+    "aspectRatio": "3:2",
+    "model": "sd3.5-large",
+    "prompt": "a wallpaper‑style hand‑painted Kids mural in the Kids – Space & Rockets sub‑scene, rendered in null, with friendly astronauts.",
+    "imageKey": "cpc/latest/1783893095251",
+    "imageUrl": "/storage/concept-images/cpc_img_1783893095251.png",
+    "imagePath": "concept-images\\cpc_img_1783893095251.png",
+    "imageSizeBytes": 1873092
+  },
+  {
+    "id": "cpc_img_1783893074245",
+    "createdAt": "2026-07-12T21:51:14.245Z",
+    "context": {
+      "client": "Client 13",
+      "project": "Project 1",
+      "concepts": [
+        {
+          "name": "c1"
+        },
+        {
+          "name": "c2"
+        },
+        {
+          "name": "c3"
+        }
+      ],
+      "activeConceptIndex": 2
+    },
+    "concept": "c3",
+    "aspectRatio": "3:2",
+    "model": "sd3.5-large",
+    "prompt": "a wallpaper‑style hand‑painted Kids mural in the Kids – Space & Rockets sub‑scene, rendered in null, with friendly astronauts.",
+    "imageKey": "cpc/latest/1783893074245",
+    "imageUrl": "/storage/concept-images/cpc_img_1783893074245.png",
+    "imagePath": "concept-images\\cpc_img_1783893074245.png",
+    "imageSizeBytes": 1742380
+  },
+  {
+    "id": "cpc_img_1783893039826",
+    "createdAt": "2026-07-12T21:50:39.826Z",
+    "context": {
+      "client": "Client 13",
+      "project": "Project 1",
+      "concepts": [
+        {
+          "name": "c1"
+        },
+        {
+          "name": "c2"
+        },
+        {
+          "name": "c3"
+        }
+      ],
+      "activeConceptIndex": 2
+    },
+    "concept": "c3",
+    "aspectRatio": "3:2",
+    "model": "sd3.5-large",
+    "prompt": "a wallpaper‑style hand‑painted Kids mural in the Kids – Space & Rockets sub‑scene, rendered in null.",
+    "imageKey": "cpc/latest/1783893039826",
+    "imageUrl": "/storage/concept-images/cpc_img_1783893039826.png",
+    "imagePath": "concept-images\\cpc_img_1783893039826.png",
+    "imageSizeBytes": 1702204
+  },
+  {
+    "id": "cpc_img_1783893021508",
+    "createdAt": "2026-07-12T21:50:21.508Z",
+    "context": {
+      "client": "Client 13",
+      "project": "Project 1",
+      "concepts": [
+        {
+          "name": "c1"
+        },
+        {
+          "name": "c2"
+        },
+        {
+          "name": "c3"
+        }
+      ],
+      "activeConceptIndex": 2
+    },
+    "concept": "c3",
+    "aspectRatio": "3:2",
+    "model": "sd3.5-large",
+    "prompt": "a wallpaper‑style hand‑painted Kids mural in the Kids – Space & Rockets sub‑scene, rendered in null.",
+    "imageKey": "cpc/latest/1783893021508",
+    "imageUrl": "/storage/concept-images/cpc_img_1783893021508.png",
+    "imagePath": "concept-images\\cpc_img_1783893021508.png",
+    "imageSizeBytes": 2015789
+  },
+  {
+    "id": "cpc_img_1783893007398",
+    "createdAt": "2026-07-12T21:50:07.398Z",
+    "context": {
+      "client": "Client 13",
+      "project": "Project 1",
+      "concepts": [
+        {
+          "name": "c1"
+        },
+        {
+          "name": "c2"
+        },
+        {
+          "name": "c3"
+        }
+      ],
+      "activeConceptIndex": 2
+    },
+    "concept": "c3",
+    "aspectRatio": "3:2",
+    "model": "sd3.5-large",
+    "prompt": "a wallpaper‑style hand‑painted Kids mural in the Kids – Space & Rockets sub‑scene, rendered in null.",
+    "imageKey": "cpc/latest/1783893007399",
+    "imageUrl": "/storage/concept-images/cpc_img_1783893007398.png",
+    "imagePath": "concept-images\\cpc_img_1783893007398.png",
+    "imageSizeBytes": 1792027
+  },
+  {
+    "id": "cpc_saved_1783892962421",
+    "createdAt": "2026-07-12T21:49:22.421Z",
+    "context": {
+      "client": "Client 13",
+      "project": "Project 1"
+    },
+    "concept": "c2",
+    "imageKey": "client 13|project 1::c2::saved",
+    "saveAction": "create",
+    "savedConcept": true,
+    "imageUrl": "/storage/concept-images/cpc_saved_1783892962421.png",
+    "imagePath": "concept-images\\cpc_saved_1783892962421.png",
+    "imageSizeBytes": 1739702
+  },
+  {
+    "id": "cpc_img_1783892950534",
+    "createdAt": "2026-07-12T21:49:10.534Z",
+    "context": {
+      "client": "Client 13",
+      "project": "Project 1",
+      "concepts": [
+        {
+          "name": "c1"
+        },
+        {
+          "name": "c2"
+        }
+      ],
+      "activeConceptIndex": 1
+    },
+    "concept": "c2",
+    "aspectRatio": "3:2",
+    "model": "sd3.5-large",
+    "prompt": "a wallpaper‑style hand‑painted Kids mural in the Kids – Space & Rockets sub‑scene, rendered in null.",
+    "imageKey": "cpc/latest/1783892950534",
+    "imageUrl": "/storage/concept-images/cpc_img_1783892950534.png",
+    "imagePath": "concept-images\\cpc_img_1783892950534.png",
+    "imageSizeBytes": 1739702
+  },
+  {
+    "id": "cpc_img_1783892923634",
+    "createdAt": "2026-07-12T21:48:43.634Z",
+    "context": {
+      "client": "Client 13",
+      "project": "Project 1",
+      "concepts": [
+        {
+          "name": "c1"
+        },
+        {
+          "name": "c2"
+        }
+      ],
+      "activeConceptIndex": 1
+    },
+    "concept": "c2",
+    "aspectRatio": "3:2",
+    "model": "sd3.5-large",
+    "prompt": "a wallpaper‑style hand‑painted Kids mural in the Kids – Space & Rockets sub‑scene, rendered in null.",
+    "imageKey": "cpc/latest/1783892923634",
+    "imageUrl": "/storage/concept-images/cpc_img_1783892923634.png",
+    "imagePath": "concept-images\\cpc_img_1783892923634.png",
+    "imageSizeBytes": 1710135
+  },
+  {
+    "id": "cpc_saved_1783892893976",
+    "createdAt": "2026-07-12T21:48:13.976Z",
+    "context": {
+      "client": "Client 13",
+      "project": "Project 1"
+    },
+    "concept": "c1",
+    "imageKey": "client 13|project 1::c1::saved",
+    "saveAction": "create",
+    "savedConcept": true,
+    "imageUrl": "/storage/concept-images/cpc_saved_1783892893976.png",
+    "imagePath": "concept-images\\cpc_saved_1783892893976.png",
+    "imageSizeBytes": 1806204
+  },
+  {
+    "id": "cpc_img_1783892876135",
+    "createdAt": "2026-07-12T21:47:56.135Z",
+    "context": {
+      "client": "Client 13",
+      "project": "Project 1",
+      "concepts": [
+        {
+          "name": "c1"
+        }
+      ],
+      "activeConceptIndex": 0
+    },
+    "concept": "c1",
+    "aspectRatio": "9:16",
+    "model": "sd3.5-large",
+    "prompt": "a wallpaper‑style hand‑painted Kids mural in the Kids – Space & Rockets sub‑scene, rendered in null.",
+    "imageKey": "cpc/latest/1783892876135",
+    "imageUrl": "/storage/concept-images/cpc_img_1783892876135.png",
+    "imagePath": "concept-images\\cpc_img_1783892876135.png",
+    "imageSizeBytes": 1806204
+  },
+  {
+    "id": "cpc_img_1783892856437",
+    "createdAt": "2026-07-12T21:47:36.437Z",
+    "context": {
+      "client": "Client 13",
+      "project": "Project 1",
+      "concepts": [
+        {
+          "name": "c1"
+        }
+      ],
+      "activeConceptIndex": 0
+    },
+    "concept": "c1",
+    "aspectRatio": "9:16",
+    "model": "sd3.5-large",
+    "prompt": "a wallpaper‑style hand‑painted Kids mural in the Kids – Space & Rockets sub‑scene, rendered in null.",
+    "imageKey": "cpc/latest/1783892856437",
+    "imageUrl": "/storage/concept-images/cpc_img_1783892856437.png",
+    "imagePath": "concept-images\\cpc_img_1783892856437.png",
+    "imageSizeBytes": 1786980
+  },
+  {
+    "id": "cpc_img_1783892837344",
+    "createdAt": "2026-07-12T21:47:17.344Z",
+    "context": {
+      "client": "Client 13",
+      "project": "Project 1",
+      "concepts": [
+        {
+          "name": "c1"
+        }
+      ],
+      "activeConceptIndex": 0
+    },
+    "concept": "c1",
+    "aspectRatio": "9:16",
+    "model": "sd3.5-large",
+    "prompt": "a wallpaper‑style hand‑painted Kids mural in the Kids – Space & Rockets sub‑scene, rendered in null.",
+    "imageKey": "cpc/latest/1783892837344",
+    "imageUrl": "/storage/concept-images/cpc_img_1783892837344.png",
+    "imagePath": "concept-images\\cpc_img_1783892837344.png",
+    "imageSizeBytes": 1883216
+  },
+  {
+    "id": "cpc_saved_1783892093619",
+    "createdAt": "2026-07-12T21:34:53.619Z",
+    "context": {
+      "client": "Client 12",
+      "project": "Project 1"
+    },
+    "concept": "c1",
+    "imageKey": "client 12|project 1::c1::saved",
+    "saveAction": "create",
+    "savedConcept": true,
+    "imageUrl": "/storage/concept-images/cpc_saved_1783892093619.png",
+    "imagePath": "concept-images\\cpc_saved_1783892093619.png",
+    "imageSizeBytes": 1968701
+  },
+  {
+    "id": "cpc_img_1783892086089",
+    "createdAt": "2026-07-12T21:34:46.089Z",
+    "context": {
+      "client": "Client 12",
+      "project": "Project 1",
+      "concepts": [
+        {
+          "name": "c1"
+        }
+      ],
+      "activeConceptIndex": 0
+    },
+    "concept": "c1",
+    "aspectRatio": "16:9",
+    "model": "sd3.5-large",
+    "prompt": "a wallpaper‑style hand‑painted Scenic mural in the Japanese Satoyama Countryside sub‑scene, rendered in light pencil‑inspired sketchwork with delicate graphite linework and minimal pigment fill.",
+    "imageKey": "cpc/latest/1783892086089",
+    "imageUrl": "/storage/concept-images/cpc_img_1783892086089.png",
+    "imagePath": "concept-images\\cpc_img_1783892086089.png",
+    "imageSizeBytes": 1968701
+  },
+  {
+    "id": "cpc_saved_1783892064595",
+    "createdAt": "2026-07-12T21:34:24.595Z",
+    "context": {
+      "client": "Client 12",
+      "project": "Project 1"
+    },
+    "concept": "c1",
+    "imageKey": "client 12|project 1::c1::saved",
+    "saveAction": "replace",
+    "savedConcept": true,
+    "imageUrl": "/storage/concept-images/cpc_saved_1783892064595.png",
+    "imagePath": "concept-images\\cpc_saved_1783892064595.png",
+    "imageSizeBytes": 1990322
+  },
+  {
+    "id": "cpc_img_1783892048681",
+    "createdAt": "2026-07-12T21:34:08.681Z",
+    "context": {
+      "client": "Client 12",
+      "project": "Project 1",
+      "concepts": [
+        {
+          "name": "c1"
+        }
+      ],
+      "activeConceptIndex": 0
+    },
+    "concept": "c1",
+    "aspectRatio": "16:9",
+    "model": "sd3.5-large",
+    "prompt": "a wallpaper‑style hand‑painted Scenic mural in the Japanese Satoyama Countryside sub‑scene, rendered in light pencil‑inspired sketchwork with delicate graphite linework and minimal pigment fill.",
+    "imageKey": "cpc/latest/1783892048681",
+    "imageUrl": "/storage/concept-images/cpc_img_1783892048681.png",
+    "imagePath": "concept-images\\cpc_img_1783892048681.png",
+    "imageSizeBytes": 1990322
+  },
+  {
+    "id": "cpc_saved_1783891966236",
+    "createdAt": "2026-07-12T21:32:46.236Z",
+    "context": {
+      "client": "Client 11",
+      "project": "Project 1"
+    },
+    "concept": "c1",
+    "imageKey": "client 11|project 1::c1::saved",
+    "saveAction": "create",
+    "savedConcept": true,
+    "imageUrl": "/storage/concept-images/cpc_saved_1783891966236.png",
+    "imagePath": "concept-images\\cpc_saved_1783891966236.png",
+    "imageSizeBytes": 2232680
+  },
+  {
+    "id": "cpc_img_1783891955767",
+    "createdAt": "2026-07-12T21:32:35.767Z",
+    "context": {
+      "client": "Client 11",
+      "project": "Project 1",
+      "concepts": [
+        {
+          "name": "c1"
+        }
+      ],
+      "activeConceptIndex": 0
+    },
+    "concept": "c1",
+    "aspectRatio": "16:9",
+    "model": "sd3.5-large",
+    "prompt": "a wallpaper‑style hand‑painted Scenic mural in the Japanese Satoyama Countryside sub‑scene, rendered in hand-painted oils.",
+    "imageKey": "cpc/latest/1783891955767",
+    "imageUrl": "/storage/concept-images/cpc_img_1783891955767.png",
+    "imagePath": "concept-images\\cpc_img_1783891955767.png",
+    "imageSizeBytes": 2232680
+  },
+  {
+    "id": "cpc_saved_1783891931482",
+    "createdAt": "2026-07-12T21:32:11.482Z",
+    "context": {
+      "client": "Client 11",
+      "project": "Project 1"
+    },
+    "concept": "c1",
+    "imageKey": "client 11|project 1::c1::saved",
+    "saveAction": "replace",
+    "savedConcept": true,
+    "imageUrl": "/storage/concept-images/cpc_saved_1783891931482.png",
+    "imagePath": "concept-images\\cpc_saved_1783891931482.png",
+    "imageSizeBytes": 2245216
+  },
+  {
+    "id": "cpc_img_1783891895727",
+    "createdAt": "2026-07-12T21:31:35.727Z",
+    "context": {
+      "client": "Client 11",
+      "project": "Project 1",
+      "concepts": [
+        {
+          "name": "c1"
+        }
+      ],
+      "activeConceptIndex": 0
+    },
+    "concept": "c1",
+    "aspectRatio": "9:16",
+    "model": "sd3.5-large",
+    "prompt": "a wallpaper‑style hand‑painted Scenic mural in the Japanese Satoyama Countryside sub‑scene, rendered in hand-painted oils.",
+    "imageKey": "cpc/latest/1783891895727",
+    "imageUrl": "/storage/concept-images/cpc_img_1783891895727.png",
+    "imagePath": "concept-images\\cpc_img_1783891895727.png",
+    "imageSizeBytes": 2245216
+  },
+  {
+    "id": "cpc_saved_1783891187349",
+    "createdAt": "2026-07-12T21:19:47.349Z",
+    "context": {
+      "client": "Client 10",
+      "project": "Project 1"
+    },
+    "concept": "c3",
+    "imageKey": "client 10|project 1::c3::saved",
+    "saveAction": "replace",
+    "savedConcept": true,
+    "imageUrl": "/storage/concept-images/cpc_saved_1783891187349.png",
+    "imagePath": "concept-images\\cpc_saved_1783891187349.png",
+    "imageSizeBytes": 1760339
+  },
+  {
+    "id": "cpc_img_1783891180585",
+    "createdAt": "2026-07-12T21:19:40.585Z",
+    "context": {
+      "client": "Client 10",
+      "project": "Project 1",
+      "concepts": [
+        {
+          "name": "c1"
+        },
+        {
+          "name": "c2"
+        },
+        {
+          "name": "c3"
+        }
+      ],
+      "activeConceptIndex": 2
+    },
+    "concept": "c3",
+    "aspectRatio": "16:9",
+    "model": "sd3.5-large",
+    "prompt": "a wallpaper‑style hand‑painted Kids mural in the Kids – Animals sub‑scene, rendered in light pencil‑inspired sketchwork with delicate graphite linework and minimal pigment fill.",
+    "imageKey": "cpc/latest/1783891180585",
+    "imageUrl": "/storage/concept-images/cpc_img_1783891180585.png",
+    "imagePath": "concept-images\\cpc_img_1783891180585.png",
+    "imageSizeBytes": 1760339
+  },
+  {
+    "id": "cpc_img_1783891152197",
+    "createdAt": "2026-07-12T21:19:12.197Z",
+    "context": {
+      "client": "Client 10",
+      "project": "Project 1",
+      "concepts": [
+        {
+          "name": "c1"
+        },
+        {
+          "name": "c2"
+        },
+        {
+          "name": "c3"
+        }
+      ],
+      "activeConceptIndex": 1
+    },
+    "concept": "c2",
+    "aspectRatio": "16:9",
+    "model": "sd3.5-large",
+    "prompt": "a wallpaper‑style hand‑painted Kids mural in the Kids – Animals sub‑scene, rendered in light pencil‑inspired sketchwork with delicate graphite linework and minimal pigment fill.",
+    "imageKey": "cpc/latest/1783891152197",
+    "imageUrl": "/storage/concept-images/cpc_img_1783891152197.png",
+    "imagePath": "concept-images\\cpc_img_1783891152197.png",
+    "imageSizeBytes": 1668860
+  },
+  {
+    "id": "cpc_saved_1783891044473",
+    "createdAt": "2026-07-12T21:17:24.474Z",
+    "context": {
+      "client": "Client 10",
+      "project": "Project 1"
+    },
+    "concept": "c2",
+    "imageKey": "client 10|project 1::c2::saved",
+    "saveAction": "create",
+    "savedConcept": true,
+    "imageUrl": "/storage/concept-images/cpc_saved_1783891044473.png",
+    "imagePath": "concept-images\\cpc_saved_1783891044473.png",
+    "imageSizeBytes": 1756207
+  },
+  {
+    "id": "cpc_img_1783891020616",
+    "createdAt": "2026-07-12T21:17:00.616Z",
+    "context": {
+      "client": "Client 10",
+      "project": "Project 1",
+      "concepts": [
+        {
+          "name": "c1"
+        },
+        {
+          "name": "c2"
+        }
+      ],
+      "activeConceptIndex": 1
+    },
+    "concept": "c2",
+    "aspectRatio": "16:9",
+    "model": "sd3.5-large",
+    "prompt": "a wallpaper‑style hand‑painted Kids mural in the Kids – Animals sub‑scene, rendered in light pencil‑inspired sketchwork with delicate graphite linework and minimal pigment fill.",
+    "imageKey": "cpc/latest/1783891020616",
+    "imageUrl": "/storage/concept-images/cpc_img_1783891020616.png",
+    "imagePath": "concept-images\\cpc_img_1783891020616.png",
+    "imageSizeBytes": 1756207
+  },
+  {
+    "id": "cpc_saved_1783890945964",
+    "createdAt": "2026-07-12T21:15:45.964Z",
+    "context": {
+      "client": "Client 10",
+      "project": "Project 1"
+    },
+    "concept": "c1",
+    "imageKey": "client 10|project 1::c1::saved",
+    "saveAction": "create",
+    "savedConcept": true,
+    "imageUrl": "/storage/concept-images/cpc_saved_1783890945964.png",
+    "imagePath": "concept-images\\cpc_saved_1783890945964.png",
+    "imageSizeBytes": 1701885
+  },
+  {
+    "id": "cpc_img_1783890935994",
+    "createdAt": "2026-07-12T21:15:35.994Z",
+    "context": {
+      "client": "Client 10",
+      "project": "Project 1",
+      "concepts": [
+        {
+          "name": "c1"
+        }
+      ],
+      "activeConceptIndex": 0
+    },
+    "concept": "c1",
+    "aspectRatio": "16:9",
+    "model": "sd3.5-large",
+    "prompt": "a wallpaper‑style hand‑painted Kids mural in the Kids – Animals sub‑scene, rendered in light pencil‑inspired sketchwork with delicate graphite linework and minimal pigment fill.",
+    "imageKey": "cpc/latest/1783890935994",
+    "imageUrl": "/storage/concept-images/cpc_img_1783890935994.png",
+    "imagePath": "concept-images\\cpc_img_1783890935994.png",
+    "imageSizeBytes": 1701885
+  },
+  {
+    "id": "cpc_img_1783890898273",
+    "createdAt": "2026-07-12T21:14:58.273Z",
+    "context": {
+      "client": "Client 10",
+      "project": "Project 1",
+      "concepts": [
+        {
+          "name": "c1"
+        }
+      ],
+      "activeConceptIndex": 0
+    },
+    "concept": "c1",
+    "aspectRatio": "16:9",
+    "model": "sd3.5-large",
+    "prompt": "a wallpaper‑style hand‑painted Kids mural in the Kids – Animals sub‑scene, rendered in light pencil‑inspired sketchwork with delicate graphite linework and minimal pigment fill.",
+    "imageKey": "cpc/latest/1783890898273",
+    "imageUrl": "/storage/concept-images/cpc_img_1783890898273.png",
+    "imagePath": "concept-images\\cpc_img_1783890898273.png",
+    "imageSizeBytes": 1730996
+  },
+  {
+    "id": "cpc_saved_1783890813954",
+    "createdAt": "2026-07-12T21:13:33.954Z",
+    "context": {
+      "client": "Client 9",
+      "project": "Project 1"
+    },
+    "concept": "c2",
+    "imageKey": "client 9|project 1::c2::saved",
+    "saveAction": "create",
+    "savedConcept": true,
+    "imageUrl": "/storage/concept-images/cpc_saved_1783890813954.png",
+    "imagePath": "concept-images\\cpc_saved_1783890813954.png",
+    "imageSizeBytes": 1743330
+  },
+  {
+    "id": "cpc_img_1783890809240",
+    "createdAt": "2026-07-12T21:13:29.240Z",
+    "context": {
+      "client": "Client 9",
+      "project": "Project 1",
+      "concepts": [
+        {
+          "name": "c1"
+        },
+        {
+          "name": "c2"
+        }
+      ],
+      "activeConceptIndex": 1
+    },
+    "concept": "c2",
+    "aspectRatio": "16:9",
+    "model": "sd3.5-large",
+    "prompt": "a wallpaper‑style hand‑painted Kids mural in the Kids – Animals sub‑scene, rendered in light pencil‑inspired sketchwork with delicate graphite linework and minimal pigment fill.",
+    "imageKey": "cpc/latest/1783890809240",
+    "imageUrl": "/storage/concept-images/cpc_img_1783890809240.png",
+    "imagePath": "concept-images\\cpc_img_1783890809240.png",
+    "imageSizeBytes": 1743330
+  },
+  {
+    "id": "cpc_saved_1783890762653",
+    "createdAt": "2026-07-12T21:12:42.653Z",
+    "context": {
+      "client": "Client 9",
+      "project": "Project 1"
+    },
+    "concept": "c1",
+    "imageKey": "client 9|project 1::c1::saved",
+    "saveAction": "create",
+    "savedConcept": true,
+    "imageUrl": "/storage/concept-images/cpc_saved_1783890762653.png",
+    "imagePath": "concept-images\\cpc_saved_1783890762653.png",
+    "imageSizeBytes": 1829508
+  },
+  {
+    "id": "cpc_img_1783890750516",
+    "createdAt": "2026-07-12T21:12:30.516Z",
+    "context": {
+      "client": "Client 9",
+      "project": "Project 1",
+      "concepts": [
+        {
+          "name": "c1"
+        }
+      ],
+      "activeConceptIndex": 0
+    },
+    "concept": "c1",
+    "aspectRatio": "16:9",
+    "model": "sd3.5-large",
+    "prompt": "a wallpaper‑style hand‑painted Kids mural in the Kids – Animals sub‑scene, rendered in light pencil‑inspired sketchwork with delicate graphite linework and minimal pigment fill.",
+    "imageKey": "cpc/latest/1783890750516",
+    "imageUrl": "/storage/concept-images/cpc_img_1783890750516.png",
+    "imagePath": "concept-images\\cpc_img_1783890750516.png",
+    "imageSizeBytes": 1829508
+  },
+  {
+    "id": "cpc_img_1783890727597",
+    "createdAt": "2026-07-12T21:12:07.597Z",
+    "context": {
+      "client": "Client 9",
+      "project": "Project 1",
+      "concepts": [
+        {
+          "name": "c1"
+        }
+      ],
+      "activeConceptIndex": 0
+    },
+    "concept": "c1",
+    "aspectRatio": "16:9",
+    "model": "sd3.5-large",
+    "prompt": "a wallpaper‑style hand‑painted Kids mural in the Kids – Animals sub‑scene, rendered in light pencil‑inspired sketchwork with delicate graphite linework and minimal pigment fill.",
+    "imageKey": "cpc/latest/1783890727597",
+    "imageUrl": "/storage/concept-images/cpc_img_1783890727597.png",
+    "imagePath": "concept-images\\cpc_img_1783890727597.png",
+    "imageSizeBytes": 2000700
+  },
+  {
+    "id": "cpc_saved_1783890708149",
+    "createdAt": "2026-07-12T21:11:48.149Z",
+    "context": {
+      "client": "Client 9",
+      "project": "Project 1"
+    },
+    "concept": "c1",
+    "imageKey": "client 9|project 1::c1::saved",
+    "saveAction": "replace",
+    "savedConcept": true,
+    "imageUrl": "/storage/concept-images/cpc_saved_1783890708149.png",
+    "imagePath": "concept-images\\cpc_saved_1783890708149.png",
+    "imageSizeBytes": 1663483
+  },
+  {
+    "id": "cpc_img_1783890692145",
+    "createdAt": "2026-07-12T21:11:32.145Z",
+    "context": {
+      "client": "Client 9",
+      "project": "Project 1",
+      "concepts": [
+        {
+          "name": "c1"
+        }
+      ],
+      "activeConceptIndex": 0
+    },
+    "concept": "c1",
+    "aspectRatio": "9:16",
+    "model": "sd3.5-large",
+    "prompt": "a wallpaper‑style hand‑painted Kids mural in the Kids – Animals sub‑scene, rendered in light pencil‑inspired sketchwork with delicate graphite linework and minimal pigment fill.",
+    "imageKey": "cpc/latest/1783890692145",
+    "imageUrl": "/storage/concept-images/cpc_img_1783890692145.png",
+    "imagePath": "concept-images\\cpc_img_1783890692145.png",
+    "imageSizeBytes": 1663483
+  },
+  {
+    "id": "cpc_img_1783890618257",
+    "createdAt": "2026-07-12T21:10:18.257Z",
+    "context": {
+      "client": "Client 9",
+      "project": "Project 1",
+      "concepts": [
+        {
+          "name": "c1"
+        }
+      ],
+      "activeConceptIndex": 0
+    },
+    "concept": "c1",
+    "aspectRatio": "9:16",
+    "model": "sd3.5-large",
+    "prompt": "a wallpaper‑style hand‑painted Scenic mural in the Meadow Flatlands sub‑scene, rendered in hand-painted oils.",
+    "imageKey": "cpc/latest/1783890618257",
+    "imageUrl": "/storage/concept-images/cpc_img_1783890618257.png",
+    "imagePath": "concept-images\\cpc_img_1783890618257.png",
+    "imageSizeBytes": 2065138
+  },
+  {
+    "id": "cpc_saved_1783889771363",
+    "createdAt": "2026-07-12T20:56:11.363Z",
+    "context": {
+      "client": "Client 1",
+      "project": "Project 1"
+    },
+    "concept": "c3",
+    "imageKey": "client 1|project 1::c3::saved",
+    "saveAction": "create",
+    "savedConcept": true,
+    "imageUrl": "/storage/concept-images/cpc_saved_1783889771363.png",
+    "imagePath": "concept-images\\cpc_saved_1783889771363.png",
+    "imageSizeBytes": 1912540
+  },
+  {
+    "id": "cpc_img_1783889763878",
+    "createdAt": "2026-07-12T20:56:03.878Z",
+    "context": {
+      "client": "Client 1",
+      "project": "Project 1",
+      "concepts": [
+        {
+          "name": "c1"
+        },
+        {
+          "name": "c2"
+        }
+      ],
+      "activeConceptIndex": 1
+    },
+    "concept": "c2",
+    "aspectRatio": "3:2",
+    "model": "sd3.5-large",
+    "prompt": "a Floral traditional patterned wallpaper print on soft neutral background printed in light pencil‑inspired sketchwork with delicate graphite linework and minimal pigment fill, with continuous pattern / mural, arching vine sweeps, and perched birds on slender stems.",
+    "imageKey": "cpc/latest/1783889763878",
+    "imageUrl": "/storage/concept-images/cpc_img_1783889763878.png",
+    "imagePath": "concept-images\\cpc_img_1783889763878.png",
+    "imageSizeBytes": 1912540
+  },
+  {
+    "id": "cpc_saved_1783889722979",
+    "createdAt": "2026-07-12T20:55:22.979Z",
+    "context": {
+      "client": "Client 1",
+      "project": "Project 1"
+    },
+    "concept": "c2",
+    "imageKey": "client 1|project 1::c2::saved",
+    "saveAction": "create",
+    "savedConcept": true,
+    "imageUrl": "/storage/concept-images/cpc_saved_1783889722979.png",
+    "imagePath": "concept-images\\cpc_saved_1783889722979.png",
+    "imageSizeBytes": 1853411
+  },
+  {
+    "id": "cpc_img_1783889709266",
+    "createdAt": "2026-07-12T20:55:09.266Z",
+    "context": {
+      "client": "Client 1",
+      "project": "Project 1",
+      "concepts": [
+        {
+          "name": "c1"
+        }
+      ],
+      "activeConceptIndex": 0
+    },
+    "concept": "c1",
+    "aspectRatio": "3:2",
+    "model": "sd3.5-large",
+    "prompt": "a Floral traditional patterned wallpaper print on soft neutral background printed in light pencil‑inspired sketchwork with delicate graphite linework and minimal pigment fill, with continuous pattern / mural, arching vine sweeps, and perched birds on slender stems.",
+    "imageKey": "cpc/latest/1783889709266",
+    "imageUrl": "/storage/concept-images/cpc_img_1783889709266.png",
+    "imagePath": "concept-images\\cpc_img_1783889709266.png",
+    "imageSizeBytes": 1853411
+  },
+  {
+    "id": "cpc_saved_1783889673086",
+    "createdAt": "2026-07-12T20:54:33.086Z",
+    "context": {
+      "client": "Client 1",
+      "project": "Project 1"
+    },
+    "concept": "c1",
+    "imageKey": "client 1|project 1::c1::saved",
+    "saveAction": "replace",
+    "savedConcept": true,
+    "imageUrl": "/storage/concept-images/cpc_saved_1783889673086.png",
+    "imagePath": "concept-images\\cpc_saved_1783889673086.png",
+    "imageSizeBytes": 1853874
+  },
+  {
+    "id": "cpc_img_1783889662600",
+    "createdAt": "2026-07-12T20:54:22.600Z",
+    "context": {
+      "client": "Client 1",
+      "project": "Project 1",
+      "concepts": [
+        {
+          "name": "c1"
+        }
+      ],
+      "activeConceptIndex": 0
+    },
+    "concept": "c1",
+    "aspectRatio": "9:16",
+    "model": "sd3.5-large",
+    "prompt": "a Floral traditional patterned wallpaper print on soft neutral background printed in light pencil‑inspired sketchwork with delicate graphite linework and minimal pigment fill, with continuous pattern / mural, arching vine sweeps, and perched birds on slender stems.",
+    "imageKey": "cpc/latest/1783889662600",
+    "imageUrl": "/storage/concept-images/cpc_img_1783889662600.png",
+    "imagePath": "concept-images\\cpc_img_1783889662600.png",
+    "imageSizeBytes": 1853874
+  },
+  {
+    "id": "cpc_saved_1783886221278",
+    "createdAt": "2026-07-12T19:57:01.278Z",
+    "context": {
+      "client": "Client 2",
+      "project": "Project 1"
+    },
+    "concept": "c3",
+    "imageKey": "client 2|project 1::c3::saved",
+    "saveAction": "create",
+    "savedConcept": true,
+    "imageUrl": "/storage/concept-images/cpc_saved_1783886221278.png",
+    "imagePath": "concept-images\\cpc_saved_1783886221278.png",
+    "imageSizeBytes": 2122440
+  },
+  {
+    "id": "cpc_img_1783886215826",
+    "createdAt": "2026-07-12T19:56:55.826Z",
+    "context": {
+      "client": "Client 2",
+      "project": "Project 1",
+      "concepts": [
+        {
+          "name": "c1"
+        },
+        {
+          "name": "c2"
+        }
+      ],
+      "activeConceptIndex": 1
+    },
+    "concept": "c2",
+    "aspectRatio": "3:2",
+    "model": "sd3.5-large",
+    "prompt": "a wallpaper‑style hand‑painted Scenic mural in the Provence Lavender Atmosphere sub‑scene, rendered in light pencil‑inspired sketchwork with delicate graphite linework and minimal pigment fill.",
+    "imageKey": "cpc/latest/1783886215826",
+    "imageUrl": "/storage/concept-images/cpc_img_1783886215826.png",
+    "imagePath": "concept-images\\cpc_img_1783886215826.png",
+    "imageSizeBytes": 2122440
+  },
+  {
+    "id": "cpc_saved_1783886135619",
+    "createdAt": "2026-07-12T19:55:35.619Z",
+    "context": {
+      "client": "Client 2",
+      "project": "Project 1"
+    },
+    "concept": "c2",
+    "imageKey": "client 2|project 1::c2::saved",
+    "saveAction": "create",
+    "savedConcept": true,
+    "imageUrl": "/storage/concept-images/cpc_saved_1783886135619.png",
+    "imagePath": "concept-images\\cpc_saved_1783886135619.png",
+    "imageSizeBytes": 2034431
+  },
+  {
+    "id": "cpc_img_1783886129276",
+    "createdAt": "2026-07-12T19:55:29.276Z",
+    "context": {
+      "client": "Client 2",
+      "project": "Project 1",
+      "concepts": [
+        {
+          "name": "c1"
+        }
+      ],
+      "activeConceptIndex": 0
+    },
+    "concept": "c1",
+    "aspectRatio": "3:2",
+    "model": "sd3.5-large",
+    "prompt": "a wallpaper‑style hand‑painted Scenic mural in the Provence Lavender Atmosphere sub‑scene, rendered in light pencil‑inspired sketchwork with delicate graphite linework and minimal pigment fill.",
+    "imageKey": "cpc/latest/1783886129276",
+    "imageUrl": "/storage/concept-images/cpc_img_1783886129276.png",
+    "imagePath": "concept-images\\cpc_img_1783886129276.png",
+    "imageSizeBytes": 2034431
+  },
+  {
+    "id": "cpc_saved_1783886094250",
+    "createdAt": "2026-07-12T19:54:54.250Z",
+    "context": {
+      "client": "Client 2",
+      "project": "Project 1"
+    },
+    "concept": "c1",
+    "imageKey": "client 2|project 1::c1::saved",
+    "saveAction": "replace",
+    "savedConcept": true,
+    "imageUrl": "/storage/concept-images/cpc_saved_1783886094250.png",
+    "imagePath": "concept-images\\cpc_saved_1783886094250.png",
+    "imageSizeBytes": 2182777
+  },
+  {
+    "id": "cpc_img_1783886073240",
+    "createdAt": "2026-07-12T19:54:33.240Z",
+    "context": {
+      "client": "Client 2",
+      "project": "Project 1",
+      "concepts": [
+        {
+          "name": "c1"
+        }
+      ],
+      "activeConceptIndex": 0
+    },
+    "concept": "c1",
+    "aspectRatio": "9:16",
+    "model": "sd3.5-large",
+    "prompt": "a wallpaper‑style hand‑painted Scenic mural in the Provence Lavender Atmosphere sub‑scene, rendered in light pencil‑inspired sketchwork with delicate graphite linework and minimal pigment fill.",
+    "imageKey": "cpc/latest/1783886073240",
+    "imageUrl": "/storage/concept-images/cpc_img_1783886073240.png",
+    "imagePath": "concept-images\\cpc_img_1783886073240.png",
+    "imageSizeBytes": 2182777
+  },
+  {
+    "id": "cpc_saved_1783885675396",
+    "createdAt": "2026-07-12T19:47:55.396Z",
+    "context": {
+      "client": "Client 1",
+      "project": "Project 1"
+    },
+    "concept": "c1",
+    "imageKey": "client 1|project 1::c1::saved",
+    "saveAction": "replace",
+    "savedConcept": true,
+    "imageUrl": "/storage/concept-images/cpc_saved_1783885675396.png",
+    "imagePath": "concept-images\\cpc_saved_1783885675396.png",
+    "imageSizeBytes": 1954251
+  },
+  {
+    "id": "cpc_img_1783885660644",
+    "createdAt": "2026-07-12T19:47:40.644Z",
+    "context": {
+      "client": "Client 1",
+      "project": "Project 1",
+      "concepts": [
+        {
+          "name": "c1"
+        }
+      ],
+      "activeConceptIndex": 0
+    },
+    "concept": "c1",
+    "aspectRatio": "9:16",
+    "model": "sd3.5-large",
+    "prompt": "a wallpaper‑style hand‑painted Scenic mural in the Provence Lavender Atmosphere sub‑scene, rendered in light pencil‑inspired sketchwork with delicate graphite linework and minimal pigment fill.",
+    "imageKey": "cpc/latest/1783885660644",
+    "imageUrl": "/storage/concept-images/cpc_img_1783885660644.png",
+    "imagePath": "concept-images\\cpc_img_1783885660644.png",
+    "imageSizeBytes": 1954251
+  },
+  {
+    "id": "test_concept_1",
+    "createdAt": "2026-07-12T14:29:18.8070279-04:00",
+    "prompt": "test",
+    "model": "test",
+    "concept": "Concept A",
+    "aspectRatio": "1:1",
+    "context": {
+      "client": "Client 1",
+      "project": "Project 1"
+    },
+    "imageUrl": "/storage/concept-images/test_concept_1.png",
+    "imagePath": "concept-images\\test_concept_1.png",
+    "imageSizeBytes": 68
+  }
+]
