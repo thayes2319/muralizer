@@ -3247,6 +3247,111 @@ button, select {
 
 
 /* ============================================================
+   FULL-BLEED CONCEPT LIGHTBOX — Ken Burns drift
+============================================================ */
+
+#muralImage.loaded {
+  cursor: zoom-in;
+}
+
+#imageWrapper.compare-mode #muralImage.loaded {
+  cursor: default;
+}
+
+.concept-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: rgba(6, 14, 20, 0.97);
+  cursor: zoom-out;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.concept-lightbox.open {
+  display: flex;
+}
+
+#conceptLightboxImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+  will-change: transform;
+}
+
+.concept-lightbox.open #conceptLightboxImage.kb-drift-a {
+  animation: kbDriftA 26s ease-in-out infinite alternate;
+}
+
+.concept-lightbox.open #conceptLightboxImage.kb-drift-b {
+  animation: kbDriftB 30s ease-in-out infinite alternate;
+}
+
+.concept-lightbox.open #conceptLightboxImage.kb-drift-c {
+  animation: kbDriftC 28s ease-in-out infinite alternate;
+}
+
+@keyframes kbDriftA {
+  from { transform: scale(1.06) translate(-1.4%, 1%); }
+  to   { transform: scale(1.18) translate(1.6%, -1.2%); }
+}
+
+@keyframes kbDriftB {
+  from { transform: scale(1.16) translate(1.4%, -0.8%); }
+  to   { transform: scale(1.05) translate(-1.2%, 1.2%); }
+}
+
+@keyframes kbDriftC {
+  from { transform: scale(1.08) translate(0.8%, 1.4%); }
+  to   { transform: scale(1.2) translate(-1%, -1.4%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .concept-lightbox.open #conceptLightboxImage {
+    animation: none !important;
+  }
+}
+
+.concept-lightbox-watermark {
+  font-size: 9vmin;
+  color: rgba(255,255,255,0.2);
+}
+
+/* Base .mural-watermark hides until has-image; out-specify it here. */
+.concept-lightbox.open .concept-lightbox-watermark {
+  display: block;
+}
+
+.concept-lightbox-close {
+  position: absolute;
+  top: 16px;
+  right: 20px;
+  z-index: 2;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.35);
+  background: rgba(255,255,255,0.12);
+  color: #ffffff;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.concept-lightbox-close:hover {
+  background: rgba(255,255,255,0.24);
+}
+
+
+/* ============================================================
    CONCEPT STAGE RIBBON (in eyebrow, between theme control and ⋯)
 ============================================================ */
 
@@ -3254,10 +3359,13 @@ button, select {
   display: inline-flex;
   align-items: flex-start;
   justify-content: center;
-  flex: 1 1 auto;
-  min-width: 0;
-  max-width: 600px;
-  margin-top: 14px;
+  /* True center of the eyebrow regardless of the widths of the
+     scenery controls (left) and ⋯ menu (right). */
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) translateY(8px);
+  width: min(720px, 56%);
   overflow: hidden;
   white-space: nowrap;
 }
@@ -3314,6 +3422,10 @@ button, select {
   transition: background 0.45s ease;
 }
 
+.stage-chip .stage-label-short {
+  display: none;
+}
+
 .stage-chip.done,
 .stage-chip.active {
   color: #1a5d80;
@@ -3341,6 +3453,9 @@ button, select {
   }
 
   .concept-stage-ribbon {
+    position: static;
+    transform: none;
+    width: 100%;
     flex: 0 0 100%;
     max-width: none;
     margin-top: 0;
@@ -3350,9 +3465,17 @@ button, select {
   }
 
   .stage-chip {
-    font-size: 9.5px;
+    font-size: 8.5px;
     padding: 0 1px;
     min-width: 0;
+  }
+
+  .stage-chip .stage-label-full {
+    display: none;
+  }
+
+  .stage-chip .stage-label-short {
+    display: inline;
   }
 
   .stage-chip::after {
@@ -6289,10 +6412,12 @@ select[multiple].collapsible-multi.expanded option:first-child {
       <!-- CENTER: CONCEPT STAGE RIBBON (quiet pipeline status) -->
       <div id="conceptStageRibbon" class="concept-stage-ribbon" aria-label="Concept pipeline stage">
         <button class="stage-chip" type="button" data-stage="Concept">Concept</button>
-        <button class="stage-chip" type="button" data-stage="Measured">Measured</button>
-        <button class="stage-chip" type="button" data-stage="Proofed">Proofed</button>
-        <button class="stage-chip" type="button" data-stage="Printing">Printing</button>
-        <button class="stage-chip" type="button" data-stage="Installed">Installed</button>
+        <button class="stage-chip" type="button" data-stage="Measure">Measure</button>
+        <button class="stage-chip" type="button" data-stage="Estimate">Estimate</button>
+        <button class="stage-chip" type="button" data-stage="Tailor &amp; Panelize"><span class="stage-label-full">Tailor &amp; Panelize</span><span class="stage-label-short">Tailor</span></button>
+        <button class="stage-chip" type="button" data-stage="Proof">Proof</button>
+        <button class="stage-chip" type="button" data-stage="Print">Print</button>
+        <button class="stage-chip" type="button" data-stage="Install">Install</button>
       </div>
 
       <!-- RIGHT: ⋯ MAIN MENU -->
@@ -7291,6 +7416,13 @@ If you’re exploring a new direction, try adjusting just 1-2 elements at a time
         <div id="muralPaletteStrip" class="palette-strip" style="display:none;" aria-label="Dominant mural colors for paint transfer"></div>
         <img id="muralImage">
         <div class="mural-watermark">Scénique Murals</div>
+      </div>
+
+      <!-- ⭐ FULL-BLEED CONCEPT LIGHTBOX (Ken Burns drift) -->
+      <div id="conceptLightbox" class="concept-lightbox" role="dialog" aria-label="Concept full view" aria-hidden="true">
+        <button id="conceptLightboxClose" class="concept-lightbox-close" type="button" aria-label="Close full view">×</button>
+        <img id="conceptLightboxImage" alt="Concept full view" draggable="false">
+        <div class="mural-watermark concept-lightbox-watermark">Scénique Murals</div>
       </div>
 
       <div id="nextStepsBlock" style="display:none;">
@@ -11083,18 +11215,80 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // ============================================================
+// FULL-BLEED CONCEPT LIGHTBOX — Ken Burns drift
+// Click the main concept to fill the screen with a slow cinematic
+// pan/zoom. Watermarked and capture-protected like the main image.
+// ============================================================
+const KEN_BURNS_VARIANTS = ["kb-drift-a", "kb-drift-b", "kb-drift-c"];
+
+function openConceptLightbox(src) {
+  const lightbox = document.getElementById("conceptLightbox");
+  const img = document.getElementById("conceptLightboxImage");
+  if (!lightbox || !img || !src) return;
+  img.classList.remove(...KEN_BURNS_VARIANTS);
+  img.classList.add(KEN_BURNS_VARIANTS[Math.floor(Math.random() * KEN_BURNS_VARIANTS.length)]);
+  img.src = src;
+  lightbox.classList.add("open");
+  lightbox.setAttribute("aria-hidden", "false");
+  document.body.style.overflow = "hidden";
+}
+
+function closeConceptLightbox() {
+  const lightbox = document.getElementById("conceptLightbox");
+  const img = document.getElementById("conceptLightboxImage");
+  if (!lightbox) return;
+  lightbox.classList.remove("open");
+  lightbox.setAttribute("aria-hidden", "true");
+  if (img) img.removeAttribute("src");
+  document.body.style.overflow = "";
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const muralImage = document.getElementById("muralImage");
+  const imageWrapper = document.getElementById("imageWrapper");
+  const lightbox = document.getElementById("conceptLightbox");
+  if (!muralImage || !lightbox) return;
+
+  muralImage.addEventListener("click", () => {
+    if (!muralImage.src) return;
+    if (imageWrapper && imageWrapper.classList.contains("compare-mode")) return;
+    openConceptLightbox(muralImage.src);
+  });
+
+  lightbox.addEventListener("click", closeConceptLightbox);
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && lightbox.classList.contains("open")) closeConceptLightbox();
+  });
+
+  // Capture protection, mirroring the main image rules.
+  lightbox.addEventListener("contextmenu", (e) => {
+    if (!proUnlocked) e.preventDefault();
+  });
+  lightbox.addEventListener("dragstart", (e) => {
+    if (!proUnlocked) e.preventDefault();
+  });
+});
+
+// ============================================================
 // CONCEPT STAGE RIBBON
 // Concept → Measured → Proofed → Printing → Installed
 // Quiet placement in the eyebrow; stage stored per concept key.
 // ============================================================
 const cpcConceptStageStoreKey = "cpcConceptStageByKey";
-const CONCEPT_STAGE_ORDER = ["Concept", "Measured", "Proofed", "Printing", "Installed"];
+const CONCEPT_STAGE_ORDER = ["Concept", "Measure", "Estimate", "Tailor & Panelize", "Proof", "Print", "Install"];
+// Earlier builds used a shorter pipeline; map stored values forward.
+const LEGACY_STAGE_NAMES = { Measured: "Measure", Proofed: "Proof", Printing: "Print", Installed: "Install" };
 let conceptStageActiveKey = "";
 
 function readConceptStageMap() {
   try {
     const raw = localStorage.getItem(cpcConceptStageStoreKey);
-    return raw ? (JSON.parse(raw) || {}) : {};
+    const map = raw ? (JSON.parse(raw) || {}) : {};
+    Object.keys(map).forEach((k) => {
+      if (LEGACY_STAGE_NAMES[map[k]]) map[k] = LEGACY_STAGE_NAMES[map[k]];
+    });
+    return map;
   } catch (err) {
     return {};
   }
