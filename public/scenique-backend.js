@@ -149,6 +149,12 @@
     saveConceptImage(payload) {
       return post("/api/concept-images", withOwner(payload));
     },
+    createConceptShare(payload) {
+      return post("/api/concept-shares", withOwner(payload));
+    },
+    loadConceptShare(token) {
+      return get(`/api/concept-shares/${encodeURIComponent(token)}`);
+    },
     saveMeasurementRequest(payload) {
       return post("/api/measurement-requests", withOwner(payload));
     },

@@ -16,6 +16,7 @@ const requestIndexPath = path.join(dataDir, 'measurement-requests.json');
 const conceptShareIndexPath = path.join(dataDir, 'concept-shares.json');
 const port = Number(process.env.PORT || 8787);
 const host = String(process.env.HOST || '0.0.0.0').trim() || '0.0.0.0';
+const serviceRevision = String(process.env.RENDER_GIT_COMMIT || process.env.SOURCE_VERSION || 'local').trim() || 'local';
 const generateUpstream = String(process.env.MURALIZER_GENERATE_URL || '').trim();
 const upstreamApiKey = String(
   process.env.MURALIZER_API_KEY
@@ -52,6 +53,7 @@ function sendJson(res, statusCode, payload) {
   res.writeHead(statusCode, {
     'Content-Type': 'application/json; charset=utf-8',
     'Cache-Control': 'no-store',
+    'X-Scenique-Backend-Revision': serviceRevision,
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET,POST,DELETE,OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, x-api-key'
@@ -63,6 +65,7 @@ function sendText(res, statusCode, contentType, body) {
   res.writeHead(statusCode, {
     'Content-Type': `${contentType}; charset=utf-8`,
     'Cache-Control': 'no-store',
+    'X-Scenique-Backend-Revision': serviceRevision,
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET,POST,DELETE,OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, x-api-key'
@@ -73,6 +76,7 @@ function sendText(res, statusCode, contentType, body) {
 function sendNoContent(res, statusCode) {
   res.writeHead(statusCode, {
     'Cache-Control': 'no-store',
+    'X-Scenique-Backend-Revision': serviceRevision,
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET,POST,DELETE,OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, x-api-key'
@@ -761,6 +765,8 @@ async function handleApi(req, res, url) {
     sendJson(res, 200, {
       ok: true,
       service: 'scenique-backend',
+      revision: serviceRevision,
+      referenceGeneration: true,
       time: new Date().toISOString()
     });
     return true;
