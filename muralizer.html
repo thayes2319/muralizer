@@ -2820,12 +2820,86 @@ margin-top: 15px;
   font-weight: 700;
 }
 
+.reference-crop-editor {
+  display: none;
+  margin-top: 10px;
+}
+
+.reference-crop-editor.is-visible { display: block; }
+
+.reference-crop-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+  color: #444;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.reference-crop-reset {
+  border: 0;
+  background: transparent;
+  color: #216d87;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.reference-crop-frame {
+  position: relative;
+  width: min(100%, 250px);
+  aspect-ratio: 1;
+  margin: 0 auto;
+  overflow: hidden;
+  border: 1px solid rgba(33,143,201,.55);
+  border-radius: 7px;
+  background: #e7e8e4;
+  cursor: grab;
+  touch-action: none;
+}
+
+.reference-crop-frame.is-dragging { cursor: grabbing; }
+
+.reference-crop-image {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  max-width: none;
+  max-height: none;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.reference-crop-guide {
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgba(255,255,255,.92);
+  pointer-events: none;
+}
+
+.reference-crop-zoom { display: flex; align-items: center; gap: 8px; margin: 8px auto 0; width: min(100%, 250px); }
+.reference-crop-zoom input { flex: 1; accent-color: #218FC9; }
+.reference-crop-zoom span { min-width: 37px; color: #216d87; font-size: 11px; font-weight: 700; }
+.reference-crop-help { margin: 5px 0 0; color: #666; font-size: 11px; text-align: center; }
+
 .reference-influence-label { display: block; margin: 12px 0 5px; color: #444; font-size: 12px; font-weight: 700; }
 
 .reference-influence-row { display: flex; align-items: center; gap: 8px; }
 .reference-influence-row input { flex: 1; accent-color: #218FC9; }
 .reference-influence-value { width: 34px; color: #216d87; font-size: 12px; font-weight: 700; }
-.reference-influence-hint { margin: 5px 0 0; color: #666; font-size: 11px; }
+.reference-influence-hint {
+  margin: 6px 0 0;
+  padding: 7px 8px;
+  border-left: 3px solid rgba(33,143,201,.68);
+  background: rgba(226,244,251,.62);
+  color: #265266;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.35;
+}
 
 
 
@@ -3628,6 +3702,19 @@ button, select {
   padding: 0 18px 18px;
 }
 
+.room-preview-viewport { grid-column: 1; grid-row: 1 / span 2; }
+.room-preview-panel { grid-column: 2; grid-row: 2; }
+
+.room-preview-body:has(.room-preview-guidance[open]) .room-preview-guidance {
+  grid-column: 1 / -1;
+  grid-row: 1;
+}
+
+.room-preview-body:has(.room-preview-guidance[open]) .room-preview-viewport,
+.room-preview-body:has(.room-preview-guidance[open]) .room-preview-panel {
+  grid-row: 2;
+}
+
 .room-preview-stage {
   position: relative;
   min-height: 320px;
@@ -3810,6 +3897,9 @@ button, select {
 .room-preview-feature-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
 
 .room-preview-guidance {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   border: 1px solid rgba(196,136,24,0.55);
   border-radius: 6px;
   background: rgba(255,248,224,0.78);
@@ -3865,6 +3955,14 @@ button, select {
     min-height: 44px;
   }
   .room-preview-body { grid-template-columns: 1fr; }
+  .room-preview-viewport,
+  .room-preview-panel,
+  .room-preview-body:has(.room-preview-guidance[open]) .room-preview-viewport,
+  .room-preview-body:has(.room-preview-guidance[open]) .room-preview-panel,
+  .room-preview-body:has(.room-preview-guidance[open]) .room-preview-guidance {
+    grid-column: 1;
+    grid-row: auto;
+  }
   .room-preview-viewport {
     max-height: 55svh;
     overflow: auto;
@@ -8010,12 +8108,21 @@ If you’re exploring a new direction, try adjusting just 1-2 elements at a time
       <span id="referenceReimagineName" class="reference-reimagine-name"></span>
       <button type="button" class="reference-reimagine-remove" onclick="clearReferenceReimagine()">Remove</button>
     </div>
+    <div id="referenceCropEditor" class="reference-crop-editor">
+      <div class="reference-crop-heading"><span>Focus the inspiration</span><button type="button" class="reference-crop-reset" onclick="resetReferenceCrop()">Use full image</button></div>
+      <div id="referenceCropFrame" class="reference-crop-frame" aria-label="Drag to focus the inspiration image">
+        <img id="referenceCropImage" class="reference-crop-image" alt="Crop focus preview">
+        <div class="reference-crop-guide"></div>
+      </div>
+      <label class="reference-crop-zoom">Zoom <input id="referenceCropZoom" type="range" min="100" max="250" value="100" step="1" oninput="updateReferenceCropZoom(this.value)"><span id="referenceCropZoomValue">100%</span></label>
+      <p class="reference-crop-help">Drag to frame the artwork you want to guide the mural.</p>
+    </div>
     <label class="reference-influence-label" for="referenceInfluence">Source influence</label>
     <div class="reference-influence-row">
       <input id="referenceInfluence" type="range" min="30" max="65" value="45" step="1" oninput="updateReferenceInfluence(this.value)">
       <span id="referenceInfluenceValue" class="reference-influence-value">45%</span>
     </div>
-    <p id="referenceInfluenceHint" class="reference-influence-hint">Keep the visual character</p>
+    <p id="referenceInfluenceHint" class="reference-influence-hint">Balanced guidance: carry the artwork's visual character forward, never its composition.</p>
   </div>
 </details>
 
@@ -8209,15 +8316,15 @@ If you’re exploring a new direction, try adjusting just 1-2 elements at a time
                 </div>
               </div>
             </div>
+            <details class="room-preview-guidance">
+              <summary><span class="room-preview-guidance-icon" aria-hidden="true">!</span>Important about this room view</summary>
+              <div class="room-preview-guidance-copy">
+                <p><strong>Prototype view, not production proof.</strong> This is a visual guide for exploring placement and mood. It does not establish dimensions, panel layout, print scale, color matching, or installation conditions.</p>
+                <p><strong>Photo quality drives confidence.</strong> A straight-on, well-lit photo with the whole wall visible maps best. Strong lens distortion, an angled camera, shadows, obstructions, or a cropped wall can make the perspective feel less convincing.</p>
+                <p><strong>Format changes the outcome.</strong> Wide art usually reads naturally across a wide wall; tall art can leave more room visible at the sides. A small-repeat or detail-led image may look unlike a wall-scaled mural. Use this view to compare direction, then confirm composition and scale in production planning.</p>
+              </div>
+            </details>
             <div class="room-preview-panel">
-              <details class="room-preview-guidance">
-                <summary><span class="room-preview-guidance-icon" aria-hidden="true">!</span>Important about this room view</summary>
-                <div class="room-preview-guidance-copy">
-                  <p><strong>Prototype view, not production proof.</strong> This is a visual guide for exploring placement and mood. It does not establish dimensions, panel layout, print scale, color matching, or installation conditions.</p>
-                  <p><strong>Photo quality drives confidence.</strong> A straight-on, well-lit photo with the whole wall visible maps best. Strong lens distortion, an angled camera, shadows, obstructions, or a cropped wall can make the perspective feel less convincing.</p>
-                  <p><strong>Format changes the outcome.</strong> Wide art usually reads naturally across a wide wall; tall art can leave more room visible at the sides. A small-repeat or detail-led image may look unlike a wall-scaled mural. Use this view to compare direction, then confirm composition and scale in production planning.</p>
-                </div>
-              </details>
               <label class="room-preview-upload">Take or Choose Room Photo<input id="roomPreviewUpload" type="file" accept="image/*" capture="environment"></label>
               <div>
                 <p class="room-preview-label">Before / after</p>
@@ -13409,7 +13516,9 @@ function persistGeneratedConceptImage(imgBase64) {
 const referenceReimagineState = {
   dataUrl: "",
   mimeType: "",
-  name: ""
+  name: "",
+  image: null,
+  crop: { x: 0, y: 0, zoom: 1 }
 };
 
 function updateReferenceInfluence(value) {
@@ -13419,10 +13528,10 @@ function updateReferenceInfluence(value) {
   if (label) label.textContent = `${normalized}%`;
   if (hint) {
     hint.textContent = normalized < 40
-      ? "Fresh interpretation"
+      ? "Fresh interpretation: take a lighter cue from the artwork's visual character."
       : normalized > 52
-        ? "Strong source influence"
-        : "Keep the visual character";
+        ? "Strong source influence: carry more visual character forward, never the composition."
+        : "Balanced guidance: carry the artwork's visual character forward, never its composition.";
   }
 }
 
@@ -13430,10 +13539,75 @@ function clearReferenceReimagine() {
   referenceReimagineState.dataUrl = "";
   referenceReimagineState.mimeType = "";
   referenceReimagineState.name = "";
+  referenceReimagineState.image = null;
+  referenceReimagineState.crop = { x: 0, y: 0, zoom: 1 };
   const input = document.getElementById("referenceReimagineInput");
   const preview = document.getElementById("referenceReimaginePreview");
+  const editor = document.getElementById("referenceCropEditor");
   if (input) input.value = "";
   preview?.classList.remove("is-visible");
+  editor?.classList.remove("is-visible");
+}
+
+function getReferenceCropMetrics() {
+  const frame = document.getElementById("referenceCropFrame");
+  const image = referenceReimagineState.image;
+  if (!frame || !image?.naturalWidth || !image?.naturalHeight) return null;
+  const frameSize = frame.clientWidth;
+  const baseScale = Math.max(frameSize / image.naturalWidth, frameSize / image.naturalHeight);
+  return { frameSize, baseScale, scale: baseScale * referenceReimagineState.crop.zoom };
+}
+
+function clampReferenceCrop() {
+  const metrics = getReferenceCropMetrics();
+  const image = referenceReimagineState.image;
+  if (!metrics || !image) return;
+  const maxX = Math.max(0, (image.naturalWidth * metrics.scale - metrics.frameSize) / 2);
+  const maxY = Math.max(0, (image.naturalHeight * metrics.scale - metrics.frameSize) / 2);
+  referenceReimagineState.crop.x = Math.max(-maxX, Math.min(maxX, referenceReimagineState.crop.x));
+  referenceReimagineState.crop.y = Math.max(-maxY, Math.min(maxY, referenceReimagineState.crop.y));
+}
+
+function renderReferenceCrop() {
+  const imageElement = document.getElementById("referenceCropImage");
+  const metrics = getReferenceCropMetrics();
+  const image = referenceReimagineState.image;
+  if (!imageElement || !metrics || !image) return;
+  clampReferenceCrop();
+  imageElement.src = referenceReimagineState.dataUrl;
+  imageElement.style.width = `${image.naturalWidth * metrics.scale}px`;
+  imageElement.style.height = `${image.naturalHeight * metrics.scale}px`;
+  imageElement.style.transform = `translate(calc(-50% + ${referenceReimagineState.crop.x}px), calc(-50% + ${referenceReimagineState.crop.y}px))`;
+}
+
+function buildReferenceCropDataUrl() {
+  const metrics = getReferenceCropMetrics();
+  const image = referenceReimagineState.image;
+  if (!metrics || !image) return referenceReimagineState.dataUrl;
+  const canvas = document.createElement("canvas");
+  canvas.width = 1024;
+  canvas.height = 1024;
+  const sourceSize = metrics.frameSize / metrics.scale;
+  const sourceX = (image.naturalWidth - sourceSize) / 2 - referenceReimagineState.crop.x / metrics.scale;
+  const sourceY = (image.naturalHeight - sourceSize) / 2 - referenceReimagineState.crop.y / metrics.scale;
+  canvas.getContext("2d").drawImage(image, sourceX, sourceY, sourceSize, sourceSize, 0, 0, 1024, 1024);
+  return canvas.toDataURL("image/png");
+}
+
+function resetReferenceCrop() {
+  referenceReimagineState.crop = { x: 0, y: 0, zoom: 1 };
+  const zoom = document.getElementById("referenceCropZoom");
+  const value = document.getElementById("referenceCropZoomValue");
+  if (zoom) zoom.value = "100";
+  if (value) value.textContent = "100%";
+  renderReferenceCrop();
+}
+
+function updateReferenceCropZoom(value) {
+  referenceReimagineState.crop.zoom = Math.max(1, Math.min(2.5, Number(value) / 100 || 1));
+  const label = document.getElementById("referenceCropZoomValue");
+  if (label) label.textContent = `${Math.round(referenceReimagineState.crop.zoom * 100)}%`;
+  renderReferenceCrop();
 }
 
 function handleReferenceReimagineFile(file) {
@@ -13455,6 +13629,15 @@ function handleReferenceReimagineFile(file) {
     referenceReimagineState.dataUrl = String(reader.result || "");
     referenceReimagineState.mimeType = file.type;
     referenceReimagineState.name = file.name;
+    referenceReimagineState.crop = { x: 0, y: 0, zoom: 1 };
+    const sourceImage = new Image();
+    sourceImage.onload = () => {
+      referenceReimagineState.image = sourceImage;
+      const editor = document.getElementById("referenceCropEditor");
+      editor?.classList.add("is-visible");
+      resetReferenceCrop();
+    };
+    sourceImage.src = referenceReimagineState.dataUrl;
     const preview = document.getElementById("referenceReimaginePreview");
     const thumb = document.getElementById("referenceReimagineThumb");
     const name = document.getElementById("referenceReimagineName");
@@ -13490,6 +13673,32 @@ function initializeReferenceReimagineDropzone() {
 }
 
 initializeReferenceReimagineDropzone();
+
+function initializeReferenceCropGestures() {
+  const frame = document.getElementById("referenceCropFrame");
+  if (!frame || frame.dataset.cropReady) return;
+  frame.dataset.cropReady = "true";
+  let dragStart = null;
+  frame.addEventListener("pointerdown", (event) => {
+    if (!referenceReimagineState.image) return;
+    dragStart = { x: event.clientX, y: event.clientY, cropX: referenceReimagineState.crop.x, cropY: referenceReimagineState.crop.y };
+    frame.setPointerCapture(event.pointerId);
+    frame.classList.add("is-dragging");
+    event.preventDefault();
+  });
+  frame.addEventListener("pointermove", (event) => {
+    if (!dragStart) return;
+    referenceReimagineState.crop.x = dragStart.cropX + event.clientX - dragStart.x;
+    referenceReimagineState.crop.y = dragStart.cropY + event.clientY - dragStart.y;
+    renderReferenceCrop();
+    event.preventDefault();
+  });
+  const endDrag = () => { dragStart = null; frame.classList.remove("is-dragging"); };
+  frame.addEventListener("pointerup", endDrag);
+  frame.addEventListener("pointercancel", endDrag);
+}
+
+initializeReferenceCropGestures();
 
 async function generateImage() {
   const scenesPanel = document.querySelector(".mural-scenes");
@@ -13528,7 +13737,7 @@ async function generateImage() {
         aspect_ratio: aspectRatio,
         seed: currentSeed,
         model: document.getElementById("imageModelSelector").value,
-        reference_image: hasReference ? referenceReimagineState.dataUrl : undefined,
+        reference_image: hasReference ? buildReferenceCropDataUrl() : undefined,
         reference_influence: hasReference
           ? Number(document.getElementById("referenceInfluence")?.value || 45) / 100
           : undefined
@@ -13536,7 +13745,9 @@ async function generateImage() {
     });
 
     if (!response.ok) {
-      throw new Error(`Generate failed (${response.status})`);
+      const errorBody = await response.json().catch(() => null);
+      const message = String(errorBody?.error || "").trim();
+      throw new Error(`Generate failed (${response.status})${message ? `: ${message}` : ""}`);
     }
 
     const data = await response.json();
@@ -13617,6 +13828,7 @@ muralImage.src = `data:image/png;base64,${imgBase64}`;
 
   } catch (err) {
     console.error("Generation error:", err);
+    alert(err?.message || "Generation could not be completed. Please try again.");
   } finally {
     spinner?.classList.add("hidden");
   }
