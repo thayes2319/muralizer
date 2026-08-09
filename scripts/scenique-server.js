@@ -728,13 +728,15 @@ async function handleReferenceGenerateProxy(req, res) {
 // installed on a wall.
 const WALL_MOCKUP_PROMPT =
   "A professional real-estate interior photograph of a bright, tastefully furnished, completely generic and unbranded room, " +
-  "with one large feature wall showing this exact mural pattern applied edge-to-edge as an installed wall mural. " +
+  "with one large feature wall showing this exact mural pattern applied edge-to-edge as an installed wall mural, " +
+  "preserving the mural's exact colors, motifs, and composition precisely and faithfully -- do not reinterpret, restyle, or redesign the mural itself. " +
   "Natural daylight, soft realistic shadows and perspective, believable modern interior, wide-angle real-estate photography style. " +
   "No people, no visible logos or text, no identifiable real location.";
 
 const WALL_MOCKUP_NEGATIVE_PROMPT =
   "no text, no writing, no letters, no watermark, no logo, no signature, no UI elements, " +
-  "no borders, no frames, no collage, no people, no distorted architecture, no warped walls, no blurry areas";
+  "no borders, no frames, no collage, no people, no distorted architecture, no warped walls, no blurry areas, " +
+  "no reinterpreting the mural design, no altering the mural's colors or motifs, no different artwork";
 
 async function handleWallMockupProxy(req, res) {
   const body = await readBody(req);
@@ -758,7 +760,14 @@ async function handleWallMockupProxy(req, res) {
   form.append('prompt', WALL_MOCKUP_PROMPT);
   form.append('negative_prompt', WALL_MOCKUP_NEGATIVE_PROMPT);
   form.append('output_format', 'png');
-  form.append('fidelity', '0.4');
+  // Deliberately higher than generate-from-reference's 0.3-0.65 UI-exposed
+  // range above -- that flow WANTS creative deviation (it's generating a new
+  // flat mural "inspired by" a reference). This flow wants the opposite: the
+  // mural is already final, so fidelity is pushed toward the top of
+  // Stability's 0-1 range to minimize reinterpretation, while stopping short
+  // of 1.0 so the model still has enough room to invent the surrounding
+  // room/wall/lighting context around it.
+  form.append('fidelity', '0.8');
   form.append('aspect_ratio', '3:2');
   if (body.seed !== undefined && body.seed !== null && body.seed !== '') {
     form.append('seed', String(body.seed));
