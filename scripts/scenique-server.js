@@ -672,7 +672,7 @@ async function handleReferenceGenerateProxy(req, res) {
   const form = new FormData();
   const imageExtension = reference.mimeType === 'image/jpeg' ? 'jpg' : reference.mimeType.split('/')[1];
   form.append('image', new Blob([reference.buffer], { type: reference.mimeType }), `inspiration.${imageExtension}`);
-  form.append('prompt', `${prompt}\n\nCreate a flat, front-facing original mural artwork only. Do not depict a room, wall, furniture, architecture, an installed mural, text, logo, or frame.`);
+  form.append('prompt', `${prompt}\n\nCreate a flat, front-facing original mural artwork only. The full canvas must be the mural design itself, with no interior scene or installed-mural mockup. Never depict furniture, chairs, tables, sofas, beds, lamps, windows, doors, rooms, walls, floors, ceilings, architecture, people, text, logos, frames, or borders.`);
   form.append('output_format', 'png');
   form.append('fidelity', String(fidelity));
   const negativePrompt = String(body.negative_prompt || '').trim();
