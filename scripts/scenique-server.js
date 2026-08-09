@@ -730,13 +730,17 @@ const WALL_MOCKUP_PROMPT =
   "A professional real-estate interior photograph of a bright, tastefully furnished, completely generic and unbranded room, " +
   "with one large feature wall showing this exact mural pattern applied edge-to-edge as an installed wall mural, " +
   "preserving the mural's exact colors, motifs, and composition precisely and faithfully -- do not reinterpret, restyle, or redesign the mural itself. " +
+  "The mural pattern appears ONLY on that one wall. Every other surface -- furniture, upholstery, textiles, rugs, floors, ceiling, other walls -- " +
+  "is plain, solid-colored, and unpatterned, in neutral modern interior tones, completely uninfluenced by the mural's colors or motifs. " +
   "Natural daylight, soft realistic shadows and perspective, believable modern interior, wide-angle real-estate photography style. " +
   "No people, no visible logos or text, no identifiable real location.";
 
 const WALL_MOCKUP_NEGATIVE_PROMPT =
   "no text, no writing, no letters, no watermark, no logo, no signature, no UI elements, " +
   "no borders, no frames, no collage, no people, no distorted architecture, no warped walls, no blurry areas, " +
-  "no reinterpreting the mural design, no altering the mural's colors or motifs, no different artwork";
+  "no reinterpreting the mural design, no altering the mural's colors or motifs, no different artwork, " +
+  "no patterned furniture, no patterned upholstery, no patterned textiles, no patterned rugs, no patterned floors, " +
+  "no matching furniture colors, no mural pattern outside the feature wall";
 
 async function handleWallMockupProxy(req, res) {
   const body = await readBody(req);
@@ -767,7 +771,12 @@ async function handleWallMockupProxy(req, res) {
   // Stability's 0-1 range to minimize reinterpretation, while stopping short
   // of 1.0 so the model still has enough room to invent the surrounding
   // room/wall/lighting context around it.
-  form.append('fidelity', '0.8');
+  // Stepped back from an initial 0.8 -- fidelity here has no spatial/regional
+  // control, so pushing it too high was bleeding the mural's style onto
+  // furniture and other surfaces, not just the wall (confirmed via real
+  // testing). 0.65 plus the explicit "only on that one wall" prompt language
+  // above is doing the spatial-confinement work instead of raw fidelity.
+  form.append('fidelity', '0.65');
   form.append('aspect_ratio', '3:2');
   if (body.seed !== undefined && body.seed !== null && body.seed !== '') {
     form.append('seed', String(body.seed));

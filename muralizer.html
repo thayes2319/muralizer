@@ -4070,6 +4070,33 @@ button, select {
 
 .room-preview-guidance-copy p { margin: 0; }
 
+/* Desktop: this box already sits in a grid cell stretched tall by the
+   preview stage next to it, so a collapsed summary just leaves that space
+   empty. openRoomPreview() sets the real `open` attribute on desktop widths
+   so the content renders in that already-reserved space; this just cancels
+   the (otherwise mobile-appropriate) full-width reflow that [open] normally
+   triggers, so opening it here doesn't restructure the layout, and hides
+   the now-decorative toggle affordance. Mobile keeps the click-to-expand
+   behavior below, where the space isn't free to give away by default. */
+@media (min-width: 721px) {
+  .room-preview-guidance summary {
+    cursor: default;
+    pointer-events: none;
+  }
+  .room-preview-body:has(.room-preview-guidance[open]) .room-preview-guidance {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .room-preview-body:has(.room-preview-guidance[open]) .room-preview-viewport {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+  }
+  .room-preview-body:has(.room-preview-guidance[open]) .room-preview-panel {
+    grid-column: 2;
+    grid-row: 2;
+  }
+}
+
 @media (max-width: 720px) {
   .room-preview-modal {
     align-items: stretch;
@@ -8521,6 +8548,7 @@ If you’re exploring a new direction, try adjusting just 1-2 elements at a time
           <p id="genericRoomStatus" class="generic-room-status" aria-live="polite"></p>
           <div class="generic-room-actions">
             <button id="genericRoomRegenerate" class="primary" type="button">Generate</button>
+            <button id="genericRoomShare" type="button">Share</button>
           </div>
           <p class="generic-room-disclaimer">AI impression for mood only -- not a precise placement. The mural's exact colors and details may shift in this rendering; for accurate scale and placement, use "See It In Your Room" instead.</p>
         </div>
@@ -13153,6 +13181,12 @@ async function openRoomPreview() {
 
   modal.classList.add("open");
   modal.setAttribute("aria-hidden", "false");
+  // Native <details> suppresses layout for its content when closed in a way
+  // CSS display:!important can't override (confirmed: forcing display on the
+  // child still yields a 0x0 box) -- so showing the guidance box outright on
+  // desktop needs the real `open` attribute, not just a style override.
+  const guidance = document.querySelector(".room-preview-guidance");
+  if (guidance) guidance.open = window.innerWidth > 720;
   if (status) status.textContent = "Preparing this concept for your room preview...";
   roomPreviewPhoto = null;
   roomPreviewPoints = [];
@@ -13996,11 +14030,70 @@ async function runGenericRoomGeneration(sourceOverride) {
   }
 }
 
+// Mirrors shareRoomPreviewComposite() above (same three-tier fallback:
+// Capacitor native share for the Android bundle, then Web Share API, then a
+// plain download link) -- simpler here since the result is already a plain
+// generated PNG with no canvas compositing to do first.
+async function shareGenericRoomPreview() {
+  const resultImage = document.getElementById("genericRoomImage");
+  const status = document.getElementById("genericRoomStatus");
+  const src = resultImage?.src || "";
+  if (!src.startsWith("data:")) {
+    if (status) status.textContent = "Generate a room impression before sharing it.";
+    return;
+  }
+  if (status) status.textContent = "Preparing image for sharing...";
+  const blob = await (await fetch(src)).blob();
+  const file = new File([blob], "scenique-room-impression.png", { type: "image/png" });
+  const nativePlugins = window.Capacitor?.Plugins;
+  if (nativePlugins?.Filesystem?.writeFile && nativePlugins?.Share?.share) {
+    try {
+      const base64 = src.split(",")[1];
+      const saved = await nativePlugins.Filesystem.writeFile({
+        path: `scenique-room-impression-${Date.now()}.png`,
+        data: base64,
+        directory: "CACHE"
+      });
+      await nativePlugins.Share.share({
+        title: "Scénique Room Impression",
+        files: [saved.uri],
+        dialogTitle: "Share room impression"
+      });
+      if (status) status.textContent = "Room impression ready to share.";
+      return;
+    } catch (error) {
+      console.warn("Native room impression share failed:", error);
+      if (status) status.textContent = "Native sharing was unavailable. Trying the device share option...";
+    }
+  }
+  try {
+    if (navigator.share && (!navigator.canShare || navigator.canShare({ files: [file] }))) {
+      await navigator.share({ title: "Scénique Room Impression", files: [file] });
+      if (status) status.textContent = "Room impression shared.";
+      return;
+    }
+  } catch (error) {
+    if (error && error.name === "AbortError") return;
+    console.warn("Room impression share failed:", error);
+  }
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "scenique-room-impression.png";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+  if (status) status.textContent = "Room impression downloaded. Check your Downloads folder.";
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   const close = document.getElementById("genericRoomClose");
   const regenerate = document.getElementById("genericRoomRegenerate");
+  const share = document.getElementById("genericRoomShare");
   close?.addEventListener("click", closeGenericRoomPreview);
   regenerate?.addEventListener("click", () => runGenericRoomGeneration());
+  share?.addEventListener("click", shareGenericRoomPreview);
 });
 
 async function generateImage() {
