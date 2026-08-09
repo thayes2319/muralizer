@@ -15,6 +15,7 @@ const conceptIndexPath = path.join(dataDir, 'concept-images.json');
 const requestIndexPath = path.join(dataDir, 'measurement-requests.json');
 const port = Number(process.env.PORT || 8787);
 const host = String(process.env.HOST || '0.0.0.0').trim() || '0.0.0.0';
+const serviceRevision = String(process.env.RENDER_GIT_COMMIT || process.env.SOURCE_VERSION || 'local').trim() || 'local';
 const generateUpstream = String(process.env.MURALIZER_GENERATE_URL || '').trim();
 const upstreamApiKey = String(
   process.env.MURALIZER_API_KEY
@@ -51,6 +52,7 @@ function sendJson(res, statusCode, payload) {
   res.writeHead(statusCode, {
     'Content-Type': 'application/json; charset=utf-8',
     'Cache-Control': 'no-store',
+    'X-Scenique-Backend-Revision': serviceRevision,
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET,POST,DELETE,OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, x-api-key'
@@ -62,6 +64,7 @@ function sendText(res, statusCode, contentType, body) {
   res.writeHead(statusCode, {
     'Content-Type': `${contentType}; charset=utf-8`,
     'Cache-Control': 'no-store',
+    'X-Scenique-Backend-Revision': serviceRevision,
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET,POST,DELETE,OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, x-api-key'
@@ -72,6 +75,7 @@ function sendText(res, statusCode, contentType, body) {
 function sendNoContent(res, statusCode) {
   res.writeHead(statusCode, {
     'Cache-Control': 'no-store',
+    'X-Scenique-Backend-Revision': serviceRevision,
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET,POST,DELETE,OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, x-api-key'
@@ -629,6 +633,75 @@ async function handleGenerateProxy(req, res) {
   });
 }
 
+async function handleReferenceGenerateProxy(req, res) {
+  const body = await readBody(req);
+  const reference = parseImageDataUrl(body.reference_image);
+  if (!reference || !reference.buffer.length) {
+    sendJson(res, 400, { ok: false, error: 'A PNG, JPEG, or WebP reference image is required.' });
+    return;
+  }
+  if (reference.buffer.length > 10 * 1024 * 1024) {
+    sendJson(res, 413, { ok: false, error: 'Reference image exceeds the 10 MB provider limit.' });
+    return;
+  }
+  if (!upstreamApiKey) {
+    sendJson(res, 503, { ok: false, error: 'Image generation is not configured.' });
+    return;
+  }
+
+  const prompt = String(body.prompt || '').trim();
+  if (!prompt) {
+    sendJson(res, 400, { ok: false, error: 'A mural brief is required.' });
+    return;
+  }
+
+  const influence = Number(body.reference_influence);
+  const fidelity = Number.isFinite(influence)
+    ? Math.max(0.3, Math.min(0.65, influence))
+    : 0.45;
+  const form = new FormData();
+  const imageExtension = reference.mimeType === 'image/jpeg' ? 'jpg' : reference.mimeType.split('/')[1];
+  form.append('image', new Blob([reference.buffer], { type: reference.mimeType }), `inspiration.${imageExtension}`);
+  form.append('prompt', `${prompt}\n\nCreate a flat, front-facing original mural artwork only. Do not depict a room, wall, furniture, architecture, an installed mural, text, logo, or frame.`);
+  form.append('output_format', 'png');
+  form.append('fidelity', String(fidelity));
+  const negativePrompt = String(body.negative_prompt || '').trim();
+  if (negativePrompt) form.append('negative_prompt', negativePrompt);
+  const aspectRatio = String(body.aspect_ratio || '').trim();
+  if (aspectRatio) form.append('aspect_ratio', aspectRatio);
+  if (body.seed !== undefined && body.seed !== null && body.seed !== '') {
+    form.append('seed', String(body.seed));
+  }
+
+  const response = await fetch('https://api.stability.ai/v2beta/stable-image/control/style', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${upstreamApiKey}`,
+      'Accept': 'image/*',
+      'Stability-Client-ID': 'scenique-muralizer'
+    },
+    body: form
+  });
+
+  if (response.ok) {
+    const buffer = Buffer.from(await response.arrayBuffer());
+    sendJson(res, 200, { ok: true, success: true, image: buffer.toString('base64') });
+    return;
+  }
+
+  let errorPayload = null;
+  try {
+    errorPayload = await response.json();
+  } catch {
+    errorPayload = { raw: await response.text().catch(() => '') };
+  }
+  sendJson(res, response.status || 500, {
+    ok: false,
+    error: 'Reference reimagination failed',
+    details: errorPayload
+  });
+}
+
 async function handleApi(req, res, url) {
   if (req.method === 'OPTIONS') {
     sendNoContent(res, 204);
@@ -639,6 +712,8 @@ async function handleApi(req, res, url) {
     sendJson(res, 200, {
       ok: true,
       service: 'scenique-backend',
+      revision: serviceRevision,
+      referenceGeneration: true,
       time: new Date().toISOString()
     });
     return true;
@@ -690,6 +765,11 @@ async function handleApi(req, res, url) {
     return true;
   }
 
+  if (req.method === 'POST' && url.pathname === '/api/generate-from-reference') {
+    await handleReferenceGenerateProxy(req, res);
+    return true;
+  }
+
   return false;
 }
 
@@ -716,7 +796,8 @@ async function serveStatic(req, res, url) {
         const body = await fs.readFile(indexPath);
         res.writeHead(200, {
           'Content-Type': 'text/html; charset=utf-8',
-          'Cache-Control': 'no-store'
+          'Cache-Control': 'no-store',
+          'Access-Control-Allow-Origin': '*'
         });
         res.end(body);
         return;
@@ -728,7 +809,8 @@ async function serveStatic(req, res, url) {
     const body = await fs.readFile(filePath);
     res.writeHead(200, {
       'Content-Type': getContentType(filePath),
-      'Cache-Control': 'no-store'
+      'Cache-Control': 'no-store',
+      'Access-Control-Allow-Origin': '*'
     });
     res.end(body);
   } catch {
@@ -737,7 +819,8 @@ async function serveStatic(req, res, url) {
       const body = await fs.readFile(fallback);
       res.writeHead(200, {
         'Content-Type': 'text/html; charset=utf-8',
-        'Cache-Control': 'no-store'
+        'Cache-Control': 'no-store',
+        'Access-Control-Allow-Origin': '*'
       });
       res.end(body);
     } catch {
