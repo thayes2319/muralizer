@@ -13895,6 +13895,29 @@ initializeReferenceCropGestures();
 // ============================================================
 let genericRoomSeed = null;
 
+// muralImage.src is a data: URL only for a mural generated fresh this page
+// load. A concept restored from history (or freshly loaded from another
+// session) has its src resolved to a stored https://.../storage/... URL
+// instead (see resolveBackendImageUrl/cpcBackendImageStore above) -- the
+// backend's /api/generate-wall-mockup only accepts a data: URL, so that
+// case needs converting first. Concept images are served with permissive
+// CORS specifically so they can be read back like this (see the "canvas-
+// read for palette extraction" comment on the backend's static file
+// handler), so a plain fetch+blob round-trip works for both cases.
+async function ensureMuralDataUrl(src) {
+  if (!src) return "";
+  if (src.startsWith("data:")) return src;
+  const response = await fetch(src);
+  if (!response.ok) throw new Error(`Could not load this concept's image (${response.status}).`);
+  const blob = await response.blob();
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ""));
+    reader.onerror = () => reject(new Error("Could not read this concept's image."));
+    reader.readAsDataURL(blob);
+  });
+}
+
 async function openGenericRoomPreview() {
   const modal = document.getElementById("genericRoomModal");
   const muralImage = document.getElementById("muralImage");
@@ -13921,21 +13944,24 @@ function closeGenericRoomPreview() {
 
 async function runGenericRoomGeneration(sourceOverride) {
   const muralImage = document.getElementById("muralImage");
-  const source = sourceOverride || muralImage?.currentSrc || muralImage?.src;
+  const rawSource = sourceOverride || muralImage?.currentSrc || muralImage?.src;
   const stage = document.getElementById("genericRoomStage");
   const resultImage = document.getElementById("genericRoomImage");
   const status = document.getElementById("genericRoomStatus");
   const regenerateBtn = document.getElementById("genericRoomRegenerate");
-  if (!source || !stage || !resultImage) return;
+  if (!rawSource || !stage || !resultImage) return;
 
   stage.classList.remove("has-image");
-  if (status) status.textContent = "Generating a room impression... this can take a minute or two.";
+  if (status) status.textContent = "Preparing the mural image...";
   if (regenerateBtn) {
     regenerateBtn.disabled = true;
     regenerateBtn.textContent = "Generating…";
   }
 
   try {
+    const source = await ensureMuralDataUrl(rawSource);
+    if (!source) throw new Error("Could not load this concept's image.");
+    if (status) status.textContent = "Generating a room impression... this can take a minute or two.";
     const endpointPath = "/api/generate-wall-mockup";
     const endpoint = window.SceniqueBackend?.toUrl
       ? window.SceniqueBackend.toUrl(endpointPath)
