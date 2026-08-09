@@ -1,9 +1,9 @@
 // ============================================================
-// Scenique Muralizer — Service Worker (v4)
+// Scenique Muralizer — Service Worker (v5)
 // Cache-first shell, network-first for generated images
 // ============================================================
 
-const CACHE_NAME = "Muralizer-cache-v4";
+const CACHE_NAME = "Muralizer-cache-v5";
 
 
 // Add any files your app needs to load offline
