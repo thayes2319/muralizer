@@ -22,6 +22,12 @@ const upstreamApiKey = String(
   || process.env.STABILITY_API_KEY
   || ''
 ).trim();
+const openAiApiKey = String(
+  process.env.MURALIZER_OPENAI_API_KEY
+  || process.env.OPENAI_API_KEY
+  || ''
+).trim();
+const openAiVisionModel = String(process.env.OPENAI_VISION_MODEL || 'gpt-4.1-mini').trim();
 
 async function ensureDirectories() {
   await fs.mkdir(conceptDir, { recursive: true });
@@ -715,6 +721,109 @@ async function handleReferenceGenerateProxy(req, res) {
   });
 }
 
+async function handleReferenceAssessment(req, res) {
+  const body = await readBody(req);
+  const reference = parseImageDataUrl(body.reference_image);
+  if (!reference || !reference.buffer.length) {
+    sendJson(res, 400, { ok: false, error: 'A PNG, JPEG, or WebP reference image is required.' });
+    return;
+  }
+  if (reference.buffer.length > 10 * 1024 * 1024) {
+    sendJson(res, 413, { ok: false, error: 'Reference image exceeds the 10 MB provider limit.' });
+    return;
+  }
+  if (!openAiApiKey) {
+    sendJson(res, 503, { ok: false, error: 'Reference assessment is not configured.' });
+    return;
+  }
+
+  const currentDescription = String(body.current_description || '').trim();
+  const schema = {
+    name: 'reference_mural_assessment',
+    strict: true,
+    schema: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        assessment: {
+          type: 'object',
+          additionalProperties: false,
+          properties: {
+            palette: { type: 'string' },
+            painterly_treatment: { type: 'string' },
+            botanical_character: { type: 'string' },
+            lower_edge: { type: 'string' },
+            composition: { type: 'string' },
+            source_context_to_exclude: { type: 'string' }
+          },
+          required: ['palette', 'painterly_treatment', 'botanical_character', 'lower_edge', 'composition', 'source_context_to_exclude']
+        },
+        mural_description: { type: 'string' }
+      },
+      required: ['assessment', 'mural_description']
+    }
+  };
+  const instructions = [
+    'Assess the supplied inspiration image and write a concise, production-ready Mural Description.',
+    'Report visual evidence only. Do not identify artists, brands, locations, rooms, furniture, walls, frames, or installed-mural context as design content.',
+    'The description must create an original composition; never ask to copy the source composition.',
+    'Use painterly mural language: hand-painted, hand-brushed, softly variegated, tonal, layered, lyrical, or restrained where supported by the image. Never use language that asks for photorealism, a camera effect, a vector illustration, or crisp graphic rendering.',
+    'If the image visibly shows a planted, undulating lower botanical base from which taller growth emerges, make that lower-edge botanical berm an explicit required feature. Otherwise do not invent one.',
+    'For every mural type, require all canopy, botanical, and motif forms to terminate naturally before the top edge, preserving calm open breathing room above.',
+    'Return an assessment with concise evidence and a 2-4 paragraph Mural Description. The description must remain editable by the user.',
+    currentDescription ? `The user\'s current description is: ${currentDescription}` : 'There is no current user description.'
+  ].join('\n');
+  const imageDataUrl = `data:${reference.mimeType};base64,${reference.buffer.toString('base64')}`;
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${openAiApiKey}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      model: openAiVisionModel,
+      temperature: 0.2,
+      response_format: { type: 'json_schema', json_schema: schema },
+      messages: [
+        { role: 'system', content: 'You are a precise mural-art direction assessor. Follow the requested JSON schema exactly.' },
+        {
+          role: 'user',
+          content: [
+            { type: 'text', text: instructions },
+            { type: 'image_url', image_url: { url: imageDataUrl, detail: 'high' } }
+          ]
+        }
+      ]
+    })
+  });
+
+  if (!response.ok) {
+    const details = await response.json().catch(() => null);
+    sendJson(res, response.status || 502, { ok: false, error: 'Reference assessment failed', details });
+    return;
+  }
+
+  const payload = await response.json();
+  const content = payload?.choices?.[0]?.message?.content;
+  let result = null;
+  try {
+    result = JSON.parse(String(content || ''));
+  } catch {
+    sendJson(res, 502, { ok: false, error: 'Reference assessment returned an invalid result.' });
+    return;
+  }
+  if (!result || typeof result.mural_description !== 'string' || !result.mural_description.trim()) {
+    sendJson(res, 502, { ok: false, error: 'Reference assessment did not produce a mural description.' });
+    return;
+  }
+
+  sendJson(res, 200, {
+    ok: true,
+    assessment: result.assessment,
+    mural_description: result.mural_description.trim()
+  });
+}
+
 async function handleApi(req, res, url) {
   if (req.method === 'OPTIONS') {
     sendNoContent(res, 204);
@@ -727,6 +836,7 @@ async function handleApi(req, res, url) {
       service: 'scenique-backend',
       revision: serviceRevision,
       referenceGeneration: true,
+      referenceAssessment: Boolean(openAiApiKey),
       time: new Date().toISOString()
     });
     return true;
@@ -780,6 +890,11 @@ async function handleApi(req, res, url) {
 
   if (req.method === 'POST' && url.pathname === '/api/generate-from-reference') {
     await handleReferenceGenerateProxy(req, res);
+    return true;
+  }
+
+  if (req.method === 'POST' && url.pathname === '/api/assess-reference') {
+    await handleReferenceAssessment(req, res);
     return true;
   }
 

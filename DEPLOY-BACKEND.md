@@ -8,6 +8,8 @@ Set these on the deployed backend service:
 
 - `PORT`
 - `MURALIZER_API_KEY` (preferred; `STABILITY_API_KEY` also supported for compatibility)
+- `OPENAI_API_KEY` (required for per-reference visual assessment; `MURALIZER_OPENAI_API_KEY` also supported)
+- `OPENAI_VISION_MODEL` (optional; defaults to `gpt-4.1-mini`)
 - `MURALIZER_GENERATE_URL` (optional; only set when using an external generator service)
 - `SCENIQUE_DATA_DIR` (required on Render when using Persistent Disk)
 
@@ -16,11 +18,14 @@ Example:
 ```bash
 PORT=8787
 MURALIZER_API_KEY=your_real_api_key_here
+OPENAI_API_KEY=your_openai_api_key_here
 SCENIQUE_DATA_DIR=/var/data/scenique
 ```
 
 If `MURALIZER_GENERATE_URL` is not set, the backend will call Stability directly using `MURALIZER_API_KEY`.
 Do not point `MURALIZER_GENERATE_URL` to the same service URL unless that service actually exposes `/generate`.
+
+`POST /api/assess-reference` is enabled only when an OpenAI key is configured. It assesses the full uploaded reference, applies Muralizer's ruled painterly and top-edge constraints, and returns a structured assessment plus an editable `mural_description`.
 
 ## 1.1) Render Persistent Disk Setup
 
@@ -82,6 +87,7 @@ curl -s https://your-backend-host.example.com/api/concept-images
 ## 5) Security Notes
 
 - The browser no longer sends generation API keys.
+- Keep `OPENAI_API_KEY` server-side only.
 - Keep `MURALIZER_API_KEY` server-side only.
 - Restrict CORS to your production origins once final domains are known.
 - Rotate keys periodically.
