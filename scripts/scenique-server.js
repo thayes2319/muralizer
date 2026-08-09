@@ -678,10 +678,9 @@ async function handleReferenceGenerateProxy(req, res) {
   const form = new FormData();
   const imageExtension = reference.mimeType === 'image/jpeg' ? 'jpg' : reference.mimeType.split('/')[1];
   form.append('image', new Blob([reference.buffer], { type: reference.mimeType }), `inspiration.${imageExtension}`);
-  const referenceGrounding = 'Preserve a continuous, visibly undulating planted berm across the full bottom edge of the mural. This painted botanical base must remain clearly visible, not cropped or omitted. All taller stems, branches, and foliage must visibly emerge upward from this berm; do not leave botanicals floating. Treat the berm as painted foliage and leaf forms, never as a literal floor or room surface.';
   const muralOnly = 'Create a flat, front-facing original mural artwork only. The full canvas must be the mural design itself, with no interior scene or installed-mural mockup.';
   const exclusions = 'Never depict furniture, chairs, tables, sofas, beds, lamps, windows, doors, rooms, walls, floors, ceilings, architecture, people, text, logos, frames, or borders.';
-  form.append('prompt', `${prompt}\n\n${muralOnly} ${referenceGrounding} ${exclusions}`);
+  form.append('prompt', `${prompt}\n\n${muralOnly} ${exclusions}`);
   form.append('output_format', 'png');
   form.append('fidelity', String(fidelity));
   const negativePrompt = String(body.negative_prompt || '').trim();
@@ -749,14 +748,15 @@ async function handleReferenceAssessment(req, res) {
           type: 'object',
           additionalProperties: false,
           properties: {
+            genre: { type: 'string' },
             palette: { type: 'string' },
-            painterly_treatment: { type: 'string' },
+            visual_treatment: { type: 'string' },
             botanical_character: { type: 'string' },
             lower_edge: { type: 'string' },
             composition: { type: 'string' },
             source_context_to_exclude: { type: 'string' }
           },
-          required: ['palette', 'painterly_treatment', 'botanical_character', 'lower_edge', 'composition', 'source_context_to_exclude']
+          required: ['genre', 'palette', 'visual_treatment', 'botanical_character', 'lower_edge', 'composition', 'source_context_to_exclude']
         },
         mural_description: { type: 'string' }
       },
@@ -767,9 +767,8 @@ async function handleReferenceAssessment(req, res) {
     'Assess the supplied inspiration image and write a concise, production-ready Mural Description.',
     'Report visual evidence only. Do not identify artists, brands, locations, rooms, furniture, walls, frames, or installed-mural context as design content.',
     'The description must create an original composition; never ask to copy the source composition.',
-    'Use painterly mural language: hand-painted, hand-brushed, softly variegated, tonal, layered, lyrical, or restrained where supported by the image. Never use language that asks for photorealism, a camera effect, a vector illustration, or crisp graphic rendering.',
-    'If the image visibly shows a planted, undulating lower botanical base from which taller growth emerges, make that lower-edge botanical berm an explicit required feature. Otherwise do not invent one.',
-    'For every mural type, require all canopy, botanical, and motif forms to terminate naturally before the top edge, preserving calm open breathing room above.',
+    'First classify the image genre and visual treatment from visual evidence. Use the selected Muralizer category and sub-scene as scope guidance when supplied, but let the image control the genre. For a modern graphic reference, use precise graphic-mural language appropriate to its forms, color blocks, linework, repeat, or geometry; do not force painterly, botanical, or open-sky language. For a painterly, scenic, Chinoiserie, or botanical reference, use the painterly language evidenced by the image. Never request photorealism or camera effects unless the source genuinely requires another explicitly supported Muralizer genre.',
+    'When the image visibly shows a planted, undulating lower botanical base from which taller growth emerges, write the Mural Description as four distinct paragraphs in this order: (1) an opening paragraph describing the evidenced visual treatment, background, and arrangement; (2) this berm paragraph: "The lower edge is importantly defined by an undulating berm of earth, providing a natural planted base from which the taller flowering branches emerge." Adapt only plant-type words when the evidence requires it; treat the berm as painted earth and planted forms, never as a literal floor or room surface; (3) a paragraph describing the evidenced blossoms, branches, leaves, birds, or other motifs and their balanced mural composition; (4) a closing paragraph requiring canopy and botanical forms, when present, to terminate naturally well before the top edge and preserve open breathing room above. Otherwise do not invent a berm, canopy, botanicals, or open-sky requirement; use a shorter evidence-led paragraph structure.',
     'Return an assessment with concise evidence and a 2-4 paragraph Mural Description. The description must remain editable by the user.',
     currentDescription ? `The user\'s current description is: ${currentDescription}` : 'There is no current user description.'
   ].join('\n');
