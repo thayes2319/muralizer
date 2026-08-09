@@ -732,6 +732,8 @@ const WALL_MOCKUP_PROMPT =
   "preserving the mural's exact colors, motifs, and composition precisely and faithfully -- do not reinterpret, restyle, or redesign the mural itself. " +
   "The mural pattern appears ONLY on that one wall. Every other surface -- furniture, upholstery, textiles, rugs, floors, ceiling, other walls -- " +
   "is plain, solid-colored, and unpatterned, in neutral modern interior tones, completely uninfluenced by the mural's colors or motifs. " +
+  "If the mural includes an undulating berm of earth or a planted lower edge, it must remain a flat painted element of the wall mural itself -- " +
+  "never rendered as literal 3D landscaping, soil, or floor extending into the room. " +
   "Natural daylight, soft realistic shadows and perspective, believable modern interior, wide-angle real-estate photography style. " +
   "No people, no visible logos or text, no identifiable real location.";
 
@@ -740,7 +742,8 @@ const WALL_MOCKUP_NEGATIVE_PROMPT =
   "no borders, no frames, no collage, no people, no distorted architecture, no warped walls, no blurry areas, " +
   "no reinterpreting the mural design, no altering the mural's colors or motifs, no different artwork, " +
   "no patterned furniture, no patterned upholstery, no patterned textiles, no patterned rugs, no patterned floors, " +
-  "no matching furniture colors, no mural pattern outside the feature wall";
+  "no matching furniture colors, no mural pattern outside the feature wall, " +
+  "no literal earth or soil extending into the room, no 3D landscaping, no berm breaking the wall plane";
 
 async function handleWallMockupProxy(req, res) {
   const body = await readBody(req);
