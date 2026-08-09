@@ -3742,6 +3742,34 @@ button, select {
   min-height: 16px;
 }
 
+.generic-room-seed-label {
+  display: block;
+  margin: 12px 0 5px;
+  color: #444;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.generic-room-seed-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 320px;
+  margin: 0 auto;
+}
+
+.generic-room-seed-row input { flex: 1; accent-color: #218FC9; }
+
+.generic-room-seed-value {
+  width: 52px;
+  flex: 0 0 auto;
+  color: #216d87;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: right;
+}
+
 .generic-room-actions {
   display: flex;
   justify-content: center;
@@ -8546,6 +8574,11 @@ If you’re exploring a new direction, try adjusting just 1-2 elements at a time
             <img id="genericRoomImage" alt="This mural shown on a wall in a generic room">
           </div>
           <p id="genericRoomStatus" class="generic-room-status" aria-live="polite"></p>
+          <label class="generic-room-seed-label" for="genericRoomSeedSlider">Creative change on regenerate</label>
+          <div class="generic-room-seed-row">
+            <input id="genericRoomSeedSlider" type="range" min="1" max="10" value="3">
+            <span id="genericRoomSeedValue" class="generic-room-seed-value">Mild</span>
+          </div>
           <div class="generic-room-actions">
             <button id="genericRoomRegenerate" class="primary" type="button">Generate</button>
             <button id="genericRoomShare" type="button">Share</button>
@@ -13960,8 +13993,40 @@ async function openGenericRoomPreview() {
 
   modal.classList.add("open");
   modal.setAttribute("aria-hidden", "false");
-  genericRoomSeed = null;
+  // Explicit seed from the start (not left unset) so Regenerate has
+  // something real to increment from -- the backend response doesn't echo
+  // back whatever seed Stability picked for an unset request.
+  genericRoomSeed = Math.floor(Math.random() * 2**32);
   await runGenericRoomGeneration(source);
+}
+
+// Same 1-10 -> increment mapping as getSeedIncrement() (the main "Creative
+// Change @ next image" ramp slider) for consistency across the app, kept as
+// its own copy since that one is hardwired to a specific slider id.
+function getGenericRoomSeedIncrement() {
+  const slider = document.getElementById("genericRoomSeedSlider");
+  if (!slider) return 20;
+  switch (Number(slider.value)) {
+    case 1: return 1;
+    case 2: return 5;
+    case 3: return 20;
+    case 4: return 50;
+    case 5: return 150;
+    case 6: return 300;
+    case 7: return 800;
+    case 8: return 2000;
+    case 9: return 5000;
+    case 10: return 15000;
+    default: return 20;
+  }
+}
+
+function updateGenericRoomSeedLabel() {
+  const slider = document.getElementById("genericRoomSeedSlider");
+  const label = document.getElementById("genericRoomSeedValue");
+  if (!slider || !label) return;
+  const tiers = { 1: "Minimal", 2: "Subtle", 3: "Mild", 4: "Mild", 5: "Moderate", 6: "Moderate", 7: "Strong", 8: "Strong", 9: "Big Change", 10: "Wild" };
+  label.textContent = tiers[Number(slider.value)] || "Mild";
 }
 
 function closeGenericRoomPreview() {
@@ -14018,7 +14083,7 @@ async function runGenericRoomGeneration(sourceOverride) {
     resultImage.src = `data:image/png;base64,${imgBase64}`;
     stage.classList.add("has-image");
     if (status) status.textContent = "AI impression -- for mood only, not a precise placement.";
-    genericRoomSeed = Math.floor(Math.random() * 1_000_000);
+    genericRoomSeed += getGenericRoomSeedIncrement();
   } catch (error) {
     console.error("Generic room preview error:", error);
     if (status) status.textContent = error.message || "This room impression could not be generated.";
@@ -14091,9 +14156,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const close = document.getElementById("genericRoomClose");
   const regenerate = document.getElementById("genericRoomRegenerate");
   const share = document.getElementById("genericRoomShare");
+  const seedSlider = document.getElementById("genericRoomSeedSlider");
   close?.addEventListener("click", closeGenericRoomPreview);
   regenerate?.addEventListener("click", () => runGenericRoomGeneration());
   share?.addEventListener("click", shareGenericRoomPreview);
+  seedSlider?.addEventListener("input", updateGenericRoomSeedLabel);
+  updateGenericRoomSeedLabel();
 });
 
 async function generateImage() {

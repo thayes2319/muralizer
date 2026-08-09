@@ -764,19 +764,15 @@ async function handleWallMockupProxy(req, res) {
   form.append('prompt', WALL_MOCKUP_PROMPT);
   form.append('negative_prompt', WALL_MOCKUP_NEGATIVE_PROMPT);
   form.append('output_format', 'png');
-  // Deliberately higher than generate-from-reference's 0.3-0.65 UI-exposed
-  // range above -- that flow WANTS creative deviation (it's generating a new
-  // flat mural "inspired by" a reference). This flow wants the opposite: the
-  // mural is already final, so fidelity is pushed toward the top of
-  // Stability's 0-1 range to minimize reinterpretation, while stopping short
-  // of 1.0 so the model still has enough room to invent the surrounding
-  // room/wall/lighting context around it.
-  // Stepped back from an initial 0.8 -- fidelity here has no spatial/regional
-  // control, so pushing it too high was bleeding the mural's style onto
-  // furniture and other surfaces, not just the wall (confirmed via real
-  // testing). 0.65 plus the explicit "only on that one wall" prompt language
-  // above is doing the spatial-confinement work instead of raw fidelity.
-  form.append('fidelity', '0.65');
+  // History: started at 0.4, raised to 0.8 for better wall-adherence, then
+  // confirmed via real testing that fidelity this high bleeds the mural's
+  // style onto furniture/floors/textiles too -- it has no spatial/regional
+  // control, so it pushes the reference's influence over the WHOLE scene,
+  // not just the wall. Stepping back down to 0.5 (between the original 0.4
+  // and that failed 0.8) and leaning on the explicit "only on that one wall"
+  // prompt/negative-prompt language above to do the spatial-confinement work
+  // instead of raw fidelity.
+  form.append('fidelity', '0.5');
   form.append('aspect_ratio', '3:2');
   if (body.seed !== undefined && body.seed !== null && body.seed !== '') {
     form.append('seed', String(body.seed));
