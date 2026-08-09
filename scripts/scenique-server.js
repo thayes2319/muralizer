@@ -672,7 +672,7 @@ async function handleReferenceGenerateProxy(req, res) {
   const form = new FormData();
   const imageExtension = reference.mimeType === 'image/jpeg' ? 'jpg' : reference.mimeType.split('/')[1];
   form.append('image', new Blob([reference.buffer], { type: reference.mimeType }), `inspiration.${imageExtension}`);
-  const referenceGrounding = 'When the reference includes a foreground or ground along its lower edge, preserve a clearly visible lower-edge grounding layer as an original design element, not a copy of the source composition.';
+  const referenceGrounding = 'Preserve a continuous, visibly undulating planted berm across the full bottom edge of the mural. This painted botanical base must remain clearly visible, not cropped or omitted. All taller stems, branches, and foliage must visibly emerge upward from this berm; do not leave botanicals floating. Treat the berm as painted foliage and leaf forms, never as a literal floor or room surface.';
   const muralOnly = 'Create a flat, front-facing original mural artwork only. The full canvas must be the mural design itself, with no interior scene or installed-mural mockup.';
   const exclusions = 'Never depict furniture, chairs, tables, sofas, beds, lamps, windows, doors, rooms, walls, floors, ceilings, architecture, people, text, logos, frames, or borders.';
   form.append('prompt', `${prompt}\n\n${muralOnly} ${referenceGrounding} ${exclusions}`);
