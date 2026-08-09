@@ -716,8 +716,7 @@ async function serveStatic(req, res, url) {
         const body = await fs.readFile(indexPath);
         res.writeHead(200, {
           'Content-Type': 'text/html; charset=utf-8',
-          'Cache-Control': 'no-store',
-          'Access-Control-Allow-Origin': '*'
+          'Cache-Control': 'no-store'
         });
         res.end(body);
         return;
@@ -729,9 +728,7 @@ async function serveStatic(req, res, url) {
     const body = await fs.readFile(filePath);
     res.writeHead(200, {
       'Content-Type': getContentType(filePath),
-      'Cache-Control': 'no-store',
-      // Concept images are canvas-read for palette extraction; CORS required.
-      'Access-Control-Allow-Origin': '*'
+      'Cache-Control': 'no-store'
     });
     res.end(body);
   } catch {
