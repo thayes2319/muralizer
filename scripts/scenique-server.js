@@ -764,15 +764,15 @@ async function handleWallMockupProxy(req, res) {
   form.append('prompt', WALL_MOCKUP_PROMPT);
   form.append('negative_prompt', WALL_MOCKUP_NEGATIVE_PROMPT);
   form.append('output_format', 'png');
-  // History: started at 0.4, raised to 0.8 for better wall-adherence, then
-  // confirmed via real testing that fidelity this high bleeds the mural's
-  // style onto furniture/floors/textiles too -- it has no spatial/regional
+  // History: 0.4 -> 0.8 (real testing: bled the mural's style onto
+  // furniture/floors/textiles too -- fidelity has no spatial/regional
   // control, so it pushes the reference's influence over the WHOLE scene,
-  // not just the wall. Stepping back down to 0.5 (between the original 0.4
-  // and that failed 0.8) and leaning on the explicit "only on that one wall"
-  // prompt/negative-prompt language above to do the spatial-confinement work
-  // instead of raw fidelity.
-  form.append('fidelity', '0.5');
+  // not just the wall) -> 0.5 (confirmed good via real testing) -> 0.45,
+  // landed here by direct request after 0.5 tested well. The explicit "only
+  // on that one wall" prompt/negative-prompt language above is doing the
+  // spatial-confinement work; fidelity itself just balances overall
+  // adherence vs. creative freedom.
+  form.append('fidelity', '0.45');
   form.append('aspect_ratio', '3:2');
   if (body.seed !== undefined && body.seed !== null && body.seed !== '') {
     form.append('seed', String(body.seed));
