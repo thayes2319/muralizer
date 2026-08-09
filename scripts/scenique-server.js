@@ -13,6 +13,7 @@ const conceptDir = path.join(dataDir, 'concept-images');
 const requestDir = path.join(dataDir, 'measurement-requests');
 const conceptIndexPath = path.join(dataDir, 'concept-images.json');
 const requestIndexPath = path.join(dataDir, 'measurement-requests.json');
+const conceptShareIndexPath = path.join(dataDir, 'concept-shares.json');
 const port = Number(process.env.PORT || 8787);
 const host = String(process.env.HOST || '0.0.0.0').trim() || '0.0.0.0';
 const generateUpstream = String(process.env.MURALIZER_GENERATE_URL || '').trim();
@@ -186,6 +187,16 @@ function dataUrlToBuffer(imageBase64, imageDataUrl) {
   return null;
 }
 
+function parseImageDataUrl(dataUrl) {
+  const match = /^data:(image\/(?:png|jpeg|webp));base64,([A-Za-z0-9+/=\s]+)$/i.exec(String(dataUrl || ''));
+  if (!match) return null;
+
+  return {
+    mimeType: match[1].toLowerCase(),
+    buffer: Buffer.from(match[2].replace(/\s/g, ''), 'base64')
+  };
+}
+
 function getContentType(filePath) {
   const ext = path.extname(filePath).toLowerCase();
   if (ext === '.html') return 'text/html';
@@ -253,6 +264,48 @@ async function handleConceptImage(req, res) {
 
   await appendJsonItem(conceptIndexPath, record);
   sendJson(res, 201, record);
+}
+
+async function handleCreateConceptShare(req, res) {
+  const body = await readBody(req);
+  const ownerId = normalizeOwnerId(body && body.ownerId);
+  const conceptId = String(body && body.conceptId || '').trim();
+  if (!ownerId || !conceptId) {
+    sendJson(res, 400, { ok: false, error: 'ownerId and conceptId are required' });
+    return;
+  }
+
+  const concepts = await readJson(conceptIndexPath, []);
+  const concept = Array.isArray(concepts) && concepts.find((item) => (
+    String(item && item.id || '') === conceptId
+    && normalizeOwnerId(item && item.ownerId) === ownerId
+  ));
+  if (!concept) {
+    sendJson(res, 404, { ok: false, error: 'Concept not found' });
+    return;
+  }
+
+  const token = crypto.randomBytes(8).toString('base64url').slice(0, 10);
+  const share = {
+    token,
+    createdAt: new Date().toISOString(),
+    img: String(concept.imageUrl || ''),
+    title: String(body.title || 'Concept').slice(0, 160),
+    sub: String(body.sub || '').slice(0, 80),
+    scene: body.scene && typeof body.scene === 'object' ? body.scene : undefined
+  };
+  await appendJsonItem(conceptShareIndexPath, share);
+  sendJson(res, 201, { ok: true, token });
+}
+
+async function handleGetConceptShare(req, res, token) {
+  const shares = await readJson(conceptShareIndexPath, []);
+  const share = Array.isArray(shares) && shares.find((item) => item && item.token === token);
+  if (!share) {
+    sendJson(res, 404, { ok: false, error: 'Share not found' });
+    return;
+  }
+  sendJson(res, 200, share);
 }
 
 async function handleMeasurementRequest(req, res) {
@@ -629,6 +682,75 @@ async function handleGenerateProxy(req, res) {
   });
 }
 
+async function handleReferenceGenerateProxy(req, res) {
+  const body = await readBody(req);
+  const reference = parseImageDataUrl(body.reference_image);
+  if (!reference || !reference.buffer.length) {
+    sendJson(res, 400, { ok: false, error: 'A PNG, JPEG, or WebP reference image is required.' });
+    return;
+  }
+  if (reference.buffer.length > 10 * 1024 * 1024) {
+    sendJson(res, 413, { ok: false, error: 'Reference image exceeds the 10 MB provider limit.' });
+    return;
+  }
+  if (!upstreamApiKey) {
+    sendJson(res, 503, { ok: false, error: 'Image generation is not configured.' });
+    return;
+  }
+
+  const prompt = String(body.prompt || '').trim();
+  if (!prompt) {
+    sendJson(res, 400, { ok: false, error: 'A mural brief is required.' });
+    return;
+  }
+
+  const influence = Number(body.reference_influence);
+  const fidelity = Number.isFinite(influence)
+    ? Math.max(0.3, Math.min(0.65, influence))
+    : 0.45;
+  const form = new FormData();
+  const imageExtension = reference.mimeType === 'image/jpeg' ? 'jpg' : reference.mimeType.split('/')[1];
+  form.append('image', new Blob([reference.buffer], { type: reference.mimeType }), `inspiration.${imageExtension}`);
+  form.append('prompt', `${prompt}\n\nCreate a flat, front-facing original mural artwork only. Do not depict a room, wall, furniture, architecture, an installed mural, text, logo, or frame.`);
+  form.append('output_format', 'png');
+  form.append('fidelity', String(fidelity));
+  const negativePrompt = String(body.negative_prompt || '').trim();
+  if (negativePrompt) form.append('negative_prompt', negativePrompt);
+  const aspectRatio = String(body.aspect_ratio || '').trim();
+  if (aspectRatio) form.append('aspect_ratio', aspectRatio);
+  if (body.seed !== undefined && body.seed !== null && body.seed !== '') {
+    form.append('seed', String(body.seed));
+  }
+
+  const response = await fetch('https://api.stability.ai/v2beta/stable-image/control/style', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${upstreamApiKey}`,
+      'Accept': 'image/*',
+      'Stability-Client-ID': 'scenique-muralizer'
+    },
+    body: form
+  });
+
+  if (response.ok) {
+    const buffer = Buffer.from(await response.arrayBuffer());
+    sendJson(res, 200, { ok: true, success: true, image: buffer.toString('base64') });
+    return;
+  }
+
+  let errorPayload = null;
+  try {
+    errorPayload = await response.json();
+  } catch {
+    errorPayload = { raw: await response.text().catch(() => '') };
+  }
+  sendJson(res, response.status || 500, {
+    ok: false,
+    error: 'Reference reimagination failed',
+    details: errorPayload
+  });
+}
+
 async function handleApi(req, res, url) {
   if (req.method === 'OPTIONS') {
     sendNoContent(res, 204);
@@ -654,6 +776,12 @@ async function handleApi(req, res, url) {
     return true;
   }
 
+  const conceptShareMatch = url.pathname.match(/^\/api\/concept-shares\/([A-Za-z0-9_-]{6,32})$/);
+  if (req.method === 'GET' && conceptShareMatch) {
+    await handleGetConceptShare(req, res, conceptShareMatch[1]);
+    return true;
+  }
+
   if (req.method === 'GET' && url.pathname === '/api/measurement-requests') {
     const items = await readJson(requestIndexPath, []);
     sendJson(res, 200, items);
@@ -662,6 +790,11 @@ async function handleApi(req, res, url) {
 
   if (req.method === 'POST' && url.pathname === '/api/concept-images') {
     await handleConceptImage(req, res);
+    return true;
+  }
+
+  if (req.method === 'POST' && url.pathname === '/api/concept-shares') {
+    await handleCreateConceptShare(req, res);
     return true;
   }
 
@@ -687,6 +820,11 @@ async function handleApi(req, res, url) {
 
   if (req.method === 'POST' && url.pathname === '/api/generate') {
     await handleGenerateProxy(req, res);
+    return true;
+  }
+
+  if (req.method === 'POST' && url.pathname === '/api/generate-from-reference') {
+    await handleReferenceGenerateProxy(req, res);
     return true;
   }
 
