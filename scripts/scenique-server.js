@@ -190,6 +190,16 @@ function dataUrlToBuffer(imageBase64, imageDataUrl) {
   return null;
 }
 
+function parseImageDataUrl(dataUrl) {
+  const match = /^data:(image\/(?:png|jpeg|webp));base64,([A-Za-z0-9+/=\s]+)$/i.exec(String(dataUrl || ''));
+  if (!match) return null;
+
+  return {
+    mimeType: match[1].toLowerCase(),
+    buffer: Buffer.from(match[2].replace(/\s/g, ''), 'base64')
+  };
+}
+
 function getContentType(filePath) {
   const ext = path.extname(filePath).toLowerCase();
   if (ext === '.html') return 'text/html';
