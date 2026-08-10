@@ -7593,7 +7593,7 @@ select[multiple].collapsible-multi.expanded option:first-child {
           <label id="referenceReimagineDropzone" class="reference-reimagine-upload" for="referenceReimagineInput">
             <span><strong>Drop inspiration artwork here</strong><span class="reference-reimagine-upload-copy">PNG, JPEG, or WebP up to 7 MB</span></span>
             <span class="reference-reimagine-upload-button">Choose file</span>
-            <input id="referenceReimagineInput" type="file" accept="image/png,image/jpeg,image/webp" onchange="handleReferenceReimagineFile(this.files && this.files[0])">
+            <input id="referenceReimagineInput" type="file" accept="image/*" onchange="handleReferenceReimagineFile(this.files && this.files[0])">
           </label>
           <div id="referenceReimaginePreview" class="reference-reimagine-preview">
             <img id="referenceReimagineThumb" alt="Selected inspiration artwork">
@@ -13897,9 +13897,14 @@ function updateReferenceCropZoom(value) {
 
 function handleReferenceReimagineFile(file) {
   if (!file) return;
-  const acceptedTypes = ["image/jpeg", "image/png", "image/webp"];
-  if (!acceptedTypes.includes(file.type)) {
-    alert("Choose a PNG, JPEG, or WebP inspiration image.");
+  // Mobile camera/photo-library picks are frequently HEIC/HEIF on iOS
+  // (image/heic, image/heif) or occasionally report an empty/generic type
+  // depending on the source app -- a strict jpeg/png/webp whitelist rejects
+  // those before the crop tool ever gets a chance to appear. Gate on
+  // "is this even an image" instead and let the actual decode attempt below
+  // be the real pass/fail signal.
+  if (file.type && !file.type.startsWith("image/")) {
+    alert("Choose an image file for the inspiration artwork.");
     clearReferenceReimagine();
     return;
   }
@@ -13921,6 +13926,14 @@ function handleReferenceReimagineFile(file) {
       const editor = document.getElementById("referenceCropEditor");
       editor?.classList.add("is-visible");
       resetReferenceCrop();
+    };
+    // Without this, a format the browser can't decode (e.g. HEIC in a
+    // non-Safari browser) just hangs forever with no crop tool and no
+    // feedback -- exactly the reported symptom, regardless of the type
+    // check above.
+    sourceImage.onerror = () => {
+      alert("This image could not be loaded. Try a JPEG, PNG, or WebP file.");
+      clearReferenceReimagine();
     };
     sourceImage.src = referenceReimagineState.dataUrl;
     const preview = document.getElementById("referenceReimaginePreview");
