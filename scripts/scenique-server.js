@@ -732,8 +732,8 @@ const WALL_MOCKUP_PROMPT =
   "preserving the mural's exact colors, motifs, and composition precisely and faithfully -- do not reinterpret, restyle, or redesign the mural itself. " +
   "The mural pattern appears ONLY on that one wall. Every other surface -- furniture, upholstery, textiles, rugs, floors, ceiling, other walls -- " +
   "is plain, solid-colored, and unpatterned, in neutral modern interior tones, completely uninfluenced by the mural's colors or motifs. " +
-  "If the mural includes an undulating berm of earth or a planted lower edge, it must remain a flat painted element of the wall mural itself -- " +
-  "never rendered as literal 3D landscaping, soil, or floor extending into the room. " +
+  "If the mural includes an undulating berm of earth, providing a natural planted base from which taller growth emerges, that berm must remain " +
+  "clearly visible and not cropped or omitted -- it stays a flat painted element of the wall mural itself, never rendered as literal 3D landscaping, soil, or floor extending into the room. " +
   "Natural daylight, soft realistic shadows and perspective, believable modern interior, wide-angle real-estate photography style. " +
   "No people, no visible logos or text, no identifiable real location.";
 
