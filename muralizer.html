@@ -22,6 +22,14 @@
 <meta name="theme-color" content="#111111">
 <link rel="apple-touch-icon" href="icons/icon-512-scenique.png">
 
+<!-- Cormorant Garamond -- used by .scenique-title (the "by Scénique"
+     wordmark) and #generateMuralBtn, but was never actually loaded
+     anywhere in this app; both were silently relying on it being
+     installed locally and falling back to a generic serif otherwise. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&display=swap" rel="stylesheet">
+
 <!-- ⭐ PWA NAME OVERRIDES (add these) -->
 
 <meta name="application-name" content="Scénique">
@@ -2994,6 +3002,14 @@ margin-top: 15px;
    RESTORED: MURALIZE IT BUTTON WITH SUPER‑THIN LIGHT GREEN BORDER
 ============================================================ */
 
+/* Soft idle "breathing" glow -- signals this is the payoff action without
+   being constant motion; paused on hover so it doesn't fight the more
+   energetic hover glow below. */
+@keyframes muralizeBreathe {
+  0%, 100% { box-shadow: 0 0 0 rgba(111,220,122,0); }
+  50% { box-shadow: 0 0 14px rgba(111,220,122,0.55); }
+}
+
 #generateMuralBtn {
   height: 40px;
   line-height: 25px;
@@ -3002,11 +3018,16 @@ margin-top: 15px;
   align-items: center;
   justify-content: center;
 
-  font-family: "Lucida Handwriting", cursive !important;
-  
-  font-size: 22px;
+  /* Matches the Scénique wordmark's own font (.scenique-title) instead of
+     an unrelated cursive script -- ties the main CTA back to the actual
+     brand logotype. Not loaded as a web font anywhere in this app (same
+     as the wordmark), so this inherits that same system-font gamble
+     rather than introducing a new one. */
+  font-family: "Cormorant Garamond", Georgia, "Times New Roman", serif !important;
+
+  font-size: 23px;
   font-weight: 600;
-  letter-spacing: 1px;
+  letter-spacing: 1.5px;
   white-space: nowrap;
 
   background-color: #4CAF50 !important;
@@ -3024,6 +3045,8 @@ margin-top: 15px;
     box-shadow 0.25s ease,
     border-color 0.25s ease;
 
+  animation: muralizeBreathe 2.6s ease-in-out infinite;
+
   margin-top: 14px !important;
 }
 
@@ -3033,10 +3056,12 @@ margin-top: 15px;
   border-color: #8ffb9a;                       /* brighter green edge */
   box-shadow: 0 0 8px rgba(111,220,122,0.45);  /* green glow */
   transform: rotate(1.5deg);
+  animation: none;
 }
 
 #generateMuralBtn:active {
   transform: scale(0.97);
+  animation: none;
 }
 
 
