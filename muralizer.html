@@ -7644,7 +7644,7 @@ select[multiple].collapsible-multi.expanded option:first-child {
             <input id="referenceInfluence" type="range" min="30" max="65" value="45" step="1" oninput="updateReferenceInfluence(this.value)">
             <span id="referenceInfluenceValue" class="reference-influence-value">45%</span>
           </div>
-          <p id="referenceInfluenceHint" class="reference-influence-hint">Balanced guidance: carry the artwork's visual character forward, never its composition.</p>
+          <p id="referenceInfluenceHint" class="reference-influence-hint">Balanced guidance: moderate adherence to the artwork's visual character.</p>
         </div>
       </div>
 
@@ -13840,10 +13840,10 @@ function updateReferenceInfluence(value) {
   if (label) label.textContent = `${normalized}%`;
   if (hint) {
     hint.textContent = normalized < 40
-      ? "Fresh interpretation: take a lighter cue from the artwork's visual character."
+      ? "Fresh interpretation: lighter adherence to the artwork's visual character."
       : normalized > 52
-        ? "Strong source influence: carry more visual character forward, never the composition."
-        : "Balanced guidance: carry the artwork's visual character forward, never its composition.";
+        ? "Strong source influence: closer adherence to the artwork's visual character."
+        : "Balanced guidance: moderate adherence to the artwork's visual character.";
   }
 }
 
