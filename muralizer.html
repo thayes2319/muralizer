@@ -2825,6 +2825,31 @@ margin-top: 15px;
   font-weight: 700;
 }
 
+.reference-direction-mode {
+  display: none;
+  gap: 0;
+  margin: 10px 0 0;
+  padding: 0;
+  border: 1px solid rgba(33,143,201,.42);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.reference-direction-mode.is-visible { display: flex; }
+.reference-direction-mode label {
+  flex: 1;
+  padding: 7px 8px;
+  color: #36505d;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+}
+.reference-direction-mode label + label { border-left: 1px solid rgba(33,143,201,.32); }
+.reference-direction-mode input { position: absolute; opacity: 0; pointer-events: none; }
+.reference-direction-mode label.is-selected { background: #216d87; color: #fff; }
+
+.reference-assessment-status { min-height: 16px; margin: 5px 0 0; color: #58636a; font-size: 11px; line-height: 1.35; }
+
 .reference-crop-editor {
   display: none;
   margin-top: 10px;
@@ -7600,6 +7625,11 @@ select[multiple].collapsible-multi.expanded option:first-child {
             <span id="referenceReimagineName" class="reference-reimagine-name"></span>
             <button type="button" class="reference-reimagine-remove" onclick="clearReferenceReimagine()">Remove</button>
           </div>
+          <div id="referenceDirectionMode" class="reference-direction-mode" role="radiogroup" aria-label="Reimagine direction">
+            <label><input type="radio" name="referenceDirection" value="inspiration" checked onchange="updateReferenceDirectionMode(this.value)">Inspiration only</label>
+            <label><input type="radio" name="referenceDirection" value="blend" onchange="updateReferenceDirectionMode(this.value)">Blend with Muralizer</label>
+          </div>
+          <p id="referenceAssessmentStatus" class="reference-assessment-status" aria-live="polite"></p>
           <div id="referenceCropEditor" class="reference-crop-editor">
             <div class="reference-crop-heading"><span>Focus the inspiration</span><button type="button" class="reference-crop-reset" onclick="resetReferenceCrop()">Use full image</button></div>
             <div id="referenceCropFrame" class="reference-crop-frame" aria-label="Drag to focus the inspiration image">
@@ -13793,7 +13823,14 @@ const referenceReimagineState = {
   mimeType: "",
   name: "",
   image: null,
-  crop: { x: 0, y: 0, zoom: 1 }
+  crop: { x: 0, y: 0, zoom: 1 },
+  cropVersion: 0,
+  assessedCropVersion: -1,
+  assessmentPromise: null,
+  assessmentTimer: null,
+  assessedDescription: "",
+  muralizerDescription: "",
+  blendWithMuralizer: false
 };
 
 function updateReferenceInfluence(value) {
@@ -13816,12 +13853,108 @@ function clearReferenceReimagine() {
   referenceReimagineState.name = "";
   referenceReimagineState.image = null;
   referenceReimagineState.crop = { x: 0, y: 0, zoom: 1 };
+  referenceReimagineState.cropVersion = 0;
+  referenceReimagineState.assessedCropVersion = -1;
+  referenceReimagineState.assessmentPromise = null;
+  clearTimeout(referenceReimagineState.assessmentTimer);
+  referenceReimagineState.assessmentTimer = null;
+  referenceReimagineState.assessedDescription = "";
+  referenceReimagineState.muralizerDescription = "";
   const input = document.getElementById("referenceReimagineInput");
   const preview = document.getElementById("referenceReimaginePreview");
   const editor = document.getElementById("referenceCropEditor");
+  const directionMode = document.getElementById("referenceDirectionMode");
+  const assessmentStatus = document.getElementById("referenceAssessmentStatus");
   if (input) input.value = "";
   preview?.classList.remove("is-visible");
   editor?.classList.remove("is-visible");
+  directionMode?.classList.remove("is-visible");
+  if (assessmentStatus) assessmentStatus.textContent = "";
+}
+
+function buildReferenceMuralDescription() {
+  return referenceReimagineState.assessedDescription;
+}
+
+function buildReferenceGenerationDescription() {
+  if (referenceReimagineState.blendWithMuralizer && referenceReimagineState.muralizerDescription) {
+    return referenceReimagineState.muralizerDescription;
+  }
+  return referenceReimagineState.assessedDescription;
+}
+
+function applyReferenceMuralDescription() {
+  const promptBox = document.getElementById("imagePrompt");
+  const description = buildReferenceMuralDescription();
+  if (!promptBox || !description) return;
+  promptBox.value = description;
+  autoExpand(promptBox);
+}
+
+function updateReferenceDirectionMode(mode) {
+  referenceReimagineState.blendWithMuralizer = mode === "blend";
+  document.querySelectorAll(".reference-direction-mode label").forEach((label) => {
+    label.classList.toggle("is-selected", label.querySelector("input")?.checked);
+  });
+  applyReferenceMuralDescription();
+}
+
+async function assessReferenceAndWriteDescription() {
+  if (referenceReimagineState.assessmentPromise) return referenceReimagineState.assessmentPromise;
+  const source = buildReferenceCropDataUrl();
+  if (!source) return;
+  const status = document.getElementById("referenceAssessmentStatus");
+  const promptBox = document.getElementById("imagePrompt");
+  const assessedCropVersion = referenceReimagineState.cropVersion;
+  if (status) status.textContent = "Analyzing inspiration...";
+
+  const assessment = (async () => {
+    try {
+    const endpoint = window.SceniqueBackend?.toUrl
+      ? window.SceniqueBackend.toUrl("/api/assess-reference")
+      : "/api/assess-reference";
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        reference_image: source,
+        current_description: ""
+      })
+    });
+    const result = await response.json().catch(() => null);
+    if (!response.ok || !result?.mural_description) {
+      throw new Error(String(result?.error || `Assessment failed (${response.status})`));
+    }
+    referenceReimagineState.assessedDescription = result.mural_description;
+    if (promptBox) {
+      applyReferenceMuralDescription();
+      promptBox.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+    referenceReimagineState.assessedCropVersion = assessedCropVersion;
+    if (status) status.textContent = "Inspiration analyzed.";
+    return true;
+    } catch (error) {
+    console.error("Reference assessment error:", error);
+    if (status) status.textContent = error.message || "Assessment could not be completed.";
+    return false;
+    } finally {
+      referenceReimagineState.assessmentPromise = null;
+    }
+  })();
+  referenceReimagineState.assessmentPromise = assessment;
+  return assessment;
+}
+
+function scheduleReferenceAssessment() {
+  clearTimeout(referenceReimagineState.assessmentTimer);
+  referenceReimagineState.assessmentTimer = setTimeout(() => {
+    assessReferenceAndWriteDescription();
+  }, 300);
+}
+
+async function ensureReferenceAssessment() {
+  if (referenceReimagineState.assessedCropVersion === referenceReimagineState.cropVersion) return true;
+  return assessReferenceAndWriteDescription();
 }
 
 function updateCreativeDirectionMode(mode) {
@@ -13881,18 +14014,22 @@ function buildReferenceCropDataUrl() {
 
 function resetReferenceCrop() {
   referenceReimagineState.crop = { x: 0, y: 0, zoom: 1 };
+  referenceReimagineState.cropVersion += 1;
   const zoom = document.getElementById("referenceCropZoom");
   const value = document.getElementById("referenceCropZoomValue");
   if (zoom) zoom.value = "100";
   if (value) value.textContent = "100%";
   renderReferenceCrop();
+  scheduleReferenceAssessment();
 }
 
 function updateReferenceCropZoom(value) {
   referenceReimagineState.crop.zoom = Math.max(1, Math.min(2.5, Number(value) / 100 || 1));
+  referenceReimagineState.cropVersion += 1;
   const label = document.getElementById("referenceCropZoomValue");
   if (label) label.textContent = `${Math.round(referenceReimagineState.crop.zoom * 100)}%`;
   renderReferenceCrop();
+  scheduleReferenceAssessment();
 }
 
 function handleReferenceReimagineFile(file) {
@@ -13924,11 +14061,19 @@ function handleReferenceReimagineFile(file) {
     referenceReimagineState.mimeType = file.type;
     referenceReimagineState.name = file.name;
     referenceReimagineState.crop = { x: 0, y: 0, zoom: 1 };
+    referenceReimagineState.cropVersion = 0;
+    referenceReimagineState.assessedCropVersion = -1;
+    referenceReimagineState.assessedDescription = "";
+    // Snapshot whatever selection-driven description is currently in the
+    // prompt box -- this is what "Blend with Muralizer" mode falls back to
+    // using instead of the AI's read of the uploaded photo.
+    referenceReimagineState.muralizerDescription = document.getElementById("imagePrompt")?.value || "";
     const sourceImage = new Image();
     sourceImage.onload = () => {
       referenceReimagineState.image = sourceImage;
       const editor = document.getElementById("referenceCropEditor");
       editor?.classList.add("is-visible");
+      document.getElementById("referenceDirectionMode")?.classList.add("is-visible");
       resetReferenceCrop();
       // The Creative Direction control sits at the top of a long panel, so
       // on a real mobile viewport (shorter effective height than the raw
@@ -13953,6 +14098,13 @@ function handleReferenceReimagineFile(file) {
     if (thumb) thumb.src = referenceReimagineState.dataUrl;
     if (name) name.textContent = file.name;
     preview?.classList.add("is-visible");
+    const assessmentStatus = document.getElementById("referenceAssessmentStatus");
+    if (assessmentStatus) assessmentStatus.textContent = "Preparing inspiration analysis...";
+    const promptBox = document.getElementById("imagePrompt");
+    if (promptBox) {
+      promptBox.value = "";
+      autoExpand(promptBox);
+    }
   };
   reader.readAsDataURL(file);
 }
@@ -14002,7 +14154,14 @@ function initializeReferenceCropGestures() {
     renderReferenceCrop();
     event.preventDefault();
   });
-  const endDrag = () => { dragStart = null; frame.classList.remove("is-dragging"); };
+  const endDrag = () => {
+    if (dragStart) {
+      referenceReimagineState.cropVersion += 1;
+      scheduleReferenceAssessment();
+    }
+    dragStart = null;
+    frame.classList.remove("is-dragging");
+  };
   frame.addEventListener("pointerup", endDrag);
   frame.addEventListener("pointercancel", endDrag);
 }
@@ -14356,12 +14515,17 @@ async function generateImage() {
 
   const spinner = document.getElementById("spinner");
   const aspectRatio = document.getElementById("aspectRatioSelect").value;
-  const prompt = document.getElementById("imagePrompt").value;
   const hasReference = Boolean(referenceReimagineState.dataUrl);
 
   spinner?.classList.remove("hidden");
 
   try {
+    if (hasReference && !(await ensureReferenceAssessment())) {
+      throw new Error("Inspiration analysis must finish before creating a reimagined mural.");
+    }
+    const prompt = hasReference
+      ? buildReferenceGenerationDescription()
+      : document.getElementById("imagePrompt").value;
     const endpointPath = hasReference ? "/api/generate-from-reference" : "/api/generate";
     const generateEndpoint = window.SceniqueBackend?.toUrl
       ? window.SceniqueBackend.toUrl(endpointPath)
@@ -17078,10 +17242,18 @@ if (data.colorMode === "Auto-Color") {
 
 
 
-const description = generateDescription(data);
-
 const promptBox = document.getElementById("imagePrompt");
-if (promptBox) {
+// While in "Blend with Muralizer" mode, the box shows the selection-driven
+// description but generation itself pulls from muralizerDescription (see
+// buildReferenceGenerationDescription) -- captured here so it stays current
+// as selections change. In "Inspiration only" mode, selection changes
+// should NOT touch the box at all -- it stays driven purely by the image
+// assessment.
+if (promptBox && referenceReimagineState.dataUrl && referenceReimagineState.blendWithMuralizer) {
+  referenceReimagineState.muralizerDescription = generateDescription(data);
+  applyReferenceMuralDescription();
+} else if (promptBox && !referenceReimagineState.dataUrl) {
+  const description = generateDescription(data);
   promptBox.value = description;
   autoExpand(promptBox);
 }
