@@ -7626,8 +7626,8 @@ select[multiple].collapsible-multi.expanded option:first-child {
             <button type="button" class="reference-reimagine-remove" onclick="clearReferenceReimagine()">Remove</button>
           </div>
           <div id="referenceDirectionMode" class="reference-direction-mode" role="radiogroup" aria-label="Reimagine direction">
-            <label><input type="radio" name="referenceDirection" value="inspiration" checked onchange="updateReferenceDirectionMode(this.value)">Inspiration only</label>
-            <label><input type="radio" name="referenceDirection" value="blend" onchange="updateReferenceDirectionMode(this.value)">Blend with Muralizer</label>
+            <label><input type="radio" name="referenceDirection" value="inspiration" checked onchange="updateReferenceDirectionMode(this.value)">Pure Inspiration</label>
+            <label><input type="radio" name="referenceDirection" value="blend" onchange="updateReferenceDirectionMode(this.value)">Inspired Blend</label>
           </div>
           <p id="referenceAssessmentStatus" class="reference-assessment-status" aria-live="polite"></p>
           <div id="referenceCropEditor" class="reference-crop-editor">
@@ -13863,17 +13863,11 @@ function clearReferenceReimagine() {
   const input = document.getElementById("referenceReimagineInput");
   const preview = document.getElementById("referenceReimaginePreview");
   const editor = document.getElementById("referenceCropEditor");
-  const directionMode = document.getElementById("referenceDirectionMode");
   const assessmentStatus = document.getElementById("referenceAssessmentStatus");
   if (input) input.value = "";
   preview?.classList.remove("is-visible");
   editor?.classList.remove("is-visible");
-  directionMode?.classList.remove("is-visible");
   if (assessmentStatus) assessmentStatus.textContent = "";
-}
-
-function buildReferenceMuralDescription() {
-  return referenceReimagineState.assessedDescription;
 }
 
 function buildReferenceGenerationDescription() {
@@ -13885,10 +13879,29 @@ function buildReferenceGenerationDescription() {
 
 function applyReferenceMuralDescription() {
   const promptBox = document.getElementById("imagePrompt");
-  const description = buildReferenceMuralDescription();
+  const description = buildReferenceGenerationDescription();
   if (!promptBox || !description) return;
   promptBox.value = description;
   autoExpand(promptBox);
+}
+
+// Pure Inspiration ignores every selection below Creative Direction
+// entirely (buildReferenceGenerationDescription returns assessedDescription
+// regardless of what's picked) -- hiding them avoids the false impression
+// that fiddling with Category/Feel/etc. does anything in that mode. Inspired
+// Blend and Muralizer-led both actually use these, so they stay visible.
+const PURE_INSPIRATION_HIDDEN_GROUPS = [
+  "feelGroup", "categoryGroup", "subSceneGroup", "elementsGroup", "botanicalGroup",
+  "applicationGroup", "finishGroup", "colorModeGroup", "fogGroup", "substrateGroup", "panelGroup"
+];
+
+function updateSelectionGroupsVisibility() {
+  const inInspirationMode = document.getElementById("referenceReimagineBody")?.classList.contains("is-visible");
+  const isPureInspiration = Boolean(inInspirationMode) && !referenceReimagineState.blendWithMuralizer;
+  PURE_INSPIRATION_HIDDEN_GROUPS.forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = isPureInspiration ? "none" : "";
+  });
 }
 
 function updateReferenceDirectionMode(mode) {
@@ -13897,6 +13910,7 @@ function updateReferenceDirectionMode(mode) {
     label.classList.toggle("is-selected", label.querySelector("input")?.checked);
   });
   applyReferenceMuralDescription();
+  updateSelectionGroupsVisibility();
 }
 
 async function assessReferenceAndWriteDescription() {
@@ -13962,9 +13976,14 @@ function updateCreativeDirectionMode(mode) {
   document.getElementById("creativeDirectionMuralizerLabel")?.classList.toggle("is-selected", !isInspiration);
   document.getElementById("creativeDirectionInspirationLabel")?.classList.toggle("is-selected", isInspiration);
   document.getElementById("referenceReimagineBody")?.classList.toggle("is-visible", isInspiration);
+  // Shows immediately with the rest of the inspiration body, not gated on
+  // an image existing -- all 3 generation paths (Solo, Inspiration only,
+  // Blend with Muralizer) should be visible as soon as you're in this mode.
+  document.getElementById("referenceDirectionMode")?.classList.toggle("is-visible", isInspiration);
   if (!isInspiration) {
     clearReferenceReimagine();
   }
+  updateSelectionGroupsVisibility();
 }
 
 function getReferenceCropMetrics() {
@@ -14073,7 +14092,6 @@ function handleReferenceReimagineFile(file) {
       referenceReimagineState.image = sourceImage;
       const editor = document.getElementById("referenceCropEditor");
       editor?.classList.add("is-visible");
-      document.getElementById("referenceDirectionMode")?.classList.add("is-visible");
       resetReferenceCrop();
       // The Creative Direction control sits at the top of a long panel, so
       // on a real mobile viewport (shorter effective height than the raw
@@ -14523,9 +14541,12 @@ async function generateImage() {
     if (hasReference && !(await ensureReferenceAssessment())) {
       throw new Error("Inspiration analysis must finish before creating a reimagined mural.");
     }
-    const prompt = hasReference
-      ? buildReferenceGenerationDescription()
-      : document.getElementById("imagePrompt").value;
+    // Read straight from the box rather than recomputing from state -- the
+    // box is kept in sync with buildReferenceGenerationDescription() by
+    // applyReferenceMuralDescription() on every mode/assessment change, but
+    // the box remains user-editable, so whatever's actually displayed here
+    // is what actually gets sent, including manual edits.
+    const prompt = document.getElementById("imagePrompt").value;
     const endpointPath = hasReference ? "/api/generate-from-reference" : "/api/generate";
     const generateEndpoint = window.SceniqueBackend?.toUrl
       ? window.SceniqueBackend.toUrl(endpointPath)
