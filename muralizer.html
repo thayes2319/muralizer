@@ -3657,6 +3657,15 @@ button, select {
   top: 44px;
 }
 
+/* EXPERIMENTAL / TEMPORARY -- see the button's HTML comment above. */
+.concept-composite-room-btn {
+  top: 78px;
+  background: rgba(120, 12, 90, 0.55);
+}
+.concept-composite-room-btn:hover {
+  background: rgba(160, 20, 120, 0.8);
+}
+
 .generic-room-modal {
   position: fixed;
   inset: 0;
@@ -3725,14 +3734,16 @@ button, select {
   position: relative;
 }
 
-.generic-room-stage img {
+.generic-room-stage img,
+.generic-room-stage canvas {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: none;
 }
 
-.generic-room-stage.has-image img { display: block; }
+.generic-room-stage.has-image img,
+.generic-room-stage.has-image canvas { display: block; }
 
 .generic-room-status {
   margin: 10px 0 0;
@@ -8477,6 +8488,8 @@ If you’re exploring a new direction, try adjusting just 1-2 elements at a time
         <div id="muralPaletteStrip" class="palette-strip" style="display:none;" aria-label="Dominant mural colors for paint transfer"></div>
         <button id="conceptRoomBtn" class="concept-room-btn" type="button" title="Preview this concept in a room" onclick="openRoomPreview()">See It In Your Room</button>
         <button id="conceptGenericRoomBtn" class="concept-room-btn concept-generic-room-btn" type="button" title="Preview this concept in a generic room, no photo needed" onclick="openGenericRoomPreview()">See It In A Room</button>
+        <!-- EXPERIMENTAL / TEMPORARY -- canvas-composite alternative, see [[Canvas-composite room alternative]] memory. Discard freely if it doesn't hold up. -->
+        <button id="conceptCompositeRoomBtn" class="concept-room-btn concept-composite-room-btn" type="button" title="Preview this concept composited onto a stock room photo (experimental, exact placement, no AI reinterpretation)" onclick="openCompositeRoomPreview()">See It In A Room (Composite Test)</button>
         <button id="conceptShareBtn" class="concept-share-btn" type="button" title="Present &amp; share this concept" onclick="openConceptPresentation()">
           <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
           Share
@@ -8584,6 +8597,33 @@ If you’re exploring a new direction, try adjusting just 1-2 elements at a time
             <button id="genericRoomShare" type="button">Share</button>
           </div>
           <p class="generic-room-disclaimer">AI impression for mood only -- not a precise placement. The mural's exact colors and details may shift in this rendering; for accurate scale and placement, use "See It In Your Room" instead.</p>
+        </div>
+      </div>
+
+      <!-- EXPERIMENTAL / TEMPORARY -- canvas-composite proof of concept.
+           Reuses the "See It In Your Room" perspective-warp + shadow-map
+           pipeline (drawImageTriangle/createRoomPreviewShadowMap) with a
+           built-in stock photo instead of an upload, so the mural can never
+           bleed onto furniture/floors -- it's a literal masked composite,
+           not an AI reinterpretation. Discard freely if it doesn't hold up
+           next to the AI version above. -->
+      <div id="compositeRoomModal" class="generic-room-modal" role="dialog" aria-modal="true" aria-labelledby="compositeRoomTitle" aria-hidden="true">
+        <div class="generic-room-card">
+          <div class="generic-room-head">
+            <div>
+              <h3 id="compositeRoomTitle">See It In A Room (Composite Test)</h3>
+              <p>Experimental: exact pixel placement on a stock room photo, no AI reinterpretation. Always the same stock room for now.</p>
+            </div>
+            <button id="compositeRoomClose" class="generic-room-close" type="button" aria-label="Close">×</button>
+          </div>
+          <div id="compositeRoomStage" class="generic-room-stage">
+            <canvas id="compositeRoomCanvas"></canvas>
+          </div>
+          <p id="compositeRoomStatus" class="generic-room-status" aria-live="polite"></p>
+          <div class="generic-room-actions">
+            <button id="compositeRoomShare" type="button">Share</button>
+          </div>
+          <p class="generic-room-disclaimer">Test build -- one fixed stock photo, hand-estimated wall corners. Not yet a real feature.</p>
         </div>
       </div>
 
@@ -14152,6 +14192,119 @@ async function shareGenericRoomPreview() {
   if (status) status.textContent = "Room impression downloaded. Check your Downloads folder.";
 }
 
+// ============================================================
+// EXPERIMENTAL / TEMPORARY -- canvas-composite proof of concept for
+// "See It In A Room". Reuses loadRoomPreviewImage/drawImageTriangle/
+// createRoomPreviewShadowMap from the "SEE IT IN YOUR ROOM" pipeline above,
+// with a bundled stock photo and hand-estimated wall corners instead of a
+// user-uploaded photo + manual corner placement. No AI call at all for the
+// compositing step -- the mural is pasted, not reinterpreted, so it
+// structurally cannot bleed onto furniture. See the
+// "Canvas-composite room alternative" memory. Discard freely if this
+// doesn't hold up against the AI version.
+// ============================================================
+const STOCK_ROOM_PHOTO_SRC = "stock-rooms/stock-room-1.png";
+// Hand-estimated corners of the flat back wall in stock-room-1.png
+// (normalized 0-1, order: top-left, top-right, bottom-right, bottom-left --
+// same convention as roomPreviewPoints/resetRoomPreviewPoints above).
+const STOCK_ROOM_WALL_POINTS = [
+  { x: 0.234, y: 0.226 },
+  { x: 0.773, y: 0.234 },
+  { x: 0.773, y: 0.655 },
+  { x: 0.234, y: 0.655 }
+];
+
+async function openCompositeRoomPreview() {
+  const modal = document.getElementById("compositeRoomModal");
+  const muralImage = document.getElementById("muralImage");
+  const rawSource = muralImage?.currentSrc || muralImage?.src;
+  if (!modal || !rawSource) return;
+
+  modal.classList.add("open");
+  modal.setAttribute("aria-hidden", "false");
+  await runCompositeRoomPreview(rawSource);
+}
+
+function closeCompositeRoomPreview() {
+  const modal = document.getElementById("compositeRoomModal");
+  const trigger = document.getElementById("conceptCompositeRoomBtn");
+  if (!modal) return;
+  if (modal.contains(document.activeElement)) {
+    trigger?.focus();
+    if (modal.contains(document.activeElement)) document.activeElement?.blur();
+  }
+  modal.classList.remove("open");
+  requestAnimationFrame(() => modal.setAttribute("aria-hidden", "true"));
+}
+
+async function runCompositeRoomPreview(rawSource) {
+  const stage = document.getElementById("compositeRoomStage");
+  const canvas = document.getElementById("compositeRoomCanvas");
+  const status = document.getElementById("compositeRoomStatus");
+  if (!stage || !canvas) return;
+
+  if (status) status.textContent = "Compositing...";
+  try {
+    const muralSource = await ensureMuralDataUrl(rawSource);
+    const [photo, mural] = await Promise.all([
+      loadRoomPreviewImage(STOCK_ROOM_PHOTO_SRC),
+      loadRoomPreviewImage(muralSource)
+    ]);
+    const width = photo.naturalWidth;
+    const height = photo.naturalHeight;
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext("2d");
+    context.drawImage(photo, 0, 0, width, height);
+
+    const points = STOCK_ROOM_WALL_POINTS.map(point => ({ x: point.x * width, y: point.y * height }));
+    const source = [
+      { x: 0, y: 0 },
+      { x: mural.naturalWidth, y: 0 },
+      { x: mural.naturalWidth, y: mural.naturalHeight },
+      { x: 0, y: mural.naturalHeight }
+    ];
+    drawImageTriangle(context, mural, [source[0], source[1], source[2]], [points[0], points[1], points[2]]);
+    drawImageTriangle(context, mural, [source[0], source[2], source[3]], [points[0], points[2], points[3]]);
+
+    const shadowMap = createRoomPreviewShadowMap(photo);
+    context.save();
+    context.beginPath();
+    points.forEach((point, index) => index ? context.lineTo(point.x, point.y) : context.moveTo(point.x, point.y));
+    context.closePath();
+    context.clip();
+    context.globalAlpha = 0.65;
+    context.drawImage(shadowMap, 0, 0, width, height);
+    context.restore();
+
+    stage.classList.add("has-image");
+    if (status) status.textContent = "Composite test -- exact placement, one fixed stock room.";
+  } catch (error) {
+    console.error("Composite room preview error:", error);
+    if (status) status.textContent = error.message || "This composite could not be built.";
+  }
+}
+
+async function shareCompositeRoomPreview() {
+  const canvas = document.getElementById("compositeRoomCanvas");
+  const status = document.getElementById("compositeRoomStatus");
+  if (!canvas || canvas.width < 2) {
+    if (status) status.textContent = "Nothing to share yet.";
+    return;
+  }
+  const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
+  if (!blob) return;
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "composite-room-test.png";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+  if (status) status.textContent = "Composite downloaded.";
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   const close = document.getElementById("genericRoomClose");
   const regenerate = document.getElementById("genericRoomRegenerate");
@@ -14162,6 +14315,11 @@ document.addEventListener("DOMContentLoaded", () => {
   share?.addEventListener("click", shareGenericRoomPreview);
   seedSlider?.addEventListener("input", updateGenericRoomSeedLabel);
   updateGenericRoomSeedLabel();
+
+  const compositeClose = document.getElementById("compositeRoomClose");
+  const compositeShare = document.getElementById("compositeRoomShare");
+  compositeClose?.addEventListener("click", closeCompositeRoomPreview);
+  compositeShare?.addEventListener("click", shareCompositeRoomPreview);
 });
 
 async function generateImage() {
