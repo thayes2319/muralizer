@@ -14223,27 +14223,15 @@ async function shareGenericRoomPreview() {
 // "Canvas-composite room alternative" memory. Discard freely if this
 // doesn't hold up against the AI version.
 // ============================================================
-const STOCK_ROOM_PHOTO_SRC = "stock-rooms/stock-room-2.png";
-// Hand-estimated corners of the flat back wall in stock-room-2.png
+const STOCK_ROOM_PHOTO_SRC = "stock-rooms/stock-room-1.png";
+// Hand-estimated corners of the flat back wall in stock-room-1.png
 // (normalized 0-1, order: top-left, top-right, bottom-right, bottom-left --
-// same convention as roomPreviewPoints/resetRoomPreviewPoints above). Full
-// height/width this time (minus the curtain on the right) -- the furniture
-// masks below handle keeping the chair and side table sitting properly in
-// front of the mural instead of getting painted over.
+// same convention as roomPreviewPoints/resetRoomPreviewPoints above).
 const STOCK_ROOM_WALL_POINTS = [
-  { x: 0.016, y: 0.012 },
-  { x: 0.707, y: 0.012 },
-  { x: 0.707, y: 0.985 },
-  { x: 0.016, y: 0.985 }
-];
-// Hand-estimated bounding boxes (normalized) covering the side table +
-// flowers and the armchair in stock-room-2.png. Same technique the real
-// Window/Door Mask feature above uses: after the mural is painted, the
-// ORIGINAL photo gets redrawn on top within these regions, so the furniture
-// reappears sitting in front of the mural instead of being painted over.
-const STOCK_ROOM_FURNITURE_MASKS = [
-  { x: 0.115, y: 0.216, w: 0.255, h: 0.769 },
-  { x: 0.419, y: 0.469, w: 0.362, h: 0.517 }
+  { x: 0.234, y: 0.226 },
+  { x: 0.773, y: 0.234 },
+  { x: 0.773, y: 0.655 },
+  { x: 0.234, y: 0.655 }
 ];
 
 async function openCompositeRoomPreview() {
@@ -14308,18 +14296,6 @@ async function runCompositeRoomPreview(rawSource) {
     context.globalAlpha = 0.65;
     context.drawImage(shadowMap, 0, 0, width, height);
     context.restore();
-
-    // Restore the real photo on top within each furniture mask, so the
-    // chair/table sit properly in front of the mural instead of the mural
-    // painting straight over them.
-    STOCK_ROOM_FURNITURE_MASKS.forEach(mask => {
-      context.save();
-      context.beginPath();
-      context.rect(mask.x * width, mask.y * height, mask.w * width, mask.h * height);
-      context.clip();
-      context.drawImage(photo, 0, 0, width, height);
-      context.restore();
-    });
 
     stage.classList.add("has-image");
     if (status) status.textContent = "Composite test -- exact placement, one fixed stock room.";
