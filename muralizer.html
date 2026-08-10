@@ -13915,6 +13915,10 @@ function handleReferenceReimagineFile(file) {
   }
 
   const reader = new FileReader();
+  reader.onerror = () => {
+    alert("This file could not be read. Try choosing it again.");
+    clearReferenceReimagine();
+  };
   reader.onload = () => {
     referenceReimagineState.dataUrl = String(reader.result || "");
     referenceReimagineState.mimeType = file.type;
