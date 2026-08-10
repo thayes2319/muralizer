@@ -2828,7 +2828,9 @@ margin-top: 15px;
 .reference-direction-mode {
   display: none;
   gap: 0;
-  margin: 10px 0 0;
+  width: 100%;
+  max-width: 420px;
+  margin: 10px auto 0;
   padding: 0;
   border: 1px solid rgba(33,143,201,.42);
   border-radius: 6px;
@@ -7613,6 +7615,11 @@ select[multiple].collapsible-multi.expanded option:first-child {
           <label id="creativeDirectionInspirationLabel"><input type="radio" name="creativeDirectionMode" value="inspiration" onchange="updateCreativeDirectionMode(this.value)">Start with inspiration</label>
         </div>
 
+        <div id="referenceDirectionMode" class="reference-direction-mode" role="radiogroup" aria-label="Reimagine direction">
+          <label><input type="radio" name="referenceDirection" value="inspiration" checked onchange="updateReferenceDirectionMode(this.value)">Pure Inspiration</label>
+          <label><input type="radio" name="referenceDirection" value="blend" onchange="updateReferenceDirectionMode(this.value)">Inspired Blend</label>
+        </div>
+
         <div id="referenceReimagineBody" class="reference-reimagine-body">
           <p class="reference-reimagine-copy">Add one inspiration image. Your mural brief and selected format still direct a new, original composition.</p>
           <label id="referenceReimagineDropzone" class="reference-reimagine-upload" for="referenceReimagineInput">
@@ -7624,10 +7631,6 @@ select[multiple].collapsible-multi.expanded option:first-child {
             <img id="referenceReimagineThumb" alt="Selected inspiration artwork">
             <span id="referenceReimagineName" class="reference-reimagine-name"></span>
             <button type="button" class="reference-reimagine-remove" onclick="clearReferenceReimagine()">Remove</button>
-          </div>
-          <div id="referenceDirectionMode" class="reference-direction-mode" role="radiogroup" aria-label="Reimagine direction">
-            <label><input type="radio" name="referenceDirection" value="inspiration" checked onchange="updateReferenceDirectionMode(this.value)">Pure Inspiration</label>
-            <label><input type="radio" name="referenceDirection" value="blend" onchange="updateReferenceDirectionMode(this.value)">Inspired Blend</label>
           </div>
           <p id="referenceAssessmentStatus" class="reference-assessment-status" aria-live="polite"></p>
           <div id="referenceCropEditor" class="reference-crop-editor">
@@ -13902,6 +13905,11 @@ function updateSelectionGroupsVisibility() {
     const el = document.getElementById(id);
     if (el) el.style.display = isPureInspiration ? "none" : "";
   });
+  // .color-layout (the Auto-Color swatch/palette-fade graphic) is a sibling
+  // of colorModeGroup, not nested inside it, so the ID-based loop above
+  // never reaches it.
+  const colorLayout = document.querySelector(".color-layout");
+  if (colorLayout) colorLayout.style.display = isPureInspiration ? "none" : "";
 }
 
 function updateReferenceDirectionMode(mode) {
@@ -13910,7 +13918,12 @@ function updateReferenceDirectionMode(mode) {
     label.classList.toggle("is-selected", label.querySelector("input")?.checked);
   });
   applyReferenceMuralDescription();
-  updateSelectionGroupsVisibility();
+  // Showing/hiding 11 selector groups in the same synchronous tick as the
+  // pill highlight can make the click itself feel laggy on slower devices
+  // -- the browser batches paint until the whole handler returns, so the
+  // highlight and the heavy reflow would otherwise appear at the same
+  // moment. Deferring the reflow one frame lets the highlight paint first.
+  requestAnimationFrame(() => updateSelectionGroupsVisibility());
 }
 
 async function assessReferenceAndWriteDescription() {
@@ -14185,6 +14198,11 @@ function initializeReferenceCropGestures() {
 }
 
 initializeReferenceCropGestures();
+// Syncs the .is-selected pill highlight to the radio's default `checked`
+// state on load -- without this, Pure Inspiration is functionally active
+// from the start but doesn't visually look selected until the user
+// interacts with the toggle once.
+updateReferenceDirectionMode("inspiration");
 
 // ============================================================
 // SEE IT IN A ROOM (generic) -- AI-generated impression, no photo upload.
