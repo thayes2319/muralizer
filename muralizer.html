@@ -13926,6 +13926,13 @@ function handleReferenceReimagineFile(file) {
       const editor = document.getElementById("referenceCropEditor");
       editor?.classList.add("is-visible");
       resetReferenceCrop();
+      // The Creative Direction control sits at the top of a long panel, so
+      // on a real mobile viewport (shorter effective height than the raw
+      // screen resolution, once browser chrome is accounted for) this
+      // newly-revealed editor renders well below the fold with nothing
+      // prompting a scroll -- confirmed via emulation: reads exactly like
+      // "the crop tool doesn't come up" even though it rendered correctly.
+      editor?.scrollIntoView({ behavior: "smooth", block: "center" });
     };
     // Without this, a format the browser can't decode (e.g. HEIC in a
     // non-Safari browser) just hangs forever with no crop tool and no
