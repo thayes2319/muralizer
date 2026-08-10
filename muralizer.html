@@ -2840,7 +2840,8 @@ margin-top: 15px;
 .reference-direction-mode label {
   flex: 1;
   padding: 7px 8px;
-  color: #36505d;
+  color: #ffffff;
+  text-shadow: 0 1px 3px rgba(7, 24, 35, 0.9), 0 0 1px rgba(7, 24, 35, 0.95);
   cursor: pointer;
   font-size: 11px;
   font-weight: 700;
@@ -7611,8 +7612,8 @@ select[multiple].collapsible-multi.expanded option:first-child {
         </div>
 
         <div class="creative-direction-mode" role="radiogroup" aria-label="Creative direction">
-          <label id="creativeDirectionMuralizerLabel" class="is-selected"><input type="radio" name="creativeDirectionMode" value="muralizer" checked onchange="updateCreativeDirectionMode(this.value)">Muralizer-led</label>
-          <label id="creativeDirectionInspirationLabel"><input type="radio" name="creativeDirectionMode" value="inspiration" onchange="updateCreativeDirectionMode(this.value)">Start with inspiration</label>
+          <label id="creativeDirectionMuralizerLabel" class="is-selected"><input type="radio" name="creativeDirectionMode" value="muralizer" checked onchange="updateCreativeDirectionMode(this.value)">Via selections</label>
+          <label id="creativeDirectionInspirationLabel"><input type="radio" name="creativeDirectionMode" value="inspiration" onchange="updateCreativeDirectionMode(this.value)">Via inspiration</label>
         </div>
 
         <div id="referenceDirectionMode" class="reference-direction-mode" role="radiogroup" aria-label="Reimagine direction">
