@@ -14211,7 +14211,16 @@ function buildReferenceCropDataUrl() {
   const canvas = document.createElement("canvas");
   const sourceWidth = image.naturalWidth * crop.width;
   const sourceHeight = image.naturalHeight * crop.height;
-  const outputScale = 1024 / Math.max(sourceWidth, sourceHeight);
+  // Stability's control/style endpoint rejects any side under 64px. The
+  // crop tool allows selections as thin as 12% of the source on one axis
+  // (clampReferenceCrop), so scaling only by the longest side down to 1024
+  // can push a thin crop's short side below that floor -- pick whichever
+  // scale factor is larger so the 64px floor always wins when the two
+  // targets conflict.
+  const outputScale = Math.max(
+    1024 / Math.max(sourceWidth, sourceHeight),
+    64 / Math.min(sourceWidth, sourceHeight)
+  );
   canvas.width = Math.round(sourceWidth * outputScale);
   canvas.height = Math.round(sourceHeight * outputScale);
   const sourceX = image.naturalWidth * crop.left;
@@ -14963,7 +14972,19 @@ async function generateImage() {
     if (!response.ok) {
       const errorBody = await response.json().catch(() => null);
       const message = String(errorBody?.error || "").trim();
-      throw new Error(`Generate failed (${response.status})${message ? `: ${message}` : ""}`);
+      // The backend proxies the upstream provider's rejection reason in
+      // `details` (e.g. Stability's "image: unsupported dimensions..."),
+      // but it was being silently dropped here -- the user (and the
+      // console) only ever saw the generic wrapper message, which made
+      // failures like a too-thin crop indistinguishable from every other
+      // 400. Surface it.
+      const detail = errorBody?.details;
+      const detailReason = Array.isArray(detail?.errors)
+        ? detail.errors.join("; ")
+        : String(detail?.message || detail?.error || detail?.raw || "").trim();
+      const fullMessage = [message, detailReason].filter(Boolean).join(" -- ");
+      console.error("Generate failed:", { status: response.status, errorBody });
+      throw new Error(`Generate failed (${response.status})${fullMessage ? `: ${fullMessage}` : ""}`);
     }
 
     const data = await response.json();
