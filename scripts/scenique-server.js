@@ -686,6 +686,86 @@ async function handleGenerateProxy(req, res) {
   });
 }
 
+// "See It In A Room" (generic) -- feeds the actual displayed mural image
+// (whichever concept is on screen, not just the last-generated one, since
+// the prompt text box doesn't reliably reflect it -- see below) into
+// Stability's style-control endpoint, asking for a photorealistic generic
+// interior with the mural applied to a wall. This is deliberately image-
+// conditioned rather than text-prompt-based: an earlier text-only turbo
+// version was fast but produced a generic mural bearing no relation to the
+// concept actually selected, because switching to an older saved concept
+// updates the displayed image but this app never restores that concept's
+// original prompt into the prompt box (confirmed: `prompt` is written once
+// per concept record and never read back anywhere). Feeding the real pixels
+// sidesteps that gap entirely at the cost of a slower generation (control/
+// style has no documented turbo tier) -- an accepted tradeoff for fidelity.
+const WALL_MOCKUP_PROMPT =
+  "A professional real-estate interior photograph of a bright, tastefully furnished, completely generic and unbranded room, " +
+  "with one large feature wall showing this exact mural pattern applied edge-to-edge as an installed wall mural. " +
+  "Natural daylight, soft realistic shadows and perspective, believable modern interior, wide-angle real-estate photography style. " +
+  "No people, no visible logos or text, no identifiable real location.";
+
+const WALL_MOCKUP_NEGATIVE_PROMPT =
+  "no text, no writing, no letters, no watermark, no logo, no signature, no UI elements, " +
+  "no borders, no frames, no collage, no people, no distorted architecture, no warped walls, no blurry areas";
+
+async function handleWallMockupProxy(req, res) {
+  const body = await readBody(req);
+  const reference = parseImageDataUrl(body.mural_image);
+  if (!reference || !reference.buffer.length) {
+    sendJson(res, 400, { ok: false, error: 'A generated mural image is required.' });
+    return;
+  }
+  if (reference.buffer.length > 10 * 1024 * 1024) {
+    sendJson(res, 413, { ok: false, error: 'Mural image exceeds the 10 MB provider limit.' });
+    return;
+  }
+  if (!upstreamApiKey) {
+    sendJson(res, 503, { ok: false, error: 'Image generation is not configured.' });
+    return;
+  }
+
+  const form = new FormData();
+  const imageExtension = reference.mimeType === 'image/jpeg' ? 'jpg' : reference.mimeType.split('/')[1];
+  form.append('image', new Blob([reference.buffer], { type: reference.mimeType }), `mural.${imageExtension}`);
+  form.append('prompt', WALL_MOCKUP_PROMPT);
+  form.append('negative_prompt', WALL_MOCKUP_NEGATIVE_PROMPT);
+  form.append('output_format', 'png');
+  form.append('fidelity', '0.4');
+  form.append('aspect_ratio', '3:2');
+  if (body.seed !== undefined && body.seed !== null && body.seed !== '') {
+    form.append('seed', String(body.seed));
+  }
+
+  const response = await fetch('https://api.stability.ai/v2beta/stable-image/control/style', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${upstreamApiKey}`,
+      'Accept': 'image/*',
+      'Stability-Client-ID': 'scenique-muralizer'
+    },
+    body: form
+  });
+
+  if (response.ok) {
+    const buffer = Buffer.from(await response.arrayBuffer());
+    sendJson(res, 200, { ok: true, success: true, image: buffer.toString('base64') });
+    return;
+  }
+
+  let errorPayload = null;
+  try {
+    errorPayload = await response.json();
+  } catch {
+    errorPayload = { raw: await response.text().catch(() => '') };
+  }
+  sendJson(res, response.status || 500, {
+    ok: false,
+    error: 'Wall mockup generation failed',
+    details: errorPayload
+  });
+}
+
 async function handleReferenceGenerateProxy(req, res) {
   const body = await readBody(req);
   const reference = parseImageDataUrl(body.reference_image);
@@ -831,6 +911,11 @@ async function handleApi(req, res, url) {
 
   if (req.method === 'POST' && url.pathname === '/api/generate-from-reference') {
     await handleReferenceGenerateProxy(req, res);
+    return true;
+  }
+
+  if (req.method === 'POST' && url.pathname === '/api/generate-wall-mockup') {
+    await handleWallMockupProxy(req, res);
     return true;
   }
 
