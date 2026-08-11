@@ -13910,6 +13910,7 @@ function persistGeneratedConceptImage(imgBase64) {
 
 const referenceReimagineState = {
   dataUrl: "",
+  objectUrl: "",
   mimeType: "",
   name: "",
   image: null,
@@ -13939,7 +13940,9 @@ function updateReferenceInfluence(value) {
 }
 
 function clearReferenceReimagine() {
+  if (referenceReimagineState.objectUrl) URL.revokeObjectURL(referenceReimagineState.objectUrl);
   referenceReimagineState.dataUrl = "";
+  referenceReimagineState.objectUrl = "";
   referenceReimagineState.mimeType = "";
   referenceReimagineState.name = "";
   referenceReimagineState.image = null;
@@ -14112,9 +14115,8 @@ function renderReferenceCrop() {
 }
 
 function buildReferenceCropDataUrl() {
-  if (referenceReimagineState.useFullImage) return referenceReimagineState.dataUrl;
   const image = referenceReimagineState.image;
-  if (!image) return referenceReimagineState.dataUrl;
+  if (!image) return "";
   clampReferenceCrop();
   const crop = referenceReimagineState.crop;
   const canvas = document.createElement("canvas");
@@ -14156,65 +14158,49 @@ function handleReferenceReimagineFile(file) {
     return;
   }
 
-  const reader = new FileReader();
-  reader.onerror = () => {
-    alert("This file could not be read. Try choosing it again.");
+  if (referenceReimagineState.objectUrl) URL.revokeObjectURL(referenceReimagineState.objectUrl);
+  referenceReimagineState.objectUrl = URL.createObjectURL(file);
+  referenceReimagineState.dataUrl = referenceReimagineState.objectUrl;
+  referenceReimagineState.mimeType = file.type;
+  referenceReimagineState.name = file.name;
+  referenceReimagineState.crop = { left: 0, top: 0, width: 1, height: 1 };
+  referenceReimagineState.useFullImage = true;
+  referenceReimagineState.cropVersion = 0;
+  referenceReimagineState.assessedCropVersion = -1;
+  referenceReimagineState.assessedDescription = "";
+  // Snapshot whatever selection-driven description is currently in the
+  // prompt box -- this is what "Blend with Muralizer" mode falls back to
+  // using instead of the AI's read of the uploaded photo.
+  referenceReimagineState.muralizerDescription = document.getElementById("imagePrompt")?.value || "";
+  const sourceImage = new Image();
+  sourceImage.onload = () => {
+    referenceReimagineState.image = sourceImage;
+    const frame = document.getElementById("referenceCropFrame");
+    const sourceAspect = Math.min(21 / 9, Math.max(9 / 16, sourceImage.naturalWidth / sourceImage.naturalHeight));
+    frame?.style.setProperty("--reference-crop-aspect", String(sourceAspect));
+    const editor = document.getElementById("referenceCropEditor");
+    editor?.classList.add("is-visible");
+    resetReferenceCrop();
+    editor?.scrollIntoView({ behavior: "smooth", block: "center" });
+  };
+  sourceImage.onerror = () => {
+    alert("This image could not be loaded. Try a JPEG, PNG, or WebP file.");
     clearReferenceReimagine();
   };
-  reader.onload = () => {
-    referenceReimagineState.dataUrl = String(reader.result || "");
-    referenceReimagineState.mimeType = file.type;
-    referenceReimagineState.name = file.name;
-    referenceReimagineState.crop = { left: 0, top: 0, width: 1, height: 1 };
-    referenceReimagineState.useFullImage = true;
-    referenceReimagineState.cropVersion = 0;
-    referenceReimagineState.assessedCropVersion = -1;
-    referenceReimagineState.assessedDescription = "";
-    // Snapshot whatever selection-driven description is currently in the
-    // prompt box -- this is what "Blend with Muralizer" mode falls back to
-    // using instead of the AI's read of the uploaded photo.
-    referenceReimagineState.muralizerDescription = document.getElementById("imagePrompt")?.value || "";
-    const sourceImage = new Image();
-    sourceImage.onload = () => {
-      referenceReimagineState.image = sourceImage;
-      const frame = document.getElementById("referenceCropFrame");
-      const sourceAspect = Math.min(21 / 9, Math.max(9 / 16, sourceImage.naturalWidth / sourceImage.naturalHeight));
-      frame?.style.setProperty("--reference-crop-aspect", String(sourceAspect));
-      const editor = document.getElementById("referenceCropEditor");
-      editor?.classList.add("is-visible");
-      resetReferenceCrop();
-      // The Creative Direction control sits at the top of a long panel, so
-      // on a real mobile viewport (shorter effective height than the raw
-      // screen resolution, once browser chrome is accounted for) this
-      // newly-revealed editor renders well below the fold with nothing
-      // prompting a scroll -- confirmed via emulation: reads exactly like
-      // "the crop tool doesn't come up" even though it rendered correctly.
-      editor?.scrollIntoView({ behavior: "smooth", block: "center" });
-    };
-    // Without this, a format the browser can't decode (e.g. HEIC in a
-    // non-Safari browser) just hangs forever with no crop tool and no
-    // feedback -- exactly the reported symptom, regardless of the type
-    // check above.
-    sourceImage.onerror = () => {
-      alert("This image could not be loaded. Try a JPEG, PNG, or WebP file.");
-      clearReferenceReimagine();
-    };
-    sourceImage.src = referenceReimagineState.dataUrl;
-    const preview = document.getElementById("referenceReimaginePreview");
-    const thumb = document.getElementById("referenceReimagineThumb");
-    const name = document.getElementById("referenceReimagineName");
-    if (thumb) thumb.src = referenceReimagineState.dataUrl;
-    if (name) name.textContent = file.name;
-    preview?.classList.add("is-visible");
-    const assessmentStatus = document.getElementById("referenceAssessmentStatus");
-    if (assessmentStatus) assessmentStatus.textContent = "Preparing inspiration analysis...";
-    const promptBox = document.getElementById("imagePrompt");
-    if (promptBox) {
-      promptBox.value = "";
-      autoExpand(promptBox);
-    }
-  };
-  reader.readAsDataURL(file);
+  sourceImage.src = referenceReimagineState.objectUrl;
+  const preview = document.getElementById("referenceReimaginePreview");
+  const thumb = document.getElementById("referenceReimagineThumb");
+  const name = document.getElementById("referenceReimagineName");
+  if (thumb) thumb.src = referenceReimagineState.objectUrl;
+  if (name) name.textContent = file.name;
+  preview?.classList.add("is-visible");
+  const assessmentStatus = document.getElementById("referenceAssessmentStatus");
+  if (assessmentStatus) assessmentStatus.textContent = "Preparing inspiration analysis...";
+  const promptBox = document.getElementById("imagePrompt");
+  if (promptBox) {
+    promptBox.value = "";
+    autoExpand(promptBox);
+  }
 }
 
 function initializeReferenceReimagineDropzone() {
