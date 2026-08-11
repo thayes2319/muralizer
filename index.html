@@ -23,24 +23,24 @@
 <meta name="theme-color" content="#111111">
 <link rel="apple-touch-icon" href="icons/icon-512-scenique.png">
 
+<!-- Cormorant Garamond -- used by .scenique-title (the "by Scénique"
+     wordmark) and #generateMuralBtn, but was never actually loaded
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&display=swap" rel="stylesheet">
+
 <!-- ⭐ PWA NAME OVERRIDES (add these) -->
 
 <meta name="application-name" content="Scénique">
 <meta name="apple-mobile-web-app-title" content="Scénique">
-
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <script>
 window.SCENIQUE_API_BASE_URL = "https://muralizer.onrender.com";
 </script>
 <script src="scenique-backend.js"></script>
-
-
-
 <style type="text/css">
 
-
 /* ============================================================
-   GLOBAL RESET + BASE
+  BODY WRAPPER
 ============================================================ */
 
 html, body {
@@ -51,7 +51,6 @@ html, body {
   overflow-x: hidden;
 }
 
-/* Default background (Android + Desktop) */
 body {
   background-size: cover;
   background-position: center top;
@@ -60,7 +59,6 @@ body {
   padding-bottom: 56px;
 }
 
-/* iOS: replace fixed background with parallax layer */
 @supports (-webkit-touch-callout: none) {
   body {
     background: none !important;
@@ -82,15 +80,6 @@ body {
 :root {
   --scenery-avg-rgb: 244, 246, 248;
 }
-
-
-
-
-
-
-/* ============================================================
-   BODY WRAPPER 
-============================================================ */
 
 .blur-layer {
   position: absolute;
@@ -1376,6 +1365,61 @@ margin-top: 15px;
   color: #ffffff;
 }
 
+.cpc-compare-header-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.cpc-compare-navigator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  min-height: 28px;
+}
+
+.cpc-compare-nav-arrow {
+  width: 24px;
+  height: 24px;
+  border: 1px solid rgba(255,255,255,0.85);
+  border-radius: 50%;
+  background: rgba(22, 105, 144, 0.78);
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  font-family: Arial, sans-serif;
+  font-size: 19px;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.26);
+}
+
+.cpc-compare-nav-arrow:hover:not(:disabled) {
+  background: rgba(15, 83, 117, 0.95);
+}
+
+.cpc-compare-nav-arrow:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.cpc-compare-range {
+  min-width: 52px;
+  color: #ffffff;
+  font-family: Candara, sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-align: center;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.52);
+}
+
 .cpc-compare-tray {
   width: 100%;
   display: grid;
@@ -1390,11 +1434,10 @@ margin-top: 15px;
 }
 
 .cpc-compare-toolbar {
-  width: 100%;
   display: flex;
+  align-items: center;
   justify-content: flex-end;
   gap: 6px;
-  margin-bottom: 6px;
 }
 
 .cpc-compare-toolbar-btn {
@@ -2717,33 +2760,41 @@ margin-top: 15px;
 /* ============================================================
    REIMAGINE AN INSPIRATION
 ============================================================ */
-.reference-reimagine-panel {
-  width: min(100%, 420px);
-  margin: 16px auto 0;
-  padding: 11px 13px;
-  border: 1px solid rgba(33,143,201,.35);
-  border-radius: 10px;
-  background: rgba(255,255,255,.58);
+.creative-direction-mode {
+  display: flex;
+  gap: 0;
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto 10px;
+  padding: 0;
+  border: 1px solid rgba(33,143,201,.42);
+  border-radius: 8px;
+  overflow: hidden;
 }
-
-.reference-reimagine-panel summary {
+.creative-direction-mode label {
+  flex: 1;
+  padding: 9px 10px;
   color: #216d87;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 12.5px;
   font-weight: 700;
+  text-align: center;
+  background: #f4f8ff;
+  transition: background .15s ease, color .15s ease;
 }
+.creative-direction-mode label + label { border-left: 1px solid rgba(33,143,201,.32); }
+.creative-direction-mode input { position: absolute; opacity: 0; pointer-events: none; }
+.creative-direction-mode label.is-selected { background: #218FC9; color: #fff; }
 
-.reference-reimagine-panel summary span {
-  color: #666;
-  font-size: 12px;
-  font-weight: 400;
-}
-
-.reference-reimagine-body { padding-top: 12px; }
+.reference-reimagine-body { display: none; padding-top: 12px; max-width: 420px; margin: 0 auto; }
+.reference-reimagine-body.is-visible { display: block; }
 
 .reference-reimagine-copy {
   margin: 0 0 10px;
-  color: #555;
+  padding: 7px 8px;
+  border-left: 3px solid rgba(33,143,201,.68);
+  background: rgba(255,255,255,.72);
+  color: #2c2c2c;
   font-size: 12px;
   line-height: 1.42;
 }
@@ -2821,6 +2872,34 @@ margin-top: 15px;
   font-weight: 700;
 }
 
+.reference-direction-mode {
+  display: none;
+  gap: 0;
+  width: 100%;
+  max-width: 420px;
+  margin: 10px auto 0;
+  padding: 0;
+  border: 1px solid rgba(33,143,201,.42);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.reference-direction-mode.is-visible { display: flex; }
+.reference-direction-mode label {
+  flex: 1;
+  padding: 7px 8px;
+  color: #ffffff;
+  text-shadow: 0 1px 3px rgba(7, 24, 35, 0.9), 0 0 1px rgba(7, 24, 35, 0.95);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+}
+.reference-direction-mode label + label { border-left: 1px solid rgba(33,143,201,.32); }
+.reference-direction-mode input { position: absolute; opacity: 0; pointer-events: none; }
+.reference-direction-mode label.is-selected { background: #216d87; color: #fff; }
+
+.reference-assessment-status { min-height: 16px; margin: 5px 0 0; color: #58636a; font-size: 11px; line-height: 1.35; }
+
 .reference-crop-editor {
   display: none;
   margin-top: 10px;
@@ -2850,40 +2929,65 @@ margin-top: 15px;
 
 .reference-crop-frame {
   position: relative;
-  width: min(100%, 250px);
-  aspect-ratio: 1;
+  width: calc(100% - 16px);
+  max-width: 440px;
+  min-height: 150px;
+  aspect-ratio: var(--reference-crop-aspect, 1);
   margin: 0 auto;
   overflow: hidden;
   border: 1px solid rgba(33,143,201,.55);
   border-radius: 7px;
   background: #e7e8e4;
-  cursor: grab;
+  cursor: default;
   touch-action: none;
 }
 
-.reference-crop-frame.is-dragging { cursor: grabbing; }
+.reference-crop-frame.is-dragging .reference-crop-selection { cursor: grabbing; }
 
 .reference-crop-image {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  max-width: none;
-  max-height: none;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
   pointer-events: none;
   user-select: none;
   -webkit-user-drag: none;
 }
 
-.reference-crop-guide {
+.reference-crop-selection {
   position: absolute;
-  inset: 0;
-  border: 1px solid rgba(255,255,255,.92);
-  pointer-events: none;
+  box-sizing: border-box;
+  border: 2px solid rgba(255,255,255,.96);
+  box-shadow: 0 0 0 999px rgba(15,20,22,.38), 0 1px 3px rgba(0,0,0,.45);
+  cursor: grab;
+  touch-action: none;
 }
 
-.reference-crop-zoom { display: flex; align-items: center; gap: 8px; margin: 8px auto 0; width: min(100%, 250px); }
-.reference-crop-zoom input { flex: 1; accent-color: #218FC9; }
-.reference-crop-zoom span { min-width: 37px; color: #216d87; font-size: 11px; font-weight: 700; }
+.reference-crop-handle {
+  position: absolute;
+  z-index: 1;
+  box-sizing: border-box;
+  border: 2px solid #216d87;
+  background: #fff;
+  touch-action: none;
+}
+
+.reference-crop-handle-edge { border-radius: 6px; }
+.reference-crop-handle-left,
+.reference-crop-handle-right { top: 50%; width: 18px; height: 46px; transform: translate(-50%, -50%); cursor: ew-resize; }
+.reference-crop-handle-left { left: 9px; }
+.reference-crop-handle-right { left: calc(100% - 9px); }
+.reference-crop-handle-top,
+.reference-crop-handle-bottom { left: 50%; width: 46px; height: 18px; transform: translate(-50%, -50%); cursor: ns-resize; }
+.reference-crop-handle-top { top: 9px; }
+.reference-crop-handle-bottom { top: calc(100% - 9px); }
+
+.reference-crop-handle-corner { width: 16px; height: 16px; border-radius: 50%; transform: translate(-50%, -50%); }
+.reference-crop-handle-nw { top: 8px; left: 8px; cursor: nwse-resize; }
+.reference-crop-handle-ne { top: 8px; left: calc(100% - 8px); cursor: nesw-resize; }
+.reference-crop-handle-se { top: calc(100% - 8px); left: calc(100% - 8px); cursor: nwse-resize; }
+.reference-crop-handle-sw { top: calc(100% - 8px); left: 8px; cursor: nesw-resize; }
+
 .reference-crop-help { margin: 5px 0 0; color: #666; font-size: 11px; text-align: center; }
 
 .reference-influence-label { display: block; margin: 12px 0 5px; color: #444; font-size: 12px; font-weight: 700; }
@@ -2891,7 +2995,16 @@ margin-top: 15px;
 .reference-influence-row { display: flex; align-items: center; gap: 8px; }
 .reference-influence-row input { flex: 1; accent-color: #218FC9; }
 .reference-influence-value { width: 34px; color: #216d87; font-size: 12px; font-weight: 700; }
-.reference-influence-hint { margin: 5px 0 0; color: #666; font-size: 11px; }
+.reference-influence-hint {
+  margin: 6px 0 0;
+  padding: 7px 8px;
+  border-left: 3px solid rgba(33,143,201,.68);
+  background: rgba(226,244,251,.62);
+  color: #265266;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.35;
+}
 
 
 
@@ -2953,6 +3066,14 @@ margin-top: 15px;
    RESTORED: MURALIZE IT BUTTON WITH SUPER‑THIN LIGHT GREEN BORDER
 ============================================================ */
 
+/* Soft idle "breathing" glow -- signals this is the payoff action without
+   being constant motion; paused on hover so it doesn't fight the more
+   energetic hover glow below. */
+@keyframes muralizeBreathe {
+  0%, 100% { box-shadow: 0 0 0 rgba(111,220,122,0); }
+  50% { box-shadow: 0 0 14px rgba(111,220,122,0.55); }
+}
+
 #generateMuralBtn {
   height: 40px;
   line-height: 25px;
@@ -2961,11 +3082,16 @@ margin-top: 15px;
   align-items: center;
   justify-content: center;
 
-  font-family: "Lucida Handwriting", cursive !important;
-  
-  font-size: 22px;
+  /* Matches the Scénique wordmark's own font (.scenique-title) instead of
+     an unrelated cursive script -- ties the main CTA back to the actual
+     brand logotype. Not loaded as a web font anywhere in this app (same
+     as the wordmark), so this inherits that same system-font gamble
+     rather than introducing a new one. */
+  font-family: "Cormorant Garamond", Georgia, "Times New Roman", serif !important;
+
+  font-size: 23px;
   font-weight: 600;
-  letter-spacing: 1px;
+  letter-spacing: 1.5px;
   white-space: nowrap;
 
   background-color: #4CAF50 !important;
@@ -2983,6 +3109,8 @@ margin-top: 15px;
     box-shadow 0.25s ease,
     border-color 0.25s ease;
 
+  animation: muralizeBreathe 2.6s ease-in-out infinite;
+
   margin-top: 14px !important;
 }
 
@@ -2992,10 +3120,12 @@ margin-top: 15px;
   border-color: #8ffb9a;                       /* brighter green edge */
   box-shadow: 0 0 8px rgba(111,220,122,0.45);  /* green glow */
   transform: rotate(1.5deg);
+  animation: none;
 }
 
 #generateMuralBtn:active {
   transform: scale(0.97);
+  animation: none;
 }
 
 
@@ -3640,6 +3770,171 @@ button, select {
   display: inline-flex;
 }
 
+.concept-generic-room-btn {
+  top: 44px;
+}
+
+/* EXPERIMENTAL / TEMPORARY -- see the button's HTML comment above. */
+.concept-composite-room-btn {
+  top: 78px;
+  background: rgba(120, 12, 90, 0.55);
+}
+.concept-composite-room-btn:hover {
+  background: rgba(160, 20, 120, 0.8);
+}
+
+.generic-room-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 10020;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  box-sizing: border-box;
+  background: rgba(6, 14, 20, 0.88);
+}
+
+.generic-room-modal.open { display: flex; }
+
+.generic-room-card {
+  width: min(100%, 640px);
+  max-height: 92vh;
+  overflow-y: auto;
+  background: #fff;
+  border-radius: 12px;
+  padding: 18px;
+  box-sizing: border-box;
+}
+
+.generic-room-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.generic-room-head h3 {
+  margin: 0 0 4px;
+  color: #164965;
+  font-size: 1.05rem;
+}
+
+.generic-room-head p {
+  margin: 0;
+  color: #58636a;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.generic-room-close {
+  flex: 0 0 auto;
+  border: 0;
+  background: transparent;
+  color: #58636a;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+
+.generic-room-stage {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: 8px;
+  background: rgba(33,143,201,0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+
+.generic-room-stage img,
+.generic-room-stage canvas {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: none;
+}
+
+.generic-room-stage.has-image img,
+.generic-room-stage.has-image canvas { display: block; }
+
+.generic-room-status {
+  margin: 10px 0 0;
+  color: #58636a;
+  font-size: 12px;
+  text-align: center;
+  min-height: 16px;
+}
+
+.generic-room-seed-label {
+  display: block;
+  margin: 12px 0 5px;
+  color: #444;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.generic-room-seed-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 320px;
+  margin: 0 auto;
+}
+
+.generic-room-seed-row input { flex: 1; accent-color: #218FC9; }
+
+.generic-room-seed-value {
+  width: 52px;
+  flex: 0 0 auto;
+  color: #216d87;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: right;
+}
+
+.generic-room-actions {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.generic-room-actions button {
+  border: 1px solid #218FC9;
+  border-radius: 999px;
+  background: #fff;
+  color: #216d87;
+  font-family: Candara, sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 7px 14px;
+  cursor: pointer;
+}
+
+.generic-room-actions button.primary {
+  background: #218FC9;
+  color: #fff;
+}
+
+.generic-room-actions button:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+.generic-room-disclaimer {
+  margin: 10px 0 0;
+  color: #7a7a7a;
+  font-size: 10.5px;
+  line-height: 1.4;
+  text-align: center;
+}
+
 .room-preview-modal {
   position: fixed;
   inset: 0;
@@ -3930,6 +4225,33 @@ button, select {
 }
 
 .room-preview-guidance-copy p { margin: 0; }
+
+/* Desktop: this box already sits in a grid cell stretched tall by the
+   preview stage next to it, so a collapsed summary just leaves that space
+   empty. openRoomPreview() sets the real `open` attribute on desktop widths
+   so the content renders in that already-reserved space; this just cancels
+   the (otherwise mobile-appropriate) full-width reflow that [open] normally
+   triggers, so opening it here doesn't restructure the layout, and hides
+   the now-decorative toggle affordance. Mobile keeps the click-to-expand
+   behavior below, where the space isn't free to give away by default. */
+@media (min-width: 721px) {
+  .room-preview-guidance summary {
+    cursor: default;
+    pointer-events: none;
+  }
+  .room-preview-body:has(.room-preview-guidance[open]) .room-preview-guidance {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .room-preview-body:has(.room-preview-guidance[open]) .room-preview-viewport {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+  }
+  .room-preview-body:has(.room-preview-guidance[open]) .room-preview-panel {
+    grid-column: 2;
+    grid-row: 2;
+  }
+}
 
 @media (max-width: 720px) {
   .room-preview-modal {
@@ -4935,6 +5257,23 @@ font-family:"Segoe Script",cursive !important;
   margin-top: 10px;
   line-height: 1.4;
   color: #222;
+}
+
+.kickoff-dismiss-option {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 16px;
+  color: #555;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.kickoff-dismiss-option input {
+  width: 16px;
+  height: 16px;
+  accent-color: #3B9F3E;
 }
 
 
@@ -7367,6 +7706,67 @@ select[multiple].collapsible-multi.expanded option:first-child {
 
     <div class="mzr-panel-body">
 
+      <!-- Creative Direction -->
+      <div id="creativeDirectionGroup" class="selector-group">
+        <div class="selector-header">
+          <label class="tip" data-tip="Choose whether Muralizer designs freely from your selections, or takes its visual character from an inspiration image you upload.">Creative Direction</label>
+
+          <span class="tip-dots-wrapper">
+            <span class="tip-dots tip" data-tip="Choose whether Muralizer designs freely from your selections, or takes its visual character from an inspiration image you upload.">···</span>
+          </span>
+
+        </div>
+
+        <div class="creative-direction-mode" role="radiogroup" aria-label="Creative direction">
+          <label id="creativeDirectionMuralizerLabel" class="is-selected"><input type="radio" name="creativeDirectionMode" value="muralizer" checked onchange="updateCreativeDirectionMode(this.value)">Via selections</label>
+          <label id="creativeDirectionInspirationLabel"><input type="radio" name="creativeDirectionMode" value="inspiration" onchange="updateCreativeDirectionMode(this.value)">Via inspiration</label>
+        </div>
+
+        <div id="referenceDirectionMode" class="reference-direction-mode" role="radiogroup" aria-label="Reimagine direction">
+          <label><input type="radio" name="referenceDirection" value="inspiration" checked onchange="updateReferenceDirectionMode(this.value)">Pure Inspiration</label>
+          <label><input type="radio" name="referenceDirection" value="blend" onchange="updateReferenceDirectionMode(this.value)">Inspired Blend</label>
+        </div>
+
+        <div id="referenceReimagineBody" class="reference-reimagine-body">
+          <p id="referenceReimagineCopy" class="reference-reimagine-copy">Add one inspiration image. Muralizer creates a new, original composition guided entirely by its visual character — the selections below are not used.</p>
+          <label id="referenceReimagineDropzone" class="reference-reimagine-upload" for="referenceReimagineInput">
+            <span><strong>Drop inspiration artwork here</strong><span class="reference-reimagine-upload-copy">PNG, JPEG, or WebP up to 7 MB</span></span>
+            <span class="reference-reimagine-upload-button">Choose file</span>
+            <input id="referenceReimagineInput" type="file" accept="image/*" onchange="handleReferenceReimagineFile(this.files && this.files[0])">
+          </label>
+          <div id="referenceReimaginePreview" class="reference-reimagine-preview">
+            <img id="referenceReimagineThumb" alt="Selected inspiration artwork">
+            <span id="referenceReimagineName" class="reference-reimagine-name"></span>
+            <button type="button" class="reference-reimagine-remove" onclick="clearReferenceReimagine()">Remove</button>
+          </div>
+          <p id="referenceAssessmentStatus" class="reference-assessment-status" aria-live="polite"></p>
+          <div id="referenceCropEditor" class="reference-crop-editor">
+            <div class="reference-crop-heading"><span>Focus the inspiration</span><button type="button" class="reference-crop-reset" onclick="resetReferenceCrop()">Use full image</button></div>
+            <div id="referenceCropFrame" class="reference-crop-frame" aria-label="Drag to focus the inspiration image">
+              <img id="referenceCropImage" class="reference-crop-image" alt="Crop focus preview">
+              <div id="referenceCropSelection" class="reference-crop-selection">
+                <button type="button" class="reference-crop-handle reference-crop-handle-edge reference-crop-handle-left" data-crop-handle="w" aria-label="Adjust left crop edge"></button>
+                <button type="button" class="reference-crop-handle reference-crop-handle-edge reference-crop-handle-right" data-crop-handle="e" aria-label="Adjust right crop edge"></button>
+                <button type="button" class="reference-crop-handle reference-crop-handle-edge reference-crop-handle-top" data-crop-handle="n" aria-label="Adjust top crop edge"></button>
+                <button type="button" class="reference-crop-handle reference-crop-handle-edge reference-crop-handle-bottom" data-crop-handle="s" aria-label="Adjust bottom crop edge"></button>
+                <button type="button" class="reference-crop-handle reference-crop-handle-corner reference-crop-handle-nw" data-crop-handle="nw" aria-label="Adjust top-left crop corner"></button>
+                <button type="button" class="reference-crop-handle reference-crop-handle-corner reference-crop-handle-ne" data-crop-handle="ne" aria-label="Adjust top-right crop corner"></button>
+                <button type="button" class="reference-crop-handle reference-crop-handle-corner reference-crop-handle-se" data-crop-handle="se" aria-label="Adjust bottom-right crop corner"></button>
+                <button type="button" class="reference-crop-handle reference-crop-handle-corner reference-crop-handle-sw" data-crop-handle="sw" aria-label="Adjust bottom-left crop corner"></button>
+              </div>
+            </div>
+            <p class="reference-crop-help">Drag the crop box to reposition it, or use its side handles to trim one edge at a time.</p>
+          </div>
+          <label class="reference-influence-label" for="referenceInfluence">Source influence</label>
+          <div class="reference-influence-row">
+            <input id="referenceInfluence" type="range" min="30" max="65" value="45" step="1" oninput="updateReferenceInfluence(this.value)">
+            <span id="referenceInfluenceValue" class="reference-influence-value">45%</span>
+          </div>
+          <p id="referenceInfluenceHint" class="reference-influence-hint">Balanced guidance: moderate adherence to the artwork's visual character.</p>
+        </div>
+      </div>
+
+
       <!-- Feel Buttons -->
       <div id="feelGroup" class="selector-group">
         <div class="selector-header">
@@ -8086,38 +8486,6 @@ If you’re exploring a new direction, try adjusting just 1-2 elements at a time
   </div> <!-- /.mzr-panel-body -->
 </div> <!-- /.mzr-panel -->
 
-<details id="referenceReimaginePanel" class="reference-reimagine-panel muralize-it-block">
-  <summary>Reimagine an inspiration <span>Use an artwork's visual character, not its composition.</span></summary>
-  <div class="reference-reimagine-body">
-    <p class="reference-reimagine-copy">Add one inspiration image. Your mural brief and selected format still direct a new, original composition.</p>
-    <label id="referenceReimagineDropzone" class="reference-reimagine-upload" for="referenceReimagineInput">
-      <span><strong>Drop inspiration artwork here</strong><span class="reference-reimagine-upload-copy">PNG, JPEG, or WebP up to 7 MB</span></span>
-      <span class="reference-reimagine-upload-button">Choose file</span>
-      <input id="referenceReimagineInput" type="file" accept="image/png,image/jpeg,image/webp" onchange="handleReferenceReimagineFile(this.files && this.files[0])">
-    </label>
-    <div id="referenceReimaginePreview" class="reference-reimagine-preview">
-      <img id="referenceReimagineThumb" alt="Selected inspiration artwork">
-      <span id="referenceReimagineName" class="reference-reimagine-name"></span>
-      <button type="button" class="reference-reimagine-remove" onclick="clearReferenceReimagine()">Remove</button>
-    </div>
-    <div id="referenceCropEditor" class="reference-crop-editor">
-      <div class="reference-crop-heading"><span>Focus the inspiration</span><button type="button" class="reference-crop-reset" onclick="resetReferenceCrop()">Use full image</button></div>
-      <div id="referenceCropFrame" class="reference-crop-frame" aria-label="Drag to focus the inspiration image">
-        <img id="referenceCropImage" class="reference-crop-image" alt="Crop focus preview">
-        <div class="reference-crop-guide"></div>
-      </div>
-      <label class="reference-crop-zoom">Zoom <input id="referenceCropZoom" type="range" min="100" max="250" value="100" step="1" oninput="updateReferenceCropZoom(this.value)"><span id="referenceCropZoomValue">100%</span></label>
-      <p class="reference-crop-help">Drag to frame the artwork you want to guide the mural.</p>
-    </div>
-    <label class="reference-influence-label" for="referenceInfluence">Source influence</label>
-    <div class="reference-influence-row">
-      <input id="referenceInfluence" type="range" min="30" max="65" value="45" step="1" oninput="updateReferenceInfluence(this.value)">
-      <span id="referenceInfluenceValue" class="reference-influence-value">45%</span>
-    </div>
-    <p id="referenceInfluenceHint" class="reference-influence-hint">Keep the visual character</p>
-  </div>
-</details>
-
   <div class="generate-row muralize-it-block">
 
 
@@ -8258,15 +8626,25 @@ If you’re exploring a new direction, try adjusting just 1-2 elements at a time
         Download Image
       </button>
 
-      <div class="cpc-compare-toolbar" aria-label="Compare tray controls">
-        <button id="cpcClearCompareTray" class="cpc-compare-toolbar-btn" type="button">Clear Tray</button>
-        <button id="cpcResumeCompareTray" class="cpc-compare-toolbar-btn" type="button">Resume Auto</button>
+      <div class="cpc-compare-header-row">
+        <div id="cpcCompareNavigator" class="cpc-compare-navigator" aria-label="Browse ordered concepts">
+          <button id="cpcComparePrev" class="cpc-compare-nav-arrow" type="button" aria-label="Show previous concepts">&#8249;</button>
+          <span id="cpcCompareRange" class="cpc-compare-range" aria-live="polite">C1-C3</span>
+          <button id="cpcCompareNext" class="cpc-compare-nav-arrow" type="button" aria-label="Show next concepts">&#8250;</button>
+        </div>
+        <div class="cpc-compare-toolbar" aria-label="Compare tray controls">
+          <button id="cpcClearCompareTray" class="cpc-compare-toolbar-btn" type="button">Clear Tray</button>
+          <button id="cpcResumeCompareTray" class="cpc-compare-toolbar-btn" type="button">Resume Auto</button>
+        </div>
       </div>
       <div id="cpcCompareTray" class="cpc-compare-tray" aria-label="Concept compare tray"></div>
 
       <div id="imageWrapper" class="mural-wrapper">
         <div id="muralPaletteStrip" class="palette-strip" style="display:none;" aria-label="Dominant mural colors for paint transfer"></div>
         <button id="conceptRoomBtn" class="concept-room-btn" type="button" title="Preview this concept in a room" onclick="openRoomPreview()">See It In Your Room</button>
+        <button id="conceptGenericRoomBtn" class="concept-room-btn concept-generic-room-btn" type="button" title="Preview this concept in a generic room, no photo needed" onclick="openGenericRoomPreview()">See It In A Room</button>
+        <!-- EXPERIMENTAL / TEMPORARY -- canvas-composite alternative, see [[Canvas-composite room alternative]] memory. Discard freely if it doesn't hold up. -->
+        <button id="conceptCompositeRoomBtn" class="concept-room-btn concept-composite-room-btn" type="button" title="Preview this concept composited onto a stock room photo (experimental, exact placement, no AI reinterpretation)" onclick="openCompositeRoomPreview()">See It In A Room (Composite Test)</button>
         <button id="conceptShareBtn" class="concept-share-btn" type="button" title="Present &amp; share this concept" onclick="openConceptPresentation()">
           <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
           Share
@@ -8347,6 +8725,66 @@ If you’re exploring a new direction, try adjusting just 1-2 elements at a time
               <p id="roomPreviewStatus" class="room-preview-note">Room previews are visual guides, not measurements.</p>
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- SEE IT IN A ROOM (generic, AI-generated -- no photo upload) -->
+      <div id="genericRoomModal" class="generic-room-modal" role="dialog" aria-modal="true" aria-labelledby="genericRoomTitle" aria-hidden="true">
+        <div class="generic-room-card">
+          <div class="generic-room-head">
+            <div>
+              <h3 id="genericRoomTitle">See It In A Room</h3>
+              <p>An AI impression of this mural on a wall in a generic, unbranded room. Can take a minute or two to generate.</p>
+            </div>
+            <button id="genericRoomClose" class="generic-room-close" type="button" aria-label="Close">×</button>
+          </div>
+          <div id="genericRoomStage" class="generic-room-stage">
+            <img id="genericRoomImage" alt="This mural shown on a wall in a generic room">
+          </div>
+          <p id="genericRoomStatus" class="generic-room-status" aria-live="polite"></p>
+          <label class="generic-room-seed-label" for="genericRoomFidelitySlider">Mural fidelity</label>
+          <div class="generic-room-seed-row">
+            <input id="genericRoomFidelitySlider" type="range" min="30" max="65" value="45" step="1">
+            <span id="genericRoomFidelityValue" class="generic-room-seed-value">45%</span>
+          </div>
+          <p id="genericRoomFidelityHint" class="generic-room-status">Balanced: faithful to the mural without over-influencing the room.</p>
+          <label class="generic-room-seed-label" for="genericRoomSeedSlider">Creative change on regenerate</label>
+          <div class="generic-room-seed-row">
+            <input id="genericRoomSeedSlider" type="range" min="1" max="10" value="3">
+            <span id="genericRoomSeedValue" class="generic-room-seed-value">Mild</span>
+          </div>
+          <div class="generic-room-actions">
+            <button id="genericRoomRegenerate" class="primary" type="button">Generate</button>
+            <button id="genericRoomShare" type="button">Share</button>
+          </div>
+          <p class="generic-room-disclaimer">AI impression for mood only -- not a precise placement. The mural's exact colors and details may shift in this rendering; for accurate scale and placement, use "See It In Your Room" instead.</p>
+        </div>
+      </div>
+
+      <!-- EXPERIMENTAL / TEMPORARY -- canvas-composite proof of concept.
+           Reuses the "See It In Your Room" perspective-warp + shadow-map
+           pipeline (drawImageTriangle/createRoomPreviewShadowMap) with a
+           built-in stock photo instead of an upload, so the mural can never
+           bleed onto furniture/floors -- it's a literal masked composite,
+           not an AI reinterpretation. Discard freely if it doesn't hold up
+           next to the AI version above. -->
+      <div id="compositeRoomModal" class="generic-room-modal" role="dialog" aria-modal="true" aria-labelledby="compositeRoomTitle" aria-hidden="true">
+        <div class="generic-room-card">
+          <div class="generic-room-head">
+            <div>
+              <h3 id="compositeRoomTitle">See It In A Room (Composite Test)</h3>
+              <p>Experimental: exact pixel placement on a stock room photo, no AI reinterpretation. Always the same stock room for now.</p>
+            </div>
+            <button id="compositeRoomClose" class="generic-room-close" type="button" aria-label="Close">×</button>
+          </div>
+          <div id="compositeRoomStage" class="generic-room-stage">
+            <canvas id="compositeRoomCanvas"></canvas>
+          </div>
+          <p id="compositeRoomStatus" class="generic-room-status" aria-live="polite"></p>
+          <div class="generic-room-actions">
+            <button id="compositeRoomShare" type="button">Share</button>
+          </div>
+          <p class="generic-room-disclaimer">Test build -- one fixed stock photo, hand-estimated wall corners. Not yet a real feature.</p>
         </div>
       </div>
 
@@ -8497,6 +8935,11 @@ If you’re exploring a new direction, try adjusting just 1-2 elements at a time
     <div class="float-note-slogan">
       Don’t just imagine it — Muralize it.
     </div>
+
+    <label class="kickoff-dismiss-option">
+      <input id="floatNoteNeverShow" type="checkbox">
+      <span>Don't show this again</span>
+    </label>
 
     <button id="floatNoteBegin" class="float-note-btn">Create</button>
 
@@ -8816,13 +9259,8 @@ let paidTier = localStorage.getItem('paidTier') || null;
 let startingCredits = parseInt(localStorage.getItem('startingCredits') || credits);
 
 function setCredits(v) {
-  const wasZero = (credits === 0);
   credits = v;
   localStorage.setItem("credits", credits);
-
-  if (wasZero && credits > 0) {
-    localStorage.removeItem("seenFloatNote");
-  }
 }
 
 function useCredit() {
@@ -11052,6 +11490,31 @@ if (
 /* ============================================================
    DESCRIPTION ENGINE (UNIFIED, CLEAN, OPTIONAL COLOR PHRASE)
    ============================================================ */
+const lowerEdgeScopeByScene = {
+  "Chinoiserie::Scholars' Garden Walk": "The lower edge is importantly defined by an undulating berm of earth, providing a natural planted base from which the taller flowering branches emerge. Treat the berm as painted earth and planted forms, never as a literal floor or room surface.",
+  "Chinoiserie::Willow Pavilion Scene": "The lower edge is importantly defined by an undulating berm of earth, providing a natural planted base from which the taller flowering branches emerge. Treat the berm as painted earth and planted forms, never as a literal floor or room surface.",
+  "Chinoiserie::Imperial Garden Promenade": "The lower edge is importantly defined by an undulating berm of earth, providing a natural planted base from which the taller flowering branches emerge. Treat the berm as painted earth and planted forms, never as a literal floor or room surface.",
+  "Botanical::Cherry Orchard Bloom": "The lower edge is importantly defined by an undulating berm of earth, providing a natural planted base from which the taller flowering branches emerge. Treat the berm as painted earth and planted forms, never as a literal floor or room surface.",
+  "Botanical::Wisteria Canopy Scene": "The lower edge is importantly defined by an undulating berm of earth, providing a natural planted base from which the taller flowering branches emerge. Treat the berm as painted earth and planted forms, never as a literal floor or room surface.",
+  "Botanical::Forest Undergrowth Study": "The lower edge is importantly defined by an undulating berm of earth, providing a natural planted base from which the taller growth emerges. Treat the berm as painted earth and planted forms, never as a literal floor or room surface.",
+  "Botanical::Ivy-Covered Woodland Edge": "The lower edge is importantly defined by an undulating berm of earth, providing a natural planted base from which the taller growth emerges. Treat the berm as painted earth and planted forms, never as a literal floor or room surface.",
+  "Botanical::Dense Understory Tangle": "The lower edge is importantly defined by an undulating berm of earth, providing a natural planted base from which the taller growth emerges. Treat the berm as painted earth and planted forms, never as a literal floor or room surface.",
+  "Botanical::Wildflower Meadow Sweep": "Carry a continuous meadow plane of grasses and scattered wildflowers across the lower edge, forming the natural base of the scene rather than a literal floor.",
+  "Botanical::Wildflower Meadow Plane": "Carry a continuous meadow plane of grasses and scattered wildflowers across the lower edge, forming the natural base of the scene rather than a literal floor.",
+  "Botanical::Soft Meadow Grasses Field": "Carry a continuous meadow plane of softly layered grasses across the lower edge, forming the natural base of the scene rather than a literal floor.",
+  "Botanical::Lotus Pond Margin": "Define the lower edge as a planted pond margin with a softly articulated waterline, aquatic foliage, and natural bank transitions rather than a literal floor.",
+  "Chinoiserie::Lotus Pond Court": "Define the lower edge as a planted pond margin with a softly articulated waterline, aquatic foliage, and natural bank transitions rather than a literal floor.",
+  "Chinoiserie::Mountain Scholar Retreat": "Define the lower edge with a quiet rocky slope, rooted vegetation, and natural terrain transitions appropriate to the mountain garden scene.",
+  "Scenic::Mountain Village Pastoral": "Define the lower edge with softly layered hillside terrain and rooted vegetation appropriate to the pastoral scene.",
+  "Scenic::Coastal Cliff Settlement": "Define the lower edge with a rocky coastal shore, rooted vegetation, and natural terrain transitions appropriate to the coastal scene.",
+  "Scenic::Mountain and Sea": "Define the lower edge with a rocky coastal shore, rooted vegetation, and natural terrain transitions appropriate to the mountain-and-sea scene.",
+  "Scenic::Silent Sailing": "Define the lower edge as a quiet shoreline or water-edge transition appropriate to the scene, never as an interior floor."
+};
+
+function getLowerEdgeScope(category, subScene) {
+  return lowerEdgeScopeByScene[`${category || ""}::${subScene || ""}`] || "";
+}
+
 function generateDescription(data) {
   const {
     category,
@@ -11444,10 +11907,12 @@ All elements, background, and details focus on these hues.`.trim();
       `They fully overlay the sub‑scene, repeating along the width, and rise and stop naturally near the top.`;
   }
 
+  const lowerEdgeSentence = getLowerEdgeScope(category, safeSubScene);
 
   let finalDescription = [
     sceneSentence.trim(),
     botanicalSentence.trim(),
+    lowerEdgeSentence,
     fogSentence.trim(),
     substrateSentence.trim(),
     panelSentence.trim()
@@ -12977,6 +13442,12 @@ async function openRoomPreview() {
 
   modal.classList.add("open");
   modal.setAttribute("aria-hidden", "false");
+  // Native <details> suppresses layout for its content when closed in a way
+  // CSS display:!important can't override (confirmed: forcing display on the
+  // child still yields a 0x0 box) -- so showing the guidance box outright on
+  // desktop needs the real `open` attribute, not just a style override.
+  const guidance = document.querySelector(".room-preview-guidance");
+  if (guidance) guidance.open = window.innerWidth > 720;
   if (status) status.textContent = "Preparing this concept for your room preview...";
   roomPreviewPhoto = null;
   roomPreviewPoints = [];
@@ -13507,10 +13978,20 @@ function persistGeneratedConceptImage(imgBase64) {
 
 const referenceReimagineState = {
   dataUrl: "",
+  objectUrl: "",
   mimeType: "",
   name: "",
   image: null,
-  crop: { x: 0, y: 0, zoom: 1 }
+  crop: { left: 0, top: 0, width: 1, height: 1 },
+  useFullImage: true,
+  cropVersion: 0,
+  assessedCropVersion: -1,
+  assessmentPromise: null,
+  assessmentTimer: null,
+  assessedDescription: "",
+  muralizerDescription: "",
+  sourceContextToExclude: "",
+  blendWithMuralizer: false
 };
 
 function updateReferenceInfluence(value) {
@@ -13520,93 +14001,245 @@ function updateReferenceInfluence(value) {
   if (label) label.textContent = `${normalized}%`;
   if (hint) {
     hint.textContent = normalized < 40
-      ? "Fresh interpretation"
+      ? "Fresh interpretation: lighter adherence to the artwork's visual character."
       : normalized > 52
-        ? "Strong source influence"
-        : "Keep the visual character";
+        ? "Strong source influence: closer adherence to the artwork's visual character."
+        : "Balanced guidance: moderate adherence to the artwork's visual character.";
   }
 }
 
 function clearReferenceReimagine() {
+  if (referenceReimagineState.objectUrl) URL.revokeObjectURL(referenceReimagineState.objectUrl);
   referenceReimagineState.dataUrl = "";
+  referenceReimagineState.objectUrl = "";
   referenceReimagineState.mimeType = "";
   referenceReimagineState.name = "";
   referenceReimagineState.image = null;
-  referenceReimagineState.crop = { x: 0, y: 0, zoom: 1 };
+  referenceReimagineState.crop = { left: 0, top: 0, width: 1, height: 1 };
+  referenceReimagineState.useFullImage = true;
+  referenceReimagineState.cropVersion = 0;
+  referenceReimagineState.assessedCropVersion = -1;
+  referenceReimagineState.assessmentPromise = null;
+  clearTimeout(referenceReimagineState.assessmentTimer);
+  referenceReimagineState.assessmentTimer = null;
+  referenceReimagineState.assessedDescription = "";
+  referenceReimagineState.muralizerDescription = "";
+  referenceReimagineState.sourceContextToExclude = "";
   const input = document.getElementById("referenceReimagineInput");
   const preview = document.getElementById("referenceReimaginePreview");
   const editor = document.getElementById("referenceCropEditor");
+  const assessmentStatus = document.getElementById("referenceAssessmentStatus");
   if (input) input.value = "";
   preview?.classList.remove("is-visible");
   editor?.classList.remove("is-visible");
+  if (assessmentStatus) assessmentStatus.textContent = "";
 }
 
-function getReferenceCropMetrics() {
-  const frame = document.getElementById("referenceCropFrame");
-  const image = referenceReimagineState.image;
-  if (!frame || !image?.naturalWidth || !image?.naturalHeight) return null;
-  const frameSize = frame.clientWidth;
-  const baseScale = Math.max(frameSize / image.naturalWidth, frameSize / image.naturalHeight);
-  return { frameSize, baseScale, scale: baseScale * referenceReimagineState.crop.zoom };
+function buildReferenceGenerationDescription() {
+  if (referenceReimagineState.blendWithMuralizer && referenceReimagineState.muralizerDescription) {
+    return referenceReimagineState.muralizerDescription;
+  }
+  return referenceReimagineState.assessedDescription;
+}
+
+function applyReferenceMuralDescription() {
+  const promptBox = document.getElementById("imagePrompt");
+  const description = buildReferenceGenerationDescription();
+  if (!promptBox || !description) return;
+  promptBox.value = description;
+  autoExpand(promptBox);
+}
+
+// Pure Inspiration ignores every selection below Creative Direction
+// entirely (buildReferenceGenerationDescription returns assessedDescription
+// regardless of what's picked) -- hiding them avoids the false impression
+// that fiddling with Category/Feel/etc. does anything in that mode. Inspired
+// Blend and Muralizer-led both actually use these, so they stay visible.
+const PURE_INSPIRATION_HIDDEN_GROUPS = [
+  "feelGroup", "categoryGroup", "subSceneGroup", "elementsGroup", "botanicalGroup",
+  "applicationGroup", "finishGroup", "colorModeGroup", "fogGroup", "substrateGroup", "panelGroup"
+];
+
+function updateSelectionGroupsVisibility() {
+  const inInspirationMode = document.getElementById("referenceReimagineBody")?.classList.contains("is-visible");
+  const isPureInspiration = Boolean(inInspirationMode) && !referenceReimagineState.blendWithMuralizer;
+  PURE_INSPIRATION_HIDDEN_GROUPS.forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = isPureInspiration ? "none" : "";
+  });
+  // .color-layout (the Auto-Color swatch/palette-fade graphic) is a sibling
+  // of colorModeGroup, not nested inside it, so the ID-based loop above
+  // never reaches it.
+  const colorLayout = document.querySelector(".color-layout");
+  if (colorLayout) colorLayout.style.display = isPureInspiration ? "none" : "";
+}
+
+const REFERENCE_REIMAGINE_COPY = {
+  inspiration: "Add one inspiration image. No selections or build required — Muralizer creates a new, original composition guided entirely by its visual character.",
+  blend: "Add one inspiration image. Your selections and build below still inform the outcome, rendered in the style of your upload."
+};
+
+function updateReferenceReimagineCopy() {
+  const copyEl = document.getElementById("referenceReimagineCopy");
+  if (!copyEl) return;
+  copyEl.textContent = referenceReimagineState.blendWithMuralizer
+    ? REFERENCE_REIMAGINE_COPY.blend
+    : REFERENCE_REIMAGINE_COPY.inspiration;
+}
+
+function updateReferenceDirectionMode(mode) {
+  referenceReimagineState.blendWithMuralizer = mode === "blend";
+  document.querySelectorAll(".reference-direction-mode label").forEach((label) => {
+    label.classList.toggle("is-selected", label.querySelector("input")?.checked);
+  });
+  updateReferenceReimagineCopy();
+  applyReferenceMuralDescription();
+  // Showing/hiding 11 selector groups in the same synchronous tick as the
+  // pill highlight can make the click itself feel laggy on slower devices
+  // -- the browser batches paint until the whole handler returns, so the
+  // highlight and the heavy reflow would otherwise appear at the same
+  // moment. Deferring the reflow one frame lets the highlight paint first.
+  requestAnimationFrame(() => updateSelectionGroupsVisibility());
+}
+
+async function assessReferenceAndWriteDescription() {
+  if (referenceReimagineState.assessmentPromise) return referenceReimagineState.assessmentPromise;
+  const source = buildReferenceCropDataUrl();
+  if (!source) return;
+  const status = document.getElementById("referenceAssessmentStatus");
+  const promptBox = document.getElementById("imagePrompt");
+  const assessedCropVersion = referenceReimagineState.cropVersion;
+  if (status) status.textContent = "Analyzing inspiration...";
+
+  const assessment = (async () => {
+    try {
+    const endpoint = window.SceniqueBackend?.toUrl
+      ? window.SceniqueBackend.toUrl("/api/assess-reference")
+      : "/api/assess-reference";
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        reference_image: source,
+        current_description: ""
+      })
+    });
+    const result = await response.json().catch(() => null);
+    if (!response.ok || !result?.mural_description) {
+      throw new Error(String(result?.error || `Assessment failed (${response.status})`));
+    }
+    referenceReimagineState.assessedDescription = result.mural_description;
+    // The assessment already identifies source-photo context (background
+    // furniture, architecture, setting) that shouldn't leak into the mural
+    // -- feed it back in as an extra negative-prompt constraint at
+    // generation time instead of discarding it, since the generic "no
+    // furniture" negative prompt doesn't know what's actually in THIS image.
+    referenceReimagineState.sourceContextToExclude = String(result.assessment?.source_context_to_exclude || "").trim();
+    if (promptBox) {
+      applyReferenceMuralDescription();
+      promptBox.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+    referenceReimagineState.assessedCropVersion = assessedCropVersion;
+    if (status) status.textContent = "Inspiration analyzed.";
+    return true;
+    } catch (error) {
+    console.error("Reference assessment error:", error);
+    if (status) status.textContent = error.message || "Assessment could not be completed.";
+    return false;
+    } finally {
+      referenceReimagineState.assessmentPromise = null;
+    }
+  })();
+  referenceReimagineState.assessmentPromise = assessment;
+  return assessment;
+}
+
+function scheduleReferenceAssessment() {
+  clearTimeout(referenceReimagineState.assessmentTimer);
+  referenceReimagineState.assessmentTimer = setTimeout(() => {
+    assessReferenceAndWriteDescription();
+  }, 300);
+}
+
+async function ensureReferenceAssessment() {
+  if (referenceReimagineState.assessedCropVersion === referenceReimagineState.cropVersion) return true;
+  return assessReferenceAndWriteDescription();
+}
+
+function updateCreativeDirectionMode(mode) {
+  const isInspiration = mode === "inspiration";
+  document.getElementById("creativeDirectionMuralizerLabel")?.classList.toggle("is-selected", !isInspiration);
+  document.getElementById("creativeDirectionInspirationLabel")?.classList.toggle("is-selected", isInspiration);
+  document.getElementById("referenceReimagineBody")?.classList.toggle("is-visible", isInspiration);
+  // Shows immediately with the rest of the inspiration body, not gated on
+  // an image existing -- all 3 generation paths (Solo, Inspiration only,
+  // Blend with Muralizer) should be visible as soon as you're in this mode.
+  document.getElementById("referenceDirectionMode")?.classList.toggle("is-visible", isInspiration);
+  if (!isInspiration) {
+    clearReferenceReimagine();
+  }
+  updateReferenceReimagineCopy();
+  updateSelectionGroupsVisibility();
 }
 
 function clampReferenceCrop() {
-  const metrics = getReferenceCropMetrics();
-  const image = referenceReimagineState.image;
-  if (!metrics || !image) return;
-  const maxX = Math.max(0, (image.naturalWidth * metrics.scale - metrics.frameSize) / 2);
-  const maxY = Math.max(0, (image.naturalHeight * metrics.scale - metrics.frameSize) / 2);
-  referenceReimagineState.crop.x = Math.max(-maxX, Math.min(maxX, referenceReimagineState.crop.x));
-  referenceReimagineState.crop.y = Math.max(-maxY, Math.min(maxY, referenceReimagineState.crop.y));
+  const crop = referenceReimagineState.crop;
+  const minimumSize = 0.12;
+  crop.width = Math.max(minimumSize, Math.min(1, crop.width));
+  crop.height = Math.max(minimumSize, Math.min(1, crop.height));
+  crop.left = Math.max(0, Math.min(1 - crop.width, crop.left));
+  crop.top = Math.max(0, Math.min(1 - crop.height, crop.top));
 }
 
 function renderReferenceCrop() {
   const imageElement = document.getElementById("referenceCropImage");
-  const metrics = getReferenceCropMetrics();
+  const selection = document.getElementById("referenceCropSelection");
   const image = referenceReimagineState.image;
-  if (!imageElement || !metrics || !image) return;
+  if (!imageElement || !selection || !image) return;
   clampReferenceCrop();
   imageElement.src = referenceReimagineState.dataUrl;
-  imageElement.style.width = `${image.naturalWidth * metrics.scale}px`;
-  imageElement.style.height = `${image.naturalHeight * metrics.scale}px`;
-  imageElement.style.transform = `translate(calc(-50% + ${referenceReimagineState.crop.x}px), calc(-50% + ${referenceReimagineState.crop.y}px))`;
+  const crop = referenceReimagineState.crop;
+  selection.style.left = `${crop.left * 100}%`;
+  selection.style.top = `${crop.top * 100}%`;
+  selection.style.width = `${crop.width * 100}%`;
+  selection.style.height = `${crop.height * 100}%`;
 }
 
 function buildReferenceCropDataUrl() {
-  const metrics = getReferenceCropMetrics();
   const image = referenceReimagineState.image;
-  if (!metrics || !image) return referenceReimagineState.dataUrl;
+  if (!image) return "";
+  clampReferenceCrop();
+  const crop = referenceReimagineState.crop;
   const canvas = document.createElement("canvas");
-  canvas.width = 1024;
-  canvas.height = 1024;
-  const sourceSize = metrics.frameSize / metrics.scale;
-  const sourceX = (image.naturalWidth - sourceSize) / 2 - referenceReimagineState.crop.x / metrics.scale;
-  const sourceY = (image.naturalHeight - sourceSize) / 2 - referenceReimagineState.crop.y / metrics.scale;
-  canvas.getContext("2d").drawImage(image, sourceX, sourceY, sourceSize, sourceSize, 0, 0, 1024, 1024);
+  const sourceWidth = image.naturalWidth * crop.width;
+  const sourceHeight = image.naturalHeight * crop.height;
+  const outputScale = 1024 / Math.max(sourceWidth, sourceHeight);
+  canvas.width = Math.round(sourceWidth * outputScale);
+  canvas.height = Math.round(sourceHeight * outputScale);
+  const sourceX = image.naturalWidth * crop.left;
+  const sourceY = image.naturalHeight * crop.top;
+  canvas.getContext("2d").drawImage(image, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, canvas.width, canvas.height);
   return canvas.toDataURL("image/png");
 }
 
 function resetReferenceCrop() {
-  referenceReimagineState.crop = { x: 0, y: 0, zoom: 1 };
-  const zoom = document.getElementById("referenceCropZoom");
-  const value = document.getElementById("referenceCropZoomValue");
-  if (zoom) zoom.value = "100";
-  if (value) value.textContent = "100%";
+  referenceReimagineState.crop = { left: 0, top: 0, width: 1, height: 1 };
+  referenceReimagineState.useFullImage = true;
+  referenceReimagineState.cropVersion += 1;
   renderReferenceCrop();
-}
-
-function updateReferenceCropZoom(value) {
-  referenceReimagineState.crop.zoom = Math.max(1, Math.min(2.5, Number(value) / 100 || 1));
-  const label = document.getElementById("referenceCropZoomValue");
-  if (label) label.textContent = `${Math.round(referenceReimagineState.crop.zoom * 100)}%`;
-  renderReferenceCrop();
+  scheduleReferenceAssessment();
 }
 
 function handleReferenceReimagineFile(file) {
   if (!file) return;
-  const acceptedTypes = ["image/jpeg", "image/png", "image/webp"];
-  if (!acceptedTypes.includes(file.type)) {
-    alert("Choose a PNG, JPEG, or WebP inspiration image.");
+  // Mobile camera/photo-library picks are frequently HEIC/HEIF on iOS
+  // (image/heic, image/heif) or occasionally report an empty/generic type
+  // depending on the source app -- a strict jpeg/png/webp whitelist rejects
+  // those before the crop tool ever gets a chance to appear. Gate on
+  // "is this even an image" instead and let the actual decode attempt below
+  // be the real pass/fail signal.
+  if (file.type && !file.type.startsWith("image/")) {
+    alert("Choose an image file for the inspiration artwork.");
     clearReferenceReimagine();
     return;
   }
@@ -13616,28 +14249,49 @@ function handleReferenceReimagineFile(file) {
     return;
   }
 
-  const reader = new FileReader();
-  reader.onload = () => {
-    referenceReimagineState.dataUrl = String(reader.result || "");
-    referenceReimagineState.mimeType = file.type;
-    referenceReimagineState.name = file.name;
-    referenceReimagineState.crop = { x: 0, y: 0, zoom: 1 };
-    const sourceImage = new Image();
-    sourceImage.onload = () => {
-      referenceReimagineState.image = sourceImage;
-      const editor = document.getElementById("referenceCropEditor");
-      editor?.classList.add("is-visible");
-      resetReferenceCrop();
-    };
-    sourceImage.src = referenceReimagineState.dataUrl;
-    const preview = document.getElementById("referenceReimaginePreview");
-    const thumb = document.getElementById("referenceReimagineThumb");
-    const name = document.getElementById("referenceReimagineName");
-    if (thumb) thumb.src = referenceReimagineState.dataUrl;
-    if (name) name.textContent = file.name;
-    preview?.classList.add("is-visible");
+  if (referenceReimagineState.objectUrl) URL.revokeObjectURL(referenceReimagineState.objectUrl);
+  referenceReimagineState.objectUrl = URL.createObjectURL(file);
+  referenceReimagineState.dataUrl = referenceReimagineState.objectUrl;
+  referenceReimagineState.mimeType = file.type;
+  referenceReimagineState.name = file.name;
+  referenceReimagineState.crop = { left: 0, top: 0, width: 1, height: 1 };
+  referenceReimagineState.useFullImage = true;
+  referenceReimagineState.cropVersion = 0;
+  referenceReimagineState.assessedCropVersion = -1;
+  referenceReimagineState.assessedDescription = "";
+  // Snapshot whatever selection-driven description is currently in the
+  // prompt box -- this is what "Blend with Muralizer" mode falls back to
+  // using instead of the AI's read of the uploaded photo.
+  referenceReimagineState.muralizerDescription = document.getElementById("imagePrompt")?.value || "";
+  const sourceImage = new Image();
+  sourceImage.onload = () => {
+    referenceReimagineState.image = sourceImage;
+    const frame = document.getElementById("referenceCropFrame");
+    const sourceAspect = Math.min(21 / 9, Math.max(9 / 16, sourceImage.naturalWidth / sourceImage.naturalHeight));
+    frame?.style.setProperty("--reference-crop-aspect", String(sourceAspect));
+    const editor = document.getElementById("referenceCropEditor");
+    editor?.classList.add("is-visible");
+    resetReferenceCrop();
+    editor?.scrollIntoView({ behavior: "smooth", block: "center" });
   };
-  reader.readAsDataURL(file);
+  sourceImage.onerror = () => {
+    alert("This image could not be loaded. Try a JPEG, PNG, or WebP file.");
+    clearReferenceReimagine();
+  };
+  sourceImage.src = referenceReimagineState.objectUrl;
+  const preview = document.getElementById("referenceReimaginePreview");
+  const thumb = document.getElementById("referenceReimagineThumb");
+  const name = document.getElementById("referenceReimagineName");
+  if (thumb) thumb.src = referenceReimagineState.objectUrl;
+  if (name) name.textContent = file.name;
+  preview?.classList.add("is-visible");
+  const assessmentStatus = document.getElementById("referenceAssessmentStatus");
+  if (assessmentStatus) assessmentStatus.textContent = "Preparing inspiration analysis...";
+  const promptBox = document.getElementById("imagePrompt");
+  if (promptBox) {
+    promptBox.value = "";
+    autoExpand(promptBox);
+  }
 }
 
 function initializeReferenceReimagineDropzone() {
@@ -13672,25 +14326,573 @@ function initializeReferenceCropGestures() {
   frame.dataset.cropReady = "true";
   let dragStart = null;
   frame.addEventListener("pointerdown", (event) => {
-    if (!referenceReimagineState.image) return;
-    dragStart = { x: event.clientX, y: event.clientY, cropX: referenceReimagineState.crop.x, cropY: referenceReimagineState.crop.y };
+    const selection = event.target.closest("#referenceCropSelection");
+    if (!referenceReimagineState.image || !selection) return;
+    const handle = event.target.closest("[data-crop-handle]")?.dataset.cropHandle || "move";
+    dragStart = {
+      x: event.clientX,
+      y: event.clientY,
+      handle,
+      crop: { ...referenceReimagineState.crop }
+    };
     frame.setPointerCapture(event.pointerId);
     frame.classList.add("is-dragging");
     event.preventDefault();
   });
   frame.addEventListener("pointermove", (event) => {
     if (!dragStart) return;
-    referenceReimagineState.crop.x = dragStart.cropX + event.clientX - dragStart.x;
-    referenceReimagineState.crop.y = dragStart.cropY + event.clientY - dragStart.y;
+    const bounds = frame.getBoundingClientRect();
+    if (!bounds.width || !bounds.height) return;
+    const deltaX = (event.clientX - dragStart.x) / bounds.width;
+    const deltaY = (event.clientY - dragStart.y) / bounds.height;
+    const crop = { ...dragStart.crop };
+    const minimumSize = 0.12;
+    referenceReimagineState.useFullImage = false;
+    if (dragStart.handle === "move") {
+      crop.left = Math.max(0, Math.min(1 - crop.width, crop.left + deltaX));
+      crop.top = Math.max(0, Math.min(1 - crop.height, crop.top + deltaY));
+    } else {
+      let right = crop.left + crop.width;
+      let bottom = crop.top + crop.height;
+      if (dragStart.handle.includes("w")) crop.left = Math.max(0, Math.min(right - minimumSize, crop.left + deltaX));
+      if (dragStart.handle.includes("e")) right = Math.min(1, Math.max(crop.left + minimumSize, right + deltaX));
+      if (dragStart.handle.includes("n")) crop.top = Math.max(0, Math.min(bottom - minimumSize, crop.top + deltaY));
+      if (dragStart.handle.includes("s")) bottom = Math.min(1, Math.max(crop.top + minimumSize, bottom + deltaY));
+      crop.width = right - crop.left;
+      crop.height = bottom - crop.top;
+    }
+    referenceReimagineState.crop = crop;
     renderReferenceCrop();
     event.preventDefault();
   });
-  const endDrag = () => { dragStart = null; frame.classList.remove("is-dragging"); };
+  const endDrag = () => {
+    if (dragStart) {
+      referenceReimagineState.cropVersion += 1;
+      scheduleReferenceAssessment();
+    }
+    dragStart = null;
+    frame.classList.remove("is-dragging");
+  };
   frame.addEventListener("pointerup", endDrag);
   frame.addEventListener("pointercancel", endDrag);
 }
 
 initializeReferenceCropGestures();
+// Syncs the .is-selected pill highlight to the radio's default `checked`
+// state on load -- without this, Pure Inspiration is functionally active
+// from the start but doesn't visually look selected until the user
+// interacts with the toggle once.
+updateReferenceDirectionMode("inspiration");
+
+// ============================================================
+// SEE IT IN A ROOM (generic) -- AI-generated impression, no photo upload.
+// Deliberately separate from the "SEE IT IN YOUR ROOM" tool above: no
+// IndexedDB persistence, no corner handles, no crop.
+//
+// Feeds the ACTUAL displayed mural image (muralImage.src) into Stability's
+// image-conditioned "control/style" endpoint via /api/generate-wall-mockup,
+// asking for a photorealistic generic interior with the mural on a wall.
+// Image-conditioned rather than text-prompt-based on purpose: a prompt-text
+// box does not reliably describe whatever concept happens to be on screen
+// once a user browses saved concepts, so feeding the real pixels is the
+// only way to guarantee the result matches what's actually selected. Slower
+// than a turbo text call as a result (control/style has no turbo tier) --
+// an accepted tradeoff: correct-but-slow over fast-but-wrong.
+// ============================================================
+let genericRoomSeed = null;
+
+// muralImage.src is a data: URL only for a mural generated fresh this page
+// load. A concept restored from history (or freshly loaded from another
+// session) has its src resolved to a stored https://.../storage/... URL
+// instead (see resolveBackendImageUrl/cpcBackendImageStore above) -- the
+// backend's /api/generate-wall-mockup only accepts a data: URL, so that
+// case needs converting first. Concept images are served with permissive
+// CORS specifically so they can be read back like this (see the "canvas-
+// read for palette extraction" comment on the backend's static file
+// handler), so a plain fetch+blob round-trip works for both cases.
+async function ensureMuralDataUrl(src) {
+  if (!src) return "";
+  if (src.startsWith("data:")) return src;
+  const response = await fetch(src);
+  if (!response.ok) throw new Error(`Could not load this concept's image (${response.status}).`);
+  const blob = await response.blob();
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ""));
+    reader.onerror = () => reject(new Error("Could not read this concept's image."));
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function openGenericRoomPreview() {
+  const modal = document.getElementById("genericRoomModal");
+  const muralImage = document.getElementById("muralImage");
+  const source = muralImage?.currentSrc || muralImage?.src;
+  if (!modal || !source) return;
+
+  modal.classList.add("open");
+  modal.setAttribute("aria-hidden", "false");
+  // Explicit seed from the start (not left unset) so Regenerate has
+  // something real to increment from -- the backend response doesn't echo
+  // back whatever seed Stability picked for an unset request.
+  genericRoomSeed = Math.floor(Math.random() * 2**32);
+  await runGenericRoomGeneration(source);
+}
+
+// Same 1-10 -> increment mapping as getSeedIncrement() (the main "Creative
+// Change @ next image" ramp slider) for consistency across the app, kept as
+// its own copy since that one is hardwired to a specific slider id.
+function getGenericRoomSeedIncrement() {
+  const slider = document.getElementById("genericRoomSeedSlider");
+  if (!slider) return 20;
+  switch (Number(slider.value)) {
+    case 1: return 1;
+    case 2: return 5;
+    case 3: return 20;
+    case 4: return 50;
+    case 5: return 150;
+    case 6: return 300;
+    case 7: return 800;
+    case 8: return 2000;
+    case 9: return 5000;
+    case 10: return 15000;
+    default: return 20;
+  }
+}
+
+function updateGenericRoomSeedLabel() {
+  const slider = document.getElementById("genericRoomSeedSlider");
+  const label = document.getElementById("genericRoomSeedValue");
+  if (!slider || !label) return;
+  const tiers = { 1: "Minimal", 2: "Subtle", 3: "Mild", 4: "Mild", 5: "Moderate", 6: "Moderate", 7: "Strong", 8: "Strong", 9: "Big Change", 10: "Wild" };
+  label.textContent = tiers[Number(slider.value)] || "Mild";
+}
+
+// Same 30-65 clamp as the backend's handleWallMockupProxy -- that's the
+// tested-safe band (0.8 bled the mural's style onto furniture/floors; 0.5
+// confirmed good; 0.45 is the default). Mirrors the "Source influence"
+// slider's pattern (referenceInfluence) for a consistent feel.
+function getGenericRoomFidelity() {
+  const slider = document.getElementById("genericRoomFidelitySlider");
+  if (!slider) return 0.45;
+  return Math.max(30, Math.min(65, Number(slider.value) || 45)) / 100;
+}
+
+function updateGenericRoomFidelityLabel() {
+  const slider = document.getElementById("genericRoomFidelitySlider");
+  const label = document.getElementById("genericRoomFidelityValue");
+  const hint = document.getElementById("genericRoomFidelityHint");
+  if (!slider || !label) return;
+  const value = Math.max(30, Math.min(65, Number(slider.value) || 45));
+  label.textContent = `${value}%`;
+  if (hint) {
+    hint.textContent = value < 40
+      ? "Lighter: more creative freedom, less strict adherence to the mural."
+      : value > 52
+        ? "Stronger: closer adherence to the mural's exact colors and motifs."
+        : "Balanced: faithful to the mural without over-influencing the room.";
+  }
+}
+
+function closeGenericRoomPreview() {
+  const modal = document.getElementById("genericRoomModal");
+  const trigger = document.getElementById("conceptGenericRoomBtn");
+  if (!modal) return;
+  if (modal.contains(document.activeElement)) {
+    trigger?.focus();
+    if (modal.contains(document.activeElement)) document.activeElement?.blur();
+  }
+  modal.classList.remove("open");
+  requestAnimationFrame(() => modal.setAttribute("aria-hidden", "true"));
+}
+
+async function runGenericRoomGeneration(sourceOverride) {
+  const muralImage = document.getElementById("muralImage");
+  const rawSource = sourceOverride || muralImage?.currentSrc || muralImage?.src;
+  const stage = document.getElementById("genericRoomStage");
+  const resultImage = document.getElementById("genericRoomImage");
+  const status = document.getElementById("genericRoomStatus");
+  const regenerateBtn = document.getElementById("genericRoomRegenerate");
+  if (!rawSource || !stage || !resultImage) return;
+
+  stage.classList.remove("has-image");
+  if (status) status.textContent = "Preparing the mural image...";
+  if (regenerateBtn) {
+    regenerateBtn.disabled = true;
+    regenerateBtn.textContent = "Generating…";
+  }
+
+  try {
+    const source = await ensureMuralDataUrl(rawSource);
+    if (!source) throw new Error("Could not load this concept's image.");
+    if (status) status.textContent = "Generating a room impression... this can take a minute or two.";
+    const endpointPath = "/api/generate-wall-mockup";
+    const endpoint = window.SceniqueBackend?.toUrl
+      ? window.SceniqueBackend.toUrl(endpointPath)
+      : endpointPath;
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        mural_image: source,
+        seed: genericRoomSeed || undefined,
+        fidelity: getGenericRoomFidelity()
+      })
+    });
+    if (!response.ok) {
+      const errorBody = await response.json().catch(() => null);
+      throw new Error(String(errorBody?.error || `Generation failed (${response.status})`));
+    }
+    const data = await response.json();
+    const imgBase64 = data.image;
+    if (!imgBase64) throw new Error("No image returned.");
+    resultImage.src = `data:image/png;base64,${imgBase64}`;
+    stage.classList.add("has-image");
+    if (status) status.textContent = "AI impression -- for mood only, not a precise placement.";
+    genericRoomSeed += getGenericRoomSeedIncrement();
+  } catch (error) {
+    console.error("Generic room preview error:", error);
+    if (status) status.textContent = error.message || "This room impression could not be generated.";
+  } finally {
+    if (regenerateBtn) {
+      regenerateBtn.disabled = false;
+      regenerateBtn.textContent = "Regenerate";
+    }
+  }
+}
+
+// Mirrors shareRoomPreviewComposite() above (same three-tier fallback:
+// Capacitor native share for the Android bundle, then Web Share API, then a
+// plain download link) -- simpler here since the result is already a plain
+// generated PNG with no canvas compositing to do first.
+async function shareGenericRoomPreview() {
+  const resultImage = document.getElementById("genericRoomImage");
+  const status = document.getElementById("genericRoomStatus");
+  const src = resultImage?.src || "";
+  if (!src.startsWith("data:")) {
+    if (status) status.textContent = "Generate a room impression before sharing it.";
+    return;
+  }
+  if (status) status.textContent = "Preparing image for sharing...";
+  const blob = await (await fetch(src)).blob();
+  const file = new File([blob], "scenique-room-impression.png", { type: "image/png" });
+  const nativePlugins = window.Capacitor?.Plugins;
+  if (nativePlugins?.Filesystem?.writeFile && nativePlugins?.Share?.share) {
+    try {
+      const base64 = src.split(",")[1];
+      const saved = await nativePlugins.Filesystem.writeFile({
+        path: `scenique-room-impression-${Date.now()}.png`,
+        data: base64,
+        directory: "CACHE"
+      });
+      await nativePlugins.Share.share({
+        title: "Scénique Room Impression",
+        files: [saved.uri],
+        dialogTitle: "Share room impression"
+      });
+      if (status) status.textContent = "Room impression ready to share.";
+      return;
+    } catch (error) {
+      console.warn("Native room impression share failed:", error);
+      if (status) status.textContent = "Native sharing was unavailable. Trying the device share option...";
+    }
+  }
+  try {
+    if (navigator.share && (!navigator.canShare || navigator.canShare({ files: [file] }))) {
+      await navigator.share({ title: "Scénique Room Impression", files: [file] });
+      if (status) status.textContent = "Room impression shared.";
+      return;
+    }
+  } catch (error) {
+    if (error && error.name === "AbortError") return;
+    console.warn("Room impression share failed:", error);
+  }
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "scenique-room-impression.png";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+  if (status) status.textContent = "Room impression downloaded. Check your Downloads folder.";
+}
+
+// ============================================================
+// EXPERIMENTAL / TEMPORARY -- canvas-composite proof of concept for
+// "See It In A Room". Reuses loadRoomPreviewImage/drawImageTriangle/
+// createRoomPreviewShadowMap from the "SEE IT IN YOUR ROOM" pipeline above,
+// with a bundled stock photo and hand-estimated wall corners instead of a
+// user-uploaded photo + manual corner placement. No AI call at all for the
+// compositing step -- the mural is pasted, not reinterpreted, so it
+// structurally cannot bleed onto furniture. See the
+// "Canvas-composite room alternative" memory. Discard freely if this
+// doesn't hold up against the AI version.
+// ============================================================
+// 5 stock rooms spanning the aspect-ratio spectrum so a mural of any shape
+// lands on a wall built for a similar shape, rather than always being
+// force-fit onto the one 3:2 room. Each profile carries the source photo's
+// own aspect ratio (photoAspect, used to pick the nearest profile for a
+// given mural) and hand-estimated corners of that photo's flat back wall
+// (normalized 0-1, order: top-left, top-right, bottom-right, bottom-left --
+// same convention as roomPreviewPoints/resetRoomPreviewPoints above).
+const ROOM_PROFILES = [
+  {
+    id: "panoramic",
+    src: "stock-rooms/stock-room-panoramic-21x9.png",
+    photoAspect: 1536 / 640,
+    points: [
+      { x: 0.32, y: 0.27 },
+      { x: 0.68, y: 0.27 },
+      { x: 0.68, y: 0.565 },
+      { x: 0.32, y: 0.565 }
+    ]
+  },
+  {
+    id: "landscape",
+    src: "stock-rooms/stock-room-1.png",
+    photoAspect: 1216 / 832,
+    points: [
+      { x: 0.234, y: 0.226 },
+      { x: 0.773, y: 0.234 },
+      { x: 0.773, y: 0.655 },
+      { x: 0.234, y: 0.655 }
+    ]
+  },
+  {
+    id: "square",
+    src: "stock-rooms/stock-room-square-5x4.png",
+    photoAspect: 1088 / 896,
+    points: [
+      { x: 0.22, y: 0.22 },
+      { x: 0.76, y: 0.19 },
+      { x: 0.76, y: 0.66 },
+      { x: 0.22, y: 0.655 }
+    ]
+  },
+  {
+    id: "portrait",
+    src: "stock-rooms/stock-room-portrait-4x5.png",
+    photoAspect: 896 / 1088,
+    points: [
+      { x: 0.10, y: 0.09 },
+      { x: 0.915, y: 0.09 },
+      { x: 0.915, y: 0.69 },
+      { x: 0.10, y: 0.69 }
+    ]
+  },
+  {
+    id: "tall",
+    src: "stock-rooms/stock-room-tall-9x16.png",
+    photoAspect: 768 / 1344,
+    points: [
+      { x: 0.28, y: 0.07 },
+      { x: 0.73, y: 0.10 },
+      { x: 0.73, y: 0.685 },
+      { x: 0.28, y: 0.655 }
+    ]
+  }
+];
+
+// Nearest profile by aspect ratio, compared in log space so a mural twice
+// as wide as a room and one twice as tall count as equally mismatched.
+function pickRoomProfile(muralAspect) {
+  let best = ROOM_PROFILES[0];
+  let bestDistance = Infinity;
+  ROOM_PROFILES.forEach((profile) => {
+    const distance = Math.abs(Math.log(muralAspect) - Math.log(profile.photoAspect));
+    if (distance < bestDistance) {
+      bestDistance = distance;
+      best = profile;
+    }
+  });
+  return best;
+}
+
+function pointDistance(a, b) {
+  return Math.hypot(b.x - a.x, b.y - a.y);
+}
+
+// Average of top/bottom edge lengths over average of left/right edge
+// lengths, so a slightly trapezoidal wall quad (e.g. the square profile's
+// sloped top edge) still gets a representative aspect ratio.
+function computeWallAspect(points) {
+  const topWidth = pointDistance(points[0], points[1]);
+  const bottomWidth = pointDistance(points[3], points[2]);
+  const leftHeight = pointDistance(points[0], points[3]);
+  const rightHeight = pointDistance(points[1], points[2]);
+  return ((topWidth + bottomWidth) / 2) / ((leftHeight + rightHeight) / 2);
+}
+
+// Centered "cover" crop: trims whichever axis is oversized so the cropped
+// rectangle exactly matches targetAspect, keeping the crop centered. This
+// is what lets the mural fill its wall edge-to-edge without the distortion
+// that comes from stretching its full (mismatched-aspect) bounding box
+// across a quad it was never shaped for.
+function computeCoverCropRect(sourceWidth, sourceHeight, targetAspect) {
+  const sourceAspect = sourceWidth / sourceHeight;
+  if (sourceAspect > targetAspect) {
+    const width = sourceHeight * targetAspect;
+    return { x: (sourceWidth - width) / 2, y: 0, width, height: sourceHeight };
+  }
+  const height = sourceWidth / targetAspect;
+  return { x: 0, y: (sourceHeight - height) / 2, width: sourceWidth, height };
+}
+
+async function openCompositeRoomPreview() {
+  const modal = document.getElementById("compositeRoomModal");
+  const muralImage = document.getElementById("muralImage");
+  const rawSource = muralImage?.currentSrc || muralImage?.src;
+  if (!modal || !rawSource) return;
+
+  modal.classList.add("open");
+  modal.setAttribute("aria-hidden", "false");
+  await runCompositeRoomPreview(rawSource);
+}
+
+function closeCompositeRoomPreview() {
+  const modal = document.getElementById("compositeRoomModal");
+  const trigger = document.getElementById("conceptCompositeRoomBtn");
+  if (!modal) return;
+  if (modal.contains(document.activeElement)) {
+    trigger?.focus();
+    if (modal.contains(document.activeElement)) document.activeElement?.blur();
+  }
+  modal.classList.remove("open");
+  requestAnimationFrame(() => modal.setAttribute("aria-hidden", "true"));
+}
+
+async function runCompositeRoomPreview(rawSource) {
+  const stage = document.getElementById("compositeRoomStage");
+  const canvas = document.getElementById("compositeRoomCanvas");
+  const status = document.getElementById("compositeRoomStatus");
+  if (!stage || !canvas) return;
+
+  if (status) status.textContent = "Compositing...";
+  try {
+    const muralSource = await ensureMuralDataUrl(rawSource);
+    const mural = await loadRoomPreviewImage(muralSource);
+    const profile = pickRoomProfile(mural.naturalWidth / mural.naturalHeight);
+    const photo = await loadRoomPreviewImage(profile.src);
+
+    const width = photo.naturalWidth;
+    const height = photo.naturalHeight;
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext("2d");
+    context.drawImage(photo, 0, 0, width, height);
+
+    const points = profile.points.map(point => ({ x: point.x * width, y: point.y * height }));
+    const wallAspect = computeWallAspect(points);
+    const crop = computeCoverCropRect(mural.naturalWidth, mural.naturalHeight, wallAspect);
+    const source = [
+      { x: crop.x, y: crop.y },
+      { x: crop.x + crop.width, y: crop.y },
+      { x: crop.x + crop.width, y: crop.y + crop.height },
+      { x: crop.x, y: crop.y + crop.height }
+    ];
+    drawImageTriangle(context, mural, [source[0], source[1], source[2]], [points[0], points[1], points[2]]);
+    drawImageTriangle(context, mural, [source[0], source[2], source[3]], [points[0], points[2], points[3]]);
+
+    const shadowMap = createRoomPreviewShadowMap(photo);
+    context.save();
+    context.beginPath();
+    points.forEach((point, index) => index ? context.lineTo(point.x, point.y) : context.moveTo(point.x, point.y));
+    context.closePath();
+    context.clip();
+    context.globalAlpha = 0.65;
+    context.drawImage(shadowMap, 0, 0, width, height);
+    context.restore();
+
+    stage.classList.add("has-image");
+    if (status) status.textContent = "Composite test -- edge-to-edge fit, adaptive room.";
+  } catch (error) {
+    console.error("Composite room preview error:", error);
+    if (status) status.textContent = error.message || "This composite could not be built.";
+  }
+}
+
+// Same native-share -> Web Share -> download fallback chain as
+// shareGenericRoomPreview() above. The canvas-only version this replaced
+// just clicked a download link unconditionally, which on mobile browsers
+// drops the file into Downloads with no share sheet and no visible
+// confirmation -- easy to mistake for the button doing nothing.
+async function shareCompositeRoomPreview() {
+  const canvas = document.getElementById("compositeRoomCanvas");
+  const status = document.getElementById("compositeRoomStatus");
+  if (!canvas || canvas.width < 2) {
+    if (status) status.textContent = "Nothing to share yet.";
+    return;
+  }
+  if (status) status.textContent = "Preparing image for sharing...";
+  const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
+  if (!blob) {
+    if (status) status.textContent = "This composite could not be prepared for sharing.";
+    return;
+  }
+  const file = new File([blob], "composite-room-test.png", { type: "image/png" });
+  const nativePlugins = window.Capacitor?.Plugins;
+  if (nativePlugins?.Filesystem?.writeFile && nativePlugins?.Share?.share) {
+    try {
+      const dataUrl = canvas.toDataURL("image/png");
+      const base64 = dataUrl.split(",")[1];
+      const saved = await nativePlugins.Filesystem.writeFile({
+        path: `composite-room-test-${Date.now()}.png`,
+        data: base64,
+        directory: "CACHE"
+      });
+      await nativePlugins.Share.share({
+        title: "Scénique Room Composite",
+        files: [saved.uri],
+        dialogTitle: "Share room composite"
+      });
+      if (status) status.textContent = "Composite ready to share.";
+      return;
+    } catch (error) {
+      console.warn("Native composite share failed:", error);
+      if (status) status.textContent = "Native sharing was unavailable. Trying the device share option...";
+    }
+  }
+  try {
+    if (navigator.share && (!navigator.canShare || navigator.canShare({ files: [file] }))) {
+      await navigator.share({ title: "Scénique Room Composite", files: [file] });
+      if (status) status.textContent = "Composite shared.";
+      return;
+    }
+  } catch (error) {
+    if (error && error.name === "AbortError") return;
+    console.warn("Composite share failed:", error);
+  }
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "composite-room-test.png";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+  if (status) status.textContent = "Composite downloaded. Check your Downloads folder.";
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const close = document.getElementById("genericRoomClose");
+  const regenerate = document.getElementById("genericRoomRegenerate");
+  const share = document.getElementById("genericRoomShare");
+  const seedSlider = document.getElementById("genericRoomSeedSlider");
+  const fidelitySlider = document.getElementById("genericRoomFidelitySlider");
+  close?.addEventListener("click", closeGenericRoomPreview);
+  regenerate?.addEventListener("click", () => runGenericRoomGeneration());
+  share?.addEventListener("click", shareGenericRoomPreview);
+  seedSlider?.addEventListener("input", updateGenericRoomSeedLabel);
+  fidelitySlider?.addEventListener("input", updateGenericRoomFidelityLabel);
+  updateGenericRoomSeedLabel();
+  updateGenericRoomFidelityLabel();
+
+  const compositeClose = document.getElementById("compositeRoomClose");
+  const compositeShare = document.getElementById("compositeRoomShare");
+  compositeClose?.addEventListener("click", closeCompositeRoomPreview);
+  compositeShare?.addEventListener("click", shareCompositeRoomPreview);
+});
 
 async function generateImage() {
   const scenesPanel = document.querySelector(".mural-scenes");
@@ -13702,30 +14904,48 @@ async function generateImage() {
 
   const spinner = document.getElementById("spinner");
   const aspectRatio = document.getElementById("aspectRatioSelect").value;
-  const prompt = document.getElementById("imagePrompt").value;
   const hasReference = Boolean(referenceReimagineState.dataUrl);
 
   spinner?.classList.remove("hidden");
 
   try {
+    if (hasReference && !(await ensureReferenceAssessment())) {
+      throw new Error("Inspiration analysis must finish before creating a reimagined mural.");
+    }
+    // Read straight from the box rather than recomputing from state -- the
+    // box is kept in sync with buildReferenceGenerationDescription() by
+    // applyReferenceMuralDescription() on every mode/assessment change, but
+    // the box remains user-editable, so whatever's actually displayed here
+    // is what actually gets sent, including manual edits.
+    const prompt = document.getElementById("imagePrompt").value;
     const endpointPath = hasReference ? "/api/generate-from-reference" : "/api/generate";
     const generateEndpoint = window.SceniqueBackend?.toUrl
       ? window.SceniqueBackend.toUrl(endpointPath)
       : endpointPath;
+
+    const baseNegativePrompt =
+      "no furniture, no floors, no parts of homes or offices, no text, no writing, no letters, no words, no captions, no typography, " +
+      "no logos, no watermarks, no signatures, no UI elements, no interface, " +
+      "no thumbnails, no borders, no frames, no collage, no screenshots, " +
+      "no photographic lens effects, no photographic artifacts, no glare, " +
+      "no reflections, no shadows cast onto the background, no shadows implying the background is a physical wall, " +
+      "no depth-of-field, no bokeh, no HDR, no camera grain, " +
+      "no realism, no glossy surfaces, no shiny textures, no image splitting";
+    // Image-specific context the vision assessment flagged in THIS reference
+    // photo (e.g. incidental background furniture/architecture a peacock or
+    // other subject happened to be photographed against) -- the generic
+    // negative prompt above doesn't know what's actually in this particular
+    // image, so append it as an extra constraint when present.
+    const negativePrompt = (hasReference && referenceReimagineState.sourceContextToExclude)
+      ? `${baseNegativePrompt}, ${referenceReimagineState.sourceContextToExclude}`
+      : baseNegativePrompt;
 
     const response = await fetch(generateEndpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         prompt,
-        negative_prompt:
-          "no furniture, no floors, no parts of homes or offices, no text, no writing, no letters, no words, no captions, no typography, " +
-          "no logos, no watermarks, no signatures, no UI elements, no interface, " +
-          "no thumbnails, no borders, no frames, no collage, no screenshots, " +
-          "no photographic lens effects, no photographic artifacts, no glare, " +
-          "no reflections, no shadows cast onto the background, no shadows implying the background is a physical wall, " +
-          "no depth-of-field, no bokeh, no HDR, no camera grain, " +
-          "no realism, no glossy surfaces, no shiny textures, no image splitting",
+        negative_prompt: negativePrompt,
         aspect_ratio: aspectRatio,
         seed: currentSeed,
         model: document.getElementById("imageModelSelector").value,
@@ -13737,7 +14957,9 @@ async function generateImage() {
     });
 
     if (!response.ok) {
-      throw new Error(`Generate failed (${response.status})`);
+      const errorBody = await response.json().catch(() => null);
+      const message = String(errorBody?.error || "").trim();
+      throw new Error(`Generate failed (${response.status})${message ? `: ${message}` : ""}`);
     }
 
     const data = await response.json();
@@ -13818,6 +15040,7 @@ muralImage.src = `data:image/png;base64,${imgBase64}`;
 
   } catch (err) {
     console.error("Generation error:", err);
+    alert(err?.message || "Generation could not be completed. Please try again.");
   } finally {
     spinner?.classList.add("hidden");
   }
@@ -15216,53 +16439,21 @@ function lockPro() {
 // KICKOFF NOTE + PRO UNLOCK + DOWNLOAD + IMAGE PROTECTION
 // ============================================================
 
-// ⭐ Cooldown settings
-const KICKOFF_HELP_COOLDOWN_MINUTES = 10;   // must wait 10 minutes after tier activation
-const KICKOFF_HELP_MAX_PER_DAY = 3;         // max 3 per day
-let kickoffHelpShownThisSession = false;    // one per session
+const KICKOFF_AUTOSHOW_LIMIT = 2;
 
-function shouldThrottleKickoffHelp() {
-  // One per session
-  if (kickoffHelpShownThisSession) return false;
-
-  const now = Date.now();
-
-  // Daily limit
-  const today = new Date().toDateString();
-  const lastDay = localStorage.getItem("kickoffHelpDay") || "";
-  let count = Number(localStorage.getItem("kickoffHelpCount") || 0);
-
-  if (today !== lastDay) {
-    // New day → reset count
-    localStorage.setItem("kickoffHelpDay", today);
-    localStorage.setItem("kickoffHelpCount", "0");
-    count = 0;
+function closeKickoffModal() {
+  const modal = document.getElementById("floatNoteModal");
+  const neverShow = document.getElementById("floatNoteNeverShow");
+  modal?.classList.remove("visible");
+  localStorage.setItem("seenFloatNote", "true");
+  if (neverShow?.checked) {
+    localStorage.setItem("kickoffModalDisabled", "true");
+    localStorage.setItem("kickoffHelpEnabled", "false");
+    const pill = document.getElementById("floatNoteHelp");
+    if (pill) pill.style.display = "none";
+    const kickoffToggle = document.getElementById("toggleKickoff");
+    if (kickoffToggle) kickoffToggle.checked = false;
   }
-
-  if (count >= KICKOFF_HELP_MAX_PER_DAY) return false;
-
-  // Cooldown since last tier activation
-  const lastTierActivation = Number(localStorage.getItem("lastTierActivationTime") || 0);
-  const diffMinutes = (now - lastTierActivation) / 1000 / 60;
-
-  return diffMinutes >= KICKOFF_HELP_COOLDOWN_MINUTES;
-}
-
-function markKickoffHelpShown() {
-  kickoffHelpShownThisSession = true;
-
-  const today = new Date().toDateString();
-  const lastDay = localStorage.getItem("kickoffHelpDay") || "";
-  let count = Number(localStorage.getItem("kickoffHelpCount") || 0);
-
-  if (today !== lastDay) {
-    localStorage.setItem("kickoffHelpDay", today);
-    count = 0;
-  }
-
-  localStorage.setItem("kickoffHelpDay", today);
-  localStorage.setItem("kickoffHelpCount", String(count + 1));
-  localStorage.setItem("kickoffHelpLastShown", Date.now().toString());
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -15270,36 +16461,29 @@ document.addEventListener("DOMContentLoaded", () => {
   updateSessionMeter();
 
   const modal = document.getElementById("floatNoteModal");
-  const closeBtn = document.getElementById("floatNoteClose");
   const continueBtn = document.getElementById("floatNoteBegin");
   const helpBtn = document.getElementById("floatNoteHelp");
 
   helpBtn?.addEventListener("click", (e) => {
     if (e.target !== e.currentTarget) return;
+    const neverShow = document.getElementById("floatNoteNeverShow");
+    if (neverShow) neverShow.checked = false;
     modal?.classList.add("visible");
   });
 
   continueBtn?.addEventListener("click", () => {
-    modal?.classList.remove("visible");
-    localStorage.setItem("seenFloatNote", "true");
-  });
-
-  closeBtn?.addEventListener("click", () => {
-    modal?.classList.remove("visible");
-    localStorage.setItem("seenFloatNote", "true");
+    closeKickoffModal();
   });
 
   modal?.addEventListener("click", (e) => {
     if (e.target === modal) {
-      modal.classList.remove("visible");
-      localStorage.setItem("seenFloatNote", "true");
+      closeKickoffModal();
     }
   });
 
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && modal?.classList.contains("visible")) {
-      modal.classList.remove("visible");
-      localStorage.setItem("seenFloatNote", "true");
+      closeKickoffModal();
     }
   });
 
@@ -15317,20 +16501,15 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  const THREE_DAYS = 1000 * 60 * 60 * 24 * 3;
-  const lastSeen = Number(localStorage.getItem("floatNoteLastSeen") || 0);
-  const now = Date.now();
-  const timeElapsed = now - lastSeen;
-
+  const kickoffLoadCount = Number(localStorage.getItem("kickoffModalLoadCount") || 0);
   const shouldShowFloatNote =
-    !localStorage.getItem("seenFloatNote") ||
-    timeElapsed > THREE_DAYS;
+    localStorage.getItem("kickoffModalDisabled") !== "true" &&
+    kickoffLoadCount < KICKOFF_AUTOSHOW_LIMIT;
 
-  // ⭐ Apply new timing rules
-  if (shouldShowFloatNote && shouldThrottleKickoffHelp()) {
+  if (shouldShowFloatNote) {
+    localStorage.setItem("kickoffModalLoadCount", String(kickoffLoadCount + 1));
     requestAnimationFrame(() => {
       modal?.classList.add("visible");
-      markKickoffHelpShown();
     });
   }
 
@@ -16421,10 +17600,18 @@ if (data.colorMode === "Auto-Color") {
 
 
 
-const description = generateDescription(data);
-
 const promptBox = document.getElementById("imagePrompt");
-if (promptBox) {
+// While in "Blend with Muralizer" mode, the box shows the selection-driven
+// description but generation itself pulls from muralizerDescription (see
+// buildReferenceGenerationDescription) -- captured here so it stays current
+// as selections change. In "Inspiration only" mode, selection changes
+// should NOT touch the box at all -- it stays driven purely by the image
+// assessment.
+if (promptBox && referenceReimagineState.dataUrl && referenceReimagineState.blendWithMuralizer) {
+  referenceReimagineState.muralizerDescription = generateDescription(data);
+  applyReferenceMuralDescription();
+} else if (promptBox && !referenceReimagineState.dataUrl) {
+  const description = generateDescription(data);
   promptBox.value = description;
   autoExpand(promptBox);
 }
@@ -16693,6 +17880,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const activeProjectsEl = document.getElementById("cpcActiveProjects");
   const openSet = document.getElementById("cpcOpenSet");
   const compareTrayEl = document.getElementById("cpcCompareTray");
+  const comparePrevBtn = document.getElementById("cpcComparePrev");
+  const compareNextBtn = document.getElementById("cpcCompareNext");
+  const compareRangeEl = document.getElementById("cpcCompareRange");
   const clearCompareTrayBtn = document.getElementById("cpcClearCompareTray");
   const resumeCompareTrayBtn = document.getElementById("cpcResumeCompareTray");
   const addClientBtn = document.getElementById("addClientBtn");
@@ -18349,9 +19539,30 @@ document.addEventListener("DOMContentLoaded", () => {
     return renderSelections;
   }
 
+  function updateCompareNavigator() {
+    const activeCtx = contexts[getActiveProjectIndex()];
+    const concepts = Array.isArray(activeCtx && activeCtx.concepts) && activeCtx.concepts.length
+      ? activeCtx.concepts
+      : [];
+    const activeIndex = Number.isInteger(activeCtx && activeCtx.activeConceptIndex)
+      ? activeCtx.activeConceptIndex
+      : 0;
+    const windowStart = Math.floor(Math.max(0, activeIndex) / 3) * 3;
+    const windowEnd = Math.min(concepts.length, windowStart + 3);
+
+    if (compareRangeEl) {
+      compareRangeEl.textContent = concepts.length
+        ? `C${windowStart + 1}-C${windowEnd}`
+        : "No concepts";
+    }
+    if (comparePrevBtn) comparePrevBtn.disabled = windowStart === 0;
+    if (compareNextBtn) compareNextBtn.disabled = windowEnd >= concepts.length;
+  }
+
   function renderCompareTray() {
     if (!compareTrayEl) return;
     pruneCompareSelections();
+    updateCompareNavigator();
     const renderSelections = buildCompareRenderSelections();
 
     if (resumeCompareTrayBtn) {
@@ -19231,6 +20442,27 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  const moveCompareWindow = (direction) => {
+    const activeIndex = getActiveProjectIndex();
+    const activeCtx = contexts[activeIndex];
+    const concepts = Array.isArray(activeCtx && activeCtx.concepts) && activeCtx.concepts.length
+      ? activeCtx.concepts
+      : [];
+    if (!activeCtx || !concepts.length) return;
+
+    const currentIndex = Number.isInteger(activeCtx.activeConceptIndex) ? activeCtx.activeConceptIndex : 0;
+    const currentWindow = Math.floor(Math.max(0, currentIndex) / 3);
+    const targetIndex = Math.max(0, Math.min(concepts.length - 1, (currentWindow + direction) * 3));
+    if (targetIndex === currentIndex) return;
+
+    activeCtx.activeConceptIndex = targetIndex;
+    compareAutoFillPaused = false;
+    setActiveContext(activeIndex);
+  };
+
+  comparePrevBtn?.addEventListener("click", () => moveCompareWindow(-1));
+  compareNextBtn?.addEventListener("click", () => moveCompareWindow(1));
+
   if (renameProjectBtn) {
     renameProjectBtn.style.display = "none";
   }
@@ -19418,7 +20650,24 @@ document.addEventListener("DOMContentLoaded", () => {
   cpcSnapshots = readCpcSnapshots();
   renderSnapshotSelector();
 
-  void ensureOwnerDefaultConceptSeed().then(() => hydrateBackendConceptImages()).then(() => {
+  const hasOnlyDefaultContext = contexts.length === 1 &&
+    normalizeName(contexts[0] && contexts[0].client) === normalizeName("Client 1") &&
+    normalizeName(contexts[0] && contexts[0].project) === normalizeName("Project 1") &&
+    Array.isArray(contexts[0] && contexts[0].concepts) &&
+    contexts[0].concepts.length === 1 &&
+    normalizeName(contexts[0].concepts[0] && contexts[0].concepts[0].name) === normalizeName("c1");
+
+  void ensureOwnerDefaultConceptSeed().then(async () => {
+    if (!hasOnlyDefaultContext) return;
+    await refreshRenderDiskSnapshot();
+    const recoveredContexts = Array.isArray(renderDiskSnapshot && renderDiskSnapshot.contexts)
+      ? renderDiskSnapshot.contexts
+      : [];
+    if (!recoveredContexts.length) return;
+    contexts = recoveredContexts.map((context, index) => normalizeContext(context, getDefaultContext(index)));
+    setActiveContext(0);
+    setSessionStatus("Recovered client concepts from Render Disk.");
+  }).then(() => hydrateBackendConceptImages()).then(() => {
     const activeIndex = getActiveProjectIndex();
     const ctx = contexts[activeIndex];
     if (!ctx) return;

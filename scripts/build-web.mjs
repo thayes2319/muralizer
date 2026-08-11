@@ -6,8 +6,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const root = path.resolve(__dirname, "..");
 
-const sourcePath = path.join(root, "public", "muralizer.html");
-const outputPath = path.join(root, "public", "index.html");
+const sourcePath = path.join(root, "muralizer.html");
+const outputPath = path.join(root, "index.html");
 
 async function main() {
   try {
