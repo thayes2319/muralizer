@@ -13978,7 +13978,6 @@ function persistGeneratedConceptImage(imgBase64) {
 
 const referenceReimagineState = {
   dataUrl: "",
-  objectUrl: "",
   mimeType: "",
   name: "",
   image: null,
@@ -14009,9 +14008,7 @@ function updateReferenceInfluence(value) {
 }
 
 function clearReferenceReimagine() {
-  if (referenceReimagineState.objectUrl) URL.revokeObjectURL(referenceReimagineState.objectUrl);
   referenceReimagineState.dataUrl = "";
-  referenceReimagineState.objectUrl = "";
   referenceReimagineState.mimeType = "";
   referenceReimagineState.name = "";
   referenceReimagineState.image = null;
@@ -14249,55 +14246,77 @@ function handleReferenceReimagineFile(file) {
     return;
   }
 
-  if (referenceReimagineState.objectUrl) URL.revokeObjectURL(referenceReimagineState.objectUrl);
-  referenceReimagineState.objectUrl = URL.createObjectURL(file);
-  referenceReimagineState.dataUrl = referenceReimagineState.objectUrl;
-  referenceReimagineState.mimeType = file.type;
-  referenceReimagineState.name = file.name;
-  referenceReimagineState.crop = { left: 0, top: 0, width: 1, height: 1 };
-  referenceReimagineState.useFullImage = true;
-  referenceReimagineState.cropVersion = 0;
-  referenceReimagineState.assessedCropVersion = -1;
-  referenceReimagineState.assessedDescription = "";
-  // Snapshot whatever selection-driven description is currently in the
-  // prompt box -- this is what "Blend with Muralizer" mode falls back to
-  // using instead of the AI's read of the uploaded photo.
-  referenceReimagineState.muralizerDescription = document.getElementById("imagePrompt")?.value || "";
-  const sourceImage = new Image();
-  sourceImage.onload = () => {
-    referenceReimagineState.image = sourceImage;
-    const frame = document.getElementById("referenceCropFrame");
-    const sourceAspect = Math.min(21 / 9, Math.max(9 / 16, sourceImage.naturalWidth / sourceImage.naturalHeight));
-    frame?.style.setProperty("--reference-crop-aspect", String(sourceAspect));
-    const editor = document.getElementById("referenceCropEditor");
-    editor?.classList.add("is-visible");
-    resetReferenceCrop();
-    editor?.scrollIntoView({ behavior: "smooth", block: "center" });
-  };
-  sourceImage.onerror = () => {
-    // The type-check above already passed (or was skipped for an empty
-    // file.type), so this is specifically the browser's own image decoder
-    // rejecting the actual bytes -- log what it actually was so a report
-    // like "this file used to work and now doesn't" is diagnosable instead
-    // of a repeat guessing round.
-    console.error("Reference image failed to decode:", { name: file.name, type: file.type || "(empty)", size: file.size });
-    alert(`This image could not be loaded (${file.type || "unknown type"}, ${Math.round(file.size / 1024)} KB). Try a JPEG, PNG, or WebP file.`);
+  // Read via FileReader -> data: URL rather than URL.createObjectURL().
+  // Confirmed via live device testing: a plain, correctly-typed/sized JPEG
+  // that decoded fine via blob: URL on desktop (Windows/Edge) failed to
+  // decode via blob: URL specifically in the Android WebView -- a
+  // content-provider-backed File from the native gallery/file picker
+  // doesn't always resolve reliably through createObjectURL there. The
+  // other upload path in this app ("See It In Your Room" / readRoomPreviewFile)
+  // already used FileReader and has never shown this failure, so this
+  // brings the two in line instead of leaving a WebView-specific gap.
+  const reader = new FileReader();
+  reader.onerror = () => {
+    console.error("Reference image FileReader failed:", { name: file.name, type: file.type || "(empty)", size: file.size });
+    alert("This file could not be read. Try a different image.");
     clearReferenceReimagine();
   };
-  sourceImage.src = referenceReimagineState.objectUrl;
-  const preview = document.getElementById("referenceReimaginePreview");
-  const thumb = document.getElementById("referenceReimagineThumb");
-  const name = document.getElementById("referenceReimagineName");
-  if (thumb) thumb.src = referenceReimagineState.objectUrl;
-  if (name) name.textContent = file.name;
-  preview?.classList.add("is-visible");
-  const assessmentStatus = document.getElementById("referenceAssessmentStatus");
-  if (assessmentStatus) assessmentStatus.textContent = "Preparing inspiration analysis...";
-  const promptBox = document.getElementById("imagePrompt");
-  if (promptBox) {
-    promptBox.value = "";
-    autoExpand(promptBox);
-  }
+  reader.onload = () => {
+    const dataUrl = String(reader.result || "");
+    if (!dataUrl) {
+      alert("This file could not be read. Try a different image.");
+      clearReferenceReimagine();
+      return;
+    }
+    referenceReimagineState.dataUrl = dataUrl;
+    referenceReimagineState.mimeType = file.type;
+    referenceReimagineState.name = file.name;
+    referenceReimagineState.crop = { left: 0, top: 0, width: 1, height: 1 };
+    referenceReimagineState.useFullImage = true;
+    referenceReimagineState.cropVersion = 0;
+    referenceReimagineState.assessedCropVersion = -1;
+    referenceReimagineState.assessedDescription = "";
+    // Snapshot whatever selection-driven description is currently in the
+    // prompt box -- this is what "Blend with Muralizer" mode falls back to
+    // using instead of the AI's read of the uploaded photo.
+    referenceReimagineState.muralizerDescription = document.getElementById("imagePrompt")?.value || "";
+    const sourceImage = new Image();
+    sourceImage.onload = () => {
+      referenceReimagineState.image = sourceImage;
+      const frame = document.getElementById("referenceCropFrame");
+      const sourceAspect = Math.min(21 / 9, Math.max(9 / 16, sourceImage.naturalWidth / sourceImage.naturalHeight));
+      frame?.style.setProperty("--reference-crop-aspect", String(sourceAspect));
+      const editor = document.getElementById("referenceCropEditor");
+      editor?.classList.add("is-visible");
+      resetReferenceCrop();
+      editor?.scrollIntoView({ behavior: "smooth", block: "center" });
+    };
+    sourceImage.onerror = () => {
+      // The type-check above already passed (or was skipped for an empty
+      // file.type), so this is specifically the browser's own image decoder
+      // rejecting the actual bytes -- log what it actually was so a report
+      // like "this file used to work and now doesn't" is diagnosable instead
+      // of a repeat guessing round.
+      console.error("Reference image failed to decode:", { name: file.name, type: file.type || "(empty)", size: file.size });
+      alert(`This image could not be loaded (${file.type || "unknown type"}, ${Math.round(file.size / 1024)} KB). Try a JPEG, PNG, or WebP file.`);
+      clearReferenceReimagine();
+    };
+    sourceImage.src = dataUrl;
+    const preview = document.getElementById("referenceReimaginePreview");
+    const thumb = document.getElementById("referenceReimagineThumb");
+    const name = document.getElementById("referenceReimagineName");
+    if (thumb) thumb.src = dataUrl;
+    if (name) name.textContent = file.name;
+    preview?.classList.add("is-visible");
+    const assessmentStatus = document.getElementById("referenceAssessmentStatus");
+    if (assessmentStatus) assessmentStatus.textContent = "Preparing inspiration analysis...";
+    const promptBox = document.getElementById("imagePrompt");
+    if (promptBox) {
+      promptBox.value = "";
+      autoExpand(promptBox);
+    }
+  };
+  reader.readAsDataURL(file);
 }
 
 function initializeReferenceReimagineDropzone() {
