@@ -679,8 +679,16 @@ async function handleReferenceGenerateProxy(req, res) {
   const imageExtension = reference.mimeType === 'image/jpeg' ? 'jpg' : reference.mimeType.split('/')[1];
   form.append('image', new Blob([reference.buffer], { type: reference.mimeType }), `inspiration.${imageExtension}`);
   const muralOnly = 'Create a flat, front-facing original mural artwork only. The full canvas must be the mural design itself, with no interior scene or installed-mural mockup.';
+  // The reference image fed to Stability's style-control endpoint below is
+  // frequently an actual camera photo (e.g. a snapshot of an installed wall
+  // covering), and its photographic pixels bias the style-conditioned output
+  // toward photorealism regardless of what the description text says. This
+  // has to be stated explicitly and every time -- the mural description text
+  // alone (even when the assessment step gets it right) isn't a strong enough
+  // counterweight to that image-conditioning pull on its own.
+  const paintedStyle = 'Render this as a hand-painted or hand-illustrated mural artwork with visible painterly brushwork, artistic texture, and hand-rendered color blending. This must read as a painted artwork, never as a photograph or photorealistic image, no matter how photographic the reference image itself looks.';
   const exclusions = 'Never depict furniture, chairs, tables, sofas, beds, lamps, windows, doors, rooms, walls, floors, ceilings, architecture, people, text, logos, frames, or borders.';
-  form.append('prompt', `${prompt}\n\n${muralOnly} ${exclusions}`);
+  form.append('prompt', `${prompt}\n\n${muralOnly} ${paintedStyle} ${exclusions}`);
   form.append('output_format', 'png');
   form.append('fidelity', String(fidelity));
   const negativePrompt = String(body.negative_prompt || '').trim();
@@ -867,7 +875,7 @@ async function handleReferenceAssessment(req, res) {
     'Assess the supplied inspiration image and write a concise, production-ready Mural Description.',
     'Report visual evidence only. Do not identify artists, brands, locations, rooms, furniture, walls, frames, or installed-mural context as design content.',
     'The description must create an original composition; never ask to copy the source composition.',
-    'First classify the image genre and visual treatment from visual evidence. Use the selected Muralizer category and sub-scene as scope guidance when supplied, but let the image control the genre. For a modern graphic reference, use precise graphic-mural language appropriate to its forms, color blocks, linework, repeat, or geometry; do not force painterly, botanical, or open-sky language. For a painterly, scenic, Chinoiserie, or botanical reference, use the painterly language evidenced by the image. Never request photorealism or camera effects unless the source genuinely requires another explicitly supported Muralizer genre.',
+    'First classify the image genre and visual treatment from visual evidence. The reference photo may itself be an ordinary camera photograph -- for example a snapshot of an already-installed wall covering -- but the Mural Description you write must always describe a hand-painted or hand-illustrated artwork, never a photograph, regardless of how photographic the reference image itself looks. Use the selected Muralizer category and sub-scene as scope guidance when supplied, but let the image\'s depicted subject and rendering style -- not its status as a photo -- control the genre. For a modern graphic reference, use precise graphic-mural language appropriate to its forms, color blocks, linework, repeat, or geometry; do not force painterly, botanical, or open-sky language. For a painterly, scenic, Chinoiserie, or botanical reference, use the painterly language evidenced by the image\'s depicted style. Never describe or request photorealism, photographic lighting, camera effects, lens artifacts, or realistic depth of field in the Mural Description -- always describe painted, illustrated, or hand-rendered artistic qualities instead.',
     'When the image visibly shows a planted, undulating lower botanical base from which taller growth emerges, write the Mural Description as four distinct paragraphs in this order: (1) an opening paragraph describing the evidenced visual treatment, background, and arrangement; (2) this berm paragraph: "The lower edge is importantly defined by an undulating berm of earth, providing a natural planted base from which the taller flowering branches emerge." Adapt only plant-type words when the evidence requires it; treat the berm as painted earth and planted forms, never as a literal floor or room surface; (3) a paragraph describing the evidenced blossoms, branches, leaves, birds, or other motifs and their balanced mural composition; (4) a closing paragraph requiring canopy and botanical forms, when present, to terminate naturally well before the top edge and preserve open breathing room above. Otherwise do not invent a berm, canopy, botanicals, or open-sky requirement; use a shorter evidence-led paragraph structure.',
     'Return an assessment with concise evidence and a 2-4 paragraph Mural Description. The description must remain editable by the user.',
     currentDescription ? `The user\'s current description is: ${currentDescription}` : 'There is no current user description.'
