@@ -14274,7 +14274,13 @@ function handleReferenceReimagineFile(file) {
     editor?.scrollIntoView({ behavior: "smooth", block: "center" });
   };
   sourceImage.onerror = () => {
-    alert("This image could not be loaded. Try a JPEG, PNG, or WebP file.");
+    // The type-check above already passed (or was skipped for an empty
+    // file.type), so this is specifically the browser's own image decoder
+    // rejecting the actual bytes -- log what it actually was so a report
+    // like "this file used to work and now doesn't" is diagnosable instead
+    // of a repeat guessing round.
+    console.error("Reference image failed to decode:", { name: file.name, type: file.type || "(empty)", size: file.size });
+    alert(`This image could not be loaded (${file.type || "unknown type"}, ${Math.round(file.size / 1024)} KB). Try a JPEG, PNG, or WebP file.`);
     clearReferenceReimagine();
   };
   sourceImage.src = referenceReimagineState.objectUrl;

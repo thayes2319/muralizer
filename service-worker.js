@@ -1,16 +1,17 @@
 // ============================================================
-// Atmos Studio — Service Worker (v3)
-// Cache-first shell, network-first for generated images
+// Scenique Muralizer — Service Worker (v6)
+// Cache-first shell, network-only for generated images
 // ============================================================
 
-const CACHE_NAME = "Scénique";
+const CACHE_NAME = "Muralizer-cache-v6";
+
 
 // Add any files your app needs to load offline
 const ASSETS = [
   "/",
   "/muralizer-manifest-v2.json",
-  "/icons/icon-192-v2.png",
-  "/icons/icon-512.png",
+  "/icons/icon-192-scenique.png",
+  "/icons/icon-512-scenique.png",
   "/icons/maskable-512.png"
 ];
 
