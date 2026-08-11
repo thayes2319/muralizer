@@ -1,0 +1,500 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Scenique - Request Measurement</title>
+  <script>
+    window.SCENIQUE_API_BASE_URL = "https://muralizer.onrender.com";
+  </script>
+  <script src="scenique-backend.js"></script>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: Candara, "Segoe UI", sans-serif;
+      background: #f5f7fa;
+      color: #24323d;
+    }
+
+    .page {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 16px;
+      box-sizing: border-box;
+    }
+
+    .hero {
+      background: linear-gradient(140deg, rgba(33,143,201,0.14), rgba(244,198,73,0.16));
+      border: 1px solid rgba(33,143,201,0.2);
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+
+    .hero h1 {
+      margin: 0 0 6px;
+      font-size: 1.2rem;
+      color: #155f89;
+    }
+
+    .hero p {
+      margin: 0;
+      font-size: 0.95rem;
+      color: #335464;
+    }
+
+    .workflow-note {
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.72);
+      border: 1px solid rgba(33,143,201,0.14);
+      font-size: 0.88rem;
+      color: #335464;
+    }
+
+    .workflow-note strong {
+      color: #155f89;
+    }
+
+    .cpc {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .chip {
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: #fff;
+      border: 1px solid #d7e5ef;
+      font-size: 0.85rem;
+    }
+
+    .panel {
+      background: rgba(255,255,255,0.92);
+      border: 1px solid #dbe6ee;
+      border-radius: 14px;
+      padding: 14px;
+      box-shadow: 0 5px 18px rgba(0,0,0,0.05);
+    }
+
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .tab {
+      border: 1px solid #bad5e6;
+      background: #eef6fb;
+      color: #1c6a95;
+      border-radius: 999px;
+      padding: 6px 12px;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .tab.active {
+      background: #1f8ec9;
+      color: #fff;
+      border-color: #1f8ec9;
+    }
+
+    .search-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+
+    .search-row input, .search-row select {
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px solid #c6d5e0;
+      font-size: 0.9rem;
+    }
+
+    #installerSearch {
+      min-width: 260px;
+      flex: 1;
+    }
+
+    .list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .item {
+      border: 1px solid #d9e5ee;
+      border-radius: 10px;
+      background: #fff;
+      padding: 10px;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 10px;
+      align-items: start;
+    }
+
+    .item.selected {
+      border-color: #228ec7;
+      box-shadow: 0 0 0 2px rgba(34,142,199,0.12);
+    }
+
+    .name {
+      font-weight: 700;
+      color: #174f71;
+    }
+
+    .meta {
+      font-size: 0.86rem;
+      color: #4a5f6d;
+      margin-top: 2px;
+    }
+
+    .empty {
+      padding: 16px;
+      text-align: center;
+      color: #6f8491;
+      border: 1px dashed #c7d6e0;
+      border-radius: 10px;
+      background: #f9fcfe;
+    }
+
+    .invite {
+      display: grid;
+      gap: 8px;
+      max-width: 520px;
+    }
+
+    .invite input, .invite textarea {
+      border: 1px solid #c6d5e0;
+      border-radius: 8px;
+      padding: 8px;
+      font-size: 0.9rem;
+    }
+
+    .actions {
+      margin-top: 12px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 999px;
+      padding: 9px 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .btn.primary {
+      background: #1f8ec9;
+      color: #fff;
+    }
+
+    .btn.secondary {
+      background: #e8f2f9;
+      color: #1e6f9a;
+      border: 1px solid #bdd8e9;
+    }
+
+    #status {
+      font-size: 0.9rem;
+      color: #295870;
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <h1>Request Measurement</h1>
+      <p>This step sends the generated concept out for on-site measurement. The installer can measure from the concept as it stands, then share the results back for your next roomSim design and layout pass.</p>
+      <div class="workflow-note"><strong>Workflow:</strong> concept generated in roomSim, installer measures it on site, then you bring that handoff back into roomSim for the follow-up design/layout update.</div>
+      <div class="cpc">
+        <span class="chip">Client: <span id="cpcClient">Addison Home</span></span>
+        <span class="chip">Project: <span id="cpcProject">Foyer Mural</span></span>
+        <span class="chip">Concept: <span id="cpcConcept">Concept A</span></span>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="tabs">
+        <button class="tab active" data-tab="saved" type="button">Saved Installer List</button>
+        <button class="tab" data-tab="search" type="button">Search Network</button>
+        <button class="tab" data-tab="referral" type="button">Referral List</button>
+        <button class="tab" data-tab="invite" type="button">Direct Invite</button>
+      </div>
+
+      <div id="saved" class="tab-pane">
+        <div class="list" id="savedList"></div>
+      </div>
+
+      <div id="search" class="tab-pane" style="display:none;">
+        <div class="search-row">
+          <input id="installerSearch" type="text" placeholder="Search by name, city, state, or company">
+          <select id="stateFilter">
+            <option value="">All States</option>
+            <option>FL</option><option>GA</option><option>SC</option><option>NC</option><option>AL</option><option>MS</option><option>TN</option><option>LA</option><option>TX</option>
+          </select>
+        </div>
+        <div class="list" id="searchList"></div>
+      </div>
+
+      <div id="referral" class="tab-pane" style="display:none;">
+        <div class="list" id="referralList"></div>
+      </div>
+
+      <div id="invite" class="tab-pane" style="display:none;">
+        <div class="invite">
+          <input id="inviteName" type="text" placeholder="Installer name">
+          <input id="inviteCompany" type="text" placeholder="Company">
+          <input id="inviteEmail" type="email" placeholder="Email">
+          <input id="invitePhone" type="text" placeholder="Phone">
+          <textarea id="inviteNote" rows="4" placeholder="Invite note"></textarea>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn primary" id="createRequest" type="button">Create Measurement Request</button>
+        <button class="btn secondary" id="clearSelection" type="button">Clear Selection</button>
+        <div id="status"></div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const installers = [
+      { id: "i1", name: "Camden Price", company: "Pinecrest Install Group", city: "Atlanta", state: "GA", region: "Metro Atlanta + North GA", phone: "(404) 555-0128", email: "camden.price@pinecrestinstall.com", contact: "Phone", availability: "Mon-Fri 8a-5p", bucket: "saved" },
+      { id: "i2", name: "Mara Sullivan", company: "Lowcountry Wallcovering Co.", city: "Charleston", state: "SC", region: "Charleston + Coastal SC", phone: "(843) 555-0181", email: "mara.sullivan@lowcountrywallcovering.com", contact: "Email", availability: "Tue-Sat 9a-6p", bucket: "saved" },
+      { id: "i3", name: "Evan Ortega", company: "Gulfline Finish & Install", city: "Tampa", state: "FL", region: "Tampa Bay + Central FL", phone: "(813) 555-0142", email: "evan.ortega@gulflinefinish.com", contact: "Phone", availability: "Mon-Fri 7a-4p", bucket: "search" },
+      { id: "i4", name: "Noah Bernard", company: "Bayou Surface Installers", city: "New Orleans", state: "LA", region: "South Louisiana", phone: "(504) 555-0177", email: "noah.bernard@bayousurface.com", contact: "Phone", availability: "Mon-Fri 8a-5p", bucket: "search" },
+      { id: "i5", name: "Isla Moreno", company: "Lone Star Wall Systems", city: "Houston", state: "TX", region: "Houston + SE Texas", phone: "(713) 555-0139", email: "isla.moreno@lonestarwalls.com", contact: "Email", availability: "Mon-Sat 8a-6p", bucket: "search" },
+      { id: "i6", name: "Grant Whitfield", company: "Nashville Precision Install", city: "Nashville", state: "TN", region: "Middle TN", phone: "(615) 555-0114", email: "grant.whitfield@npiwalls.com", contact: "Phone", availability: "Mon-Fri 8a-5p", bucket: "search" },
+      { id: "i7", name: "Riley Dawson", company: "Coastal Referral Network", city: "Savannah", state: "GA", region: "Coastal GA + Hilton Head", phone: "(912) 555-0166", email: "riley.dawson@coastalreferrals.com", contact: "Email", availability: "Mon-Fri 9a-5p", bucket: "referral" },
+      { id: "i8", name: "Harper Cole", company: "Triangle Mural Install Referral", city: "Raleigh", state: "NC", region: "Raleigh-Durham", phone: "(919) 555-0158", email: "harper.cole@trianglemuralreferral.com", contact: "Phone", availability: "Mon-Fri 8a-5p", bucket: "referral" }
+    ];
+
+    let selectedInstallerId = null;
+    let submitting = false;
+
+    function getActiveCpcContext() {
+      try {
+        const raw = localStorage.getItem("muralizerCpcState");
+        if (!raw) return { client: "Client 1", project: "Project 1", concept: "c1" };
+        const parsed = JSON.parse(raw);
+        if (!parsed || !Array.isArray(parsed.contexts)) {
+          return { client: "Client 1", project: "Project 1", concept: "c1" };
+        }
+        const idx = Number(parsed.activeIndex);
+        return parsed.contexts[idx] || parsed.contexts[0] || { client: "Client 1", project: "Project 1", concept: "c1" };
+      } catch (err) {
+        console.warn("Unable to read CPC state:", err);
+        return { client: "Client 1", project: "Project 1", concept: "c1" };
+      }
+    }
+
+    function syncCpcHeader() {
+      const ctx = getActiveCpcContext();
+      const c = document.getElementById("cpcClient");
+      const p = document.getElementById("cpcProject");
+      const k = document.getElementById("cpcConcept");
+      if (c) c.textContent = ctx.client || "Not set";
+      if (p) p.textContent = ctx.project || "Not set";
+      if (k) k.textContent = ctx.concept || "Not set";
+      return ctx;
+    }
+
+    function setSubmitState(isSubmitting, message) {
+      submitting = isSubmitting;
+      const btn = document.getElementById("createRequest");
+      const status = document.getElementById("status");
+      if (btn) {
+        btn.disabled = isSubmitting;
+        btn.textContent = isSubmitting ? "Creating Request..." : "Create Measurement Request";
+      }
+      if (status && typeof message === "string") {
+        status.textContent = message;
+      }
+    }
+
+    function saveMeasurementRequest(request) {
+      const raw = localStorage.getItem("measurementRequests");
+      const all = raw ? JSON.parse(raw) : [];
+      all.unshift(request);
+      localStorage.setItem("measurementRequests", JSON.stringify(all.slice(0, 100)));
+
+      if (window.SceniqueBackend?.queueMeasurementRequest) {
+        window.SceniqueBackend.queueMeasurementRequest(request);
+      }
+    }
+
+    function createRequestPayload(installer, inviteData) {
+      const cpc = syncCpcHeader();
+      const directInvite = !!inviteData;
+      return {
+        requestId: `mr_${Date.now()}`,
+        type: "measurement_request",
+        status: "sent",
+        createdAt: new Date().toISOString(),
+        source: "muralizer",
+        cpc,
+        installer: installer ? {
+          id: installer.id,
+          name: installer.name,
+          company: installer.company,
+          city: installer.city,
+          state: installer.state,
+          phone: installer.phone,
+          email: installer.email
+        } : null,
+        invite: directInvite ? inviteData : null,
+        conceptPreview: {
+          exists: !!localStorage.getItem("cpcLatestConceptImageKey"),
+          key: localStorage.getItem("cpcLatestConceptImageKey") || null
+        },
+        notes: directInvite ? inviteData.note : ""
+      };
+    }
+
+    function simulateCreateRequest(payload) {
+      return new Promise((resolve) => {
+        setTimeout(() => resolve(payload), 450);
+      });
+    }
+
+    function renderList(targetId, list) {
+      const target = document.getElementById(targetId);
+      if (!target) return;
+
+      if (!list.length) {
+        target.innerHTML = '<div class="empty">No installers match this view.</div>';
+        return;
+      }
+
+      target.innerHTML = list.map(item => {
+        const isSelected = item.id === selectedInstallerId ? " selected" : "";
+        return `
+          <div class="item${isSelected}" data-installer-id="${item.id}">
+            <input type="radio" name="installerPick" ${isSelected ? "checked" : ""}>
+            <div>
+              <div class="name">${item.name} - ${item.company}</div>
+              <div class="meta">${item.city}, ${item.state} | Region: ${item.region}</div>
+              <div class="meta">Phone: ${item.phone} | Email: ${item.email}</div>
+              <div class="meta">Preferred: ${item.contact} | Availability: ${item.availability}</div>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      target.querySelectorAll(".item").forEach(el => {
+        el.addEventListener("click", () => {
+          selectedInstallerId = el.getAttribute("data-installer-id");
+          refreshAllLists();
+        });
+      });
+    }
+
+    function refreshAllLists() {
+      const q = (document.getElementById("installerSearch")?.value || "").toLowerCase().trim();
+      const state = document.getElementById("stateFilter")?.value || "";
+
+      const saved = installers.filter(i => i.bucket === "saved");
+      const referral = installers.filter(i => i.bucket === "referral");
+      const searchable = installers.filter(i => i.bucket === "search").filter(i => {
+        const passState = !state || i.state === state;
+        const hay = `${i.name} ${i.company} ${i.city} ${i.state} ${i.region}`.toLowerCase();
+        const passQuery = !q || hay.includes(q);
+        return passState && passQuery;
+      });
+
+      renderList("savedList", saved);
+      renderList("referralList", referral);
+      renderList("searchList", searchable);
+    }
+
+    function setTab(tab) {
+      document.querySelectorAll(".tab").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.tab === tab);
+      });
+      document.querySelectorAll(".tab-pane").forEach(pane => {
+        pane.style.display = pane.id === tab ? "block" : "none";
+      });
+    }
+
+    document.querySelectorAll(".tab").forEach(btn => {
+      btn.addEventListener("click", () => setTab(btn.dataset.tab));
+    });
+
+    document.getElementById("installerSearch")?.addEventListener("input", refreshAllLists);
+    document.getElementById("stateFilter")?.addEventListener("change", refreshAllLists);
+
+    document.getElementById("clearSelection")?.addEventListener("click", () => {
+      selectedInstallerId = null;
+      document.getElementById("status").textContent = "Selection cleared.";
+      refreshAllLists();
+    });
+
+    document.getElementById("createRequest")?.addEventListener("click", async () => {
+      if (submitting) return;
+      const status = document.getElementById("status");
+      const invitePaneVisible = document.getElementById("invite").style.display !== "none";
+
+      if (invitePaneVisible) {
+        const inviteName = document.getElementById("inviteName").value.trim();
+        const inviteCompany = document.getElementById("inviteCompany").value.trim();
+        const inviteEmail = document.getElementById("inviteEmail").value.trim();
+        const invitePhone = document.getElementById("invitePhone").value.trim();
+        const inviteNote = document.getElementById("inviteNote").value.trim();
+        const inviteContact = document.getElementById("inviteEmail").value.trim() || document.getElementById("invitePhone").value.trim();
+        if (!inviteName || !inviteContact) {
+          status.textContent = "Add installer name and at least one contact method to send a direct invite.";
+          return;
+        }
+
+        const payload = createRequestPayload(null, {
+          name: inviteName,
+          company: inviteCompany,
+          email: inviteEmail,
+          phone: invitePhone,
+          note: inviteNote
+        });
+
+        setSubmitState(true, "Creating request...");
+        try {
+          const created = await simulateCreateRequest(payload);
+          saveMeasurementRequest(created);
+          setSubmitState(false, `Measurement request created and invite prepared for ${inviteName}.`);
+        } catch (err) {
+          setSubmitState(false, "Could not create request. Try again.");
+        }
+        return;
+      }
+
+      const installer = installers.find(i => i.id === selectedInstallerId);
+      if (!installer) {
+        status.textContent = "Select an installer or switch to Direct Invite.";
+        return;
+      }
+
+      const payload = createRequestPayload(installer, null);
+      setSubmitState(true, "Creating request...");
+      try {
+        const created = await simulateCreateRequest(payload);
+        saveMeasurementRequest(created);
+        setSubmitState(false, `Measurement request created for ${installer.name} (${installer.company}).`);
+      } catch (err) {
+        setSubmitState(false, "Could not create request. Try again.");
+      }
+    });
+
+    syncCpcHeader();
+    refreshAllLists();
+  </script>
+</body>
+</html>
