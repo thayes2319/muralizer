@@ -730,17 +730,20 @@ const WALL_MOCKUP_PROMPT =
   "A professional real-estate interior photograph of a bright, tastefully furnished, completely generic and unbranded room, " +
   "with one large feature wall showing this exact mural pattern applied edge-to-edge as an installed wall mural, " +
   "preserving the mural's exact colors, motifs, and composition precisely and faithfully -- do not reinterpret, restyle, or redesign the mural itself. " +
+  "If the mural depicts animals, birds, people, or other figurative subjects, those figures are the mural's dominant visual content and must remain " +
+  "clearly visible, faithfully rendered, and unaltered -- never omitted, simplified away, or replaced with only the surrounding foliage, pattern, or background elements. " +
   "The mural pattern appears ONLY on that one wall. Every other surface -- furniture, upholstery, textiles, rugs, floors, ceiling, other walls -- " +
   "is plain, solid-colored, and unpatterned, in neutral modern interior tones, completely uninfluenced by the mural's colors or motifs. " +
   "If the mural includes an undulating berm of earth, providing a natural planted base from which taller growth emerges, that berm must remain " +
   "clearly visible and not cropped or omitted -- it stays a flat painted element of the wall mural itself, never rendered as literal 3D landscaping, soil, or floor extending into the room. " +
   "Natural daylight, soft realistic shadows and perspective, believable modern interior, wide-angle real-estate photography style. " +
-  "No people, no visible logos or text, no identifiable real location.";
+  "No real people occupying the room, no visible logos or text, no identifiable real location.";
 
 const WALL_MOCKUP_NEGATIVE_PROMPT =
   "no text, no writing, no letters, no watermark, no logo, no signature, no UI elements, " +
-  "no borders, no frames, no collage, no people, no distorted architecture, no warped walls, no blurry areas, " +
+  "no borders, no frames, no collage, no real people occupying the room, no distorted architecture, no warped walls, no blurry areas, " +
   "no reinterpreting the mural design, no altering the mural's colors or motifs, no different artwork, " +
+  "no omitting the mural's animal, bird, or figurative subjects, no replacing mural figures with only plain pattern or foliage, " +
   "no patterned furniture, no patterned upholstery, no patterned textiles, no patterned rugs, no patterned floors, " +
   "no matching furniture colors, no mural pattern outside the feature wall, " +
   "no literal earth or soil extending into the room, no 3D landscaping, no berm breaking the wall plane";
@@ -761,12 +764,6 @@ async function handleWallMockupProxy(req, res) {
     return;
   }
 
-  const form = new FormData();
-  const imageExtension = reference.mimeType === 'image/jpeg' ? 'jpg' : reference.mimeType.split('/')[1];
-  form.append('image', new Blob([reference.buffer], { type: reference.mimeType }), `mural.${imageExtension}`);
-  form.append('prompt', WALL_MOCKUP_PROMPT);
-  form.append('negative_prompt', WALL_MOCKUP_NEGATIVE_PROMPT);
-  form.append('output_format', 'png');
   // History: 0.4 -> 0.8 (real testing: bled the mural's style onto
   // furniture/floors/textiles too -- fidelity has no spatial/regional
   // control, so it pushes the reference's influence over the WHOLE scene,
@@ -774,8 +771,21 @@ async function handleWallMockupProxy(req, res) {
   // landed here by direct request after 0.5 tested well. The explicit "only
   // on that one wall" prompt/negative-prompt language above is doing the
   // spatial-confinement work; fidelity itself just balances overall
-  // adherence vs. creative freedom.
-  form.append('fidelity', '0.45');
+  // adherence vs. creative freedom. Now user-adjustable via the frontend's
+  // fidelity slider, clamped to this tested-safe band rather than the full
+  // 0-1 provider range.
+  const requestedFidelity = Number(body.fidelity);
+  const fidelity = Number.isFinite(requestedFidelity)
+    ? Math.max(0.3, Math.min(0.65, requestedFidelity))
+    : 0.45;
+
+  const form = new FormData();
+  const imageExtension = reference.mimeType === 'image/jpeg' ? 'jpg' : reference.mimeType.split('/')[1];
+  form.append('image', new Blob([reference.buffer], { type: reference.mimeType }), `mural.${imageExtension}`);
+  form.append('prompt', WALL_MOCKUP_PROMPT);
+  form.append('negative_prompt', WALL_MOCKUP_NEGATIVE_PROMPT);
+  form.append('output_format', 'png');
+  form.append('fidelity', String(fidelity));
   form.append('aspect_ratio', '3:2');
   if (body.seed !== undefined && body.seed !== null && body.seed !== '') {
     form.append('seed', String(body.seed));
