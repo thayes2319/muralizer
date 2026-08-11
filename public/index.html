@@ -35,6 +35,7 @@
 window.SCENIQUE_API_BASE_URL = "https://muralizer.onrender.com";
 </script>
 <script src="scenique-backend.js"></script>
+<script src="libs/image-normalize.js"></script>
 <style type="text/css">
 
 /* ============================================================
@@ -13112,13 +13113,14 @@ function loadRoomPreviewImage(src) {
   });
 }
 
-function readRoomPreviewFile(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result || ""));
-    reader.onerror = () => reject(new Error("Room photo could not be read."));
-    reader.readAsDataURL(file);
-  });
+// Routed through normalizeImageFile() (libs/image-normalize.js) rather than
+// a plain FileReader -- room photos come straight from the Android camera
+// picker and hit the same HEIC/HDR/mislabeled-format issues as the
+// inspiration upload, so this needs the same sniff/decode/strip/re-encode
+// treatment before the app ever tries to draw it.
+async function readRoomPreviewFile(file) {
+  const normalized = await normalizeImageFile(file, { maxDimension: 2400, quality: 0.9, maxOutputBytes: 6 * 1024 * 1024 });
+  return normalized.dataUrl;
 }
 
 function normalizeRoomPreviewCrop(crop) {
@@ -13588,6 +13590,8 @@ document.addEventListener("DOMContentLoaded", () => {
   upload?.addEventListener("change", async () => {
     const file = upload.files && upload.files[0];
     if (!file) return;
+    const status = document.getElementById("roomPreviewStatus");
+    if (status) status.textContent = "Preparing room photo...";
     try {
       roomPreviewPhoto = await loadRoomPreviewImage(await readRoomPreviewFile(file));
       resetRoomPreviewPoints();
@@ -13601,9 +13605,8 @@ document.addEventListener("DOMContentLoaded", () => {
       renderRoomPreview();
       await saveRoomPreviewRecord();
     } catch (error) {
-      const status = document.getElementById("roomPreviewStatus");
-      if (status) status.textContent = "This room photo could not be opened.";
-      console.warn("Unable to read room photo:", error);
+      if (status) status.textContent = error?.message || "This room photo could not be opened.";
+      console.warn("Unable to read room photo:", { name: file.name, type: file.type || "(empty)", size: file.size, error });
     }
   });
 
@@ -14225,96 +14228,73 @@ function resetReferenceCrop() {
   scheduleReferenceAssessment();
 }
 
-function handleReferenceReimagineFile(file) {
+async function handleReferenceReimagineFile(file) {
   if (!file) return;
-  // Mobile camera/photo-library picks are frequently HEIC/HEIF on iOS
-  // (image/heic, image/heif) or occasionally report an empty/generic type
-  // depending on the source app -- a strict jpeg/png/webp whitelist rejects
-  // those before the crop tool ever gets a chance to appear. Gate on
-  // "is this even an image" instead and let the actual decode attempt below
-  // be the real pass/fail signal.
-  if (file.type && !file.type.startsWith("image/")) {
-    alert("Choose an image file for the inspiration artwork.");
-    clearReferenceReimagine();
-    return;
-  }
-  if (file.size > 7 * 1024 * 1024) {
-    alert("Choose an inspiration image smaller than 7 MB.");
+  // Android/iOS cameras and galleries hand us all sorts of things mislabeled
+  // as image/jpeg -- HEIC, HDR gain-map JPEGs, Motion Photo containers, RAW
+  // shared through a generic picker. normalizeImageFile() treats the file as
+  // opaque binary, sniffs the real format, decodes it with whatever that
+  // format needs (routing HEIC/HEIF through a lazy-loaded decoder), strips
+  // EXIF/ICC/HDR metadata, and re-renders it as one canonical JPEG within
+  // safe size limits -- see libs/image-normalize.js.
+  const status = document.getElementById("referenceAssessmentStatus");
+  if (status) status.textContent = "Preparing inspiration image...";
+  let normalized;
+  try {
+    normalized = await normalizeImageFile(file, { maxDimension: 3200, quality: 0.92, maxOutputBytes: 8 * 1024 * 1024 });
+  } catch (error) {
+    console.error("Reference image normalization failed:", { name: file.name, type: file.type || "(empty)", size: file.size, error });
+    alert(error?.message || "This image could not be loaded. Try a JPEG, PNG, WebP, or HEIC photo.");
     clearReferenceReimagine();
     return;
   }
 
-  // Read via FileReader -> data: URL rather than URL.createObjectURL().
-  // Confirmed via live device testing: a plain, correctly-typed/sized JPEG
-  // that decoded fine via blob: URL on desktop (Windows/Edge) failed to
-  // decode via blob: URL specifically in the Android WebView -- a
-  // content-provider-backed File from the native gallery/file picker
-  // doesn't always resolve reliably through createObjectURL there. The
-  // other upload path in this app ("See It In Your Room" / readRoomPreviewFile)
-  // already used FileReader and has never shown this failure, so this
-  // brings the two in line instead of leaving a WebView-specific gap.
-  const reader = new FileReader();
-  reader.onerror = () => {
-    console.error("Reference image FileReader failed:", { name: file.name, type: file.type || "(empty)", size: file.size });
-    alert("This file could not be read. Try a different image.");
+  const dataUrl = normalized.dataUrl;
+  referenceReimagineState.dataUrl = dataUrl;
+  referenceReimagineState.mimeType = normalized.blob.type || "image/jpeg";
+  referenceReimagineState.name = file.name;
+  referenceReimagineState.crop = { left: 0, top: 0, width: 1, height: 1 };
+  referenceReimagineState.useFullImage = true;
+  referenceReimagineState.cropVersion = 0;
+  referenceReimagineState.assessedCropVersion = -1;
+  referenceReimagineState.assessedDescription = "";
+  // Snapshot whatever selection-driven description is currently in the
+  // prompt box -- this is what "Blend with Muralizer" mode falls back to
+  // using instead of the AI's read of the uploaded photo.
+  referenceReimagineState.muralizerDescription = document.getElementById("imagePrompt")?.value || "";
+  const sourceImage = new Image();
+  sourceImage.onload = () => {
+    referenceReimagineState.image = sourceImage;
+    const frame = document.getElementById("referenceCropFrame");
+    const sourceAspect = Math.min(21 / 9, Math.max(9 / 16, sourceImage.naturalWidth / sourceImage.naturalHeight));
+    frame?.style.setProperty("--reference-crop-aspect", String(sourceAspect));
+    const editor = document.getElementById("referenceCropEditor");
+    editor?.classList.add("is-visible");
+    resetReferenceCrop();
+    editor?.scrollIntoView({ behavior: "smooth", block: "center" });
+  };
+  sourceImage.onerror = () => {
+    // normalizeImageFile already produced this from a canvas re-encode, so
+    // a failure here would mean something else entirely is wrong (e.g. a
+    // WebView regression) rather than a format issue -- log it as such.
+    console.error("Normalized reference image failed to decode:", { name: file.name, sniffedFormat: normalized.format });
+    alert("This image could not be loaded. Try a different photo.");
     clearReferenceReimagine();
   };
-  reader.onload = () => {
-    const dataUrl = String(reader.result || "");
-    if (!dataUrl) {
-      alert("This file could not be read. Try a different image.");
-      clearReferenceReimagine();
-      return;
-    }
-    referenceReimagineState.dataUrl = dataUrl;
-    referenceReimagineState.mimeType = file.type;
-    referenceReimagineState.name = file.name;
-    referenceReimagineState.crop = { left: 0, top: 0, width: 1, height: 1 };
-    referenceReimagineState.useFullImage = true;
-    referenceReimagineState.cropVersion = 0;
-    referenceReimagineState.assessedCropVersion = -1;
-    referenceReimagineState.assessedDescription = "";
-    // Snapshot whatever selection-driven description is currently in the
-    // prompt box -- this is what "Blend with Muralizer" mode falls back to
-    // using instead of the AI's read of the uploaded photo.
-    referenceReimagineState.muralizerDescription = document.getElementById("imagePrompt")?.value || "";
-    const sourceImage = new Image();
-    sourceImage.onload = () => {
-      referenceReimagineState.image = sourceImage;
-      const frame = document.getElementById("referenceCropFrame");
-      const sourceAspect = Math.min(21 / 9, Math.max(9 / 16, sourceImage.naturalWidth / sourceImage.naturalHeight));
-      frame?.style.setProperty("--reference-crop-aspect", String(sourceAspect));
-      const editor = document.getElementById("referenceCropEditor");
-      editor?.classList.add("is-visible");
-      resetReferenceCrop();
-      editor?.scrollIntoView({ behavior: "smooth", block: "center" });
-    };
-    sourceImage.onerror = () => {
-      // The type-check above already passed (or was skipped for an empty
-      // file.type), so this is specifically the browser's own image decoder
-      // rejecting the actual bytes -- log what it actually was so a report
-      // like "this file used to work and now doesn't" is diagnosable instead
-      // of a repeat guessing round.
-      console.error("Reference image failed to decode:", { name: file.name, type: file.type || "(empty)", size: file.size });
-      alert(`This image could not be loaded (${file.type || "unknown type"}, ${Math.round(file.size / 1024)} KB). Try a JPEG, PNG, or WebP file.`);
-      clearReferenceReimagine();
-    };
-    sourceImage.src = dataUrl;
-    const preview = document.getElementById("referenceReimaginePreview");
-    const thumb = document.getElementById("referenceReimagineThumb");
-    const name = document.getElementById("referenceReimagineName");
-    if (thumb) thumb.src = dataUrl;
-    if (name) name.textContent = file.name;
-    preview?.classList.add("is-visible");
-    const assessmentStatus = document.getElementById("referenceAssessmentStatus");
-    if (assessmentStatus) assessmentStatus.textContent = "Preparing inspiration analysis...";
-    const promptBox = document.getElementById("imagePrompt");
-    if (promptBox) {
-      promptBox.value = "";
-      autoExpand(promptBox);
-    }
-  };
-  reader.readAsDataURL(file);
+  sourceImage.src = dataUrl;
+  const preview = document.getElementById("referenceReimaginePreview");
+  const thumb = document.getElementById("referenceReimagineThumb");
+  const name = document.getElementById("referenceReimagineName");
+  if (thumb) thumb.src = dataUrl;
+  if (name) name.textContent = file.name;
+  preview?.classList.add("is-visible");
+  const assessmentStatus = document.getElementById("referenceAssessmentStatus");
+  if (assessmentStatus) assessmentStatus.textContent = "Preparing inspiration analysis...";
+  const promptBox = document.getElementById("imagePrompt");
+  if (promptBox) {
+    promptBox.value = "";
+    autoExpand(promptBox);
+  }
 }
 
 function initializeReferenceReimagineDropzone() {
@@ -14950,11 +14930,11 @@ async function generateImage() {
       "no furniture, no floors, no parts of homes or offices, no text, no writing, no letters, no words, no captions, no typography, " +
       "no logos, no watermarks, no signatures, no UI elements, no interface, " +
       "no thumbnails, no borders, no frames, no collage, no screenshots, " +
-      "no photographic lens effects, no photographic artifacts, no glare, " +
-      "no reflections, no shadows cast onto the background, no shadows implying the background is a physical wall, " +
+      "no photographic lens effects, no photographic artifacts, no glare or lens flare, " +
+      "no reflections or specular highlights, no shadows cast onto the background, no shadows implying the background is a physical wall, " +
       "no depth-of-field, no bokeh, no HDR, no camera grain, " +
-      "no realism, no photorealism, no photorealistic rendering, not a photograph, no camera photo, " +
-      "no glossy surfaces, no shiny textures, no image splitting";
+      "no realism, no photorealism, not a photograph, " +
+      "no glossy or shiny surfaces, no image splitting";
     // Image-specific context the vision assessment flagged in THIS reference
     // photo (e.g. incidental background furniture/architecture a peacock or
     // other subject happened to be photographed against) -- the generic
