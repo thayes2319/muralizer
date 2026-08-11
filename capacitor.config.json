@@ -1,0 +1,21 @@
+{
+  "appId": "com.gohw.muralizer",
+  "appName": "Muralizer",
+  "webDir": "public",
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2500,
+      "fadeOutDuration": 700,
+      "backgroundColor": "#000000",
+      "showSpinner": false,
+      "launchAutoHide": true,
+      "useDialog": false
+    }
+  },
+  "android": {
+    "splashScreen": {
+      "enabled": true
+    }
+  }
+}
+
