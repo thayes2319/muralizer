@@ -1,0 +1,323 @@
+[
+  { "id": "2 color Atmospheric Drift", "src": "/gallery/2 color Atmospheric Drift.png", "category": "Abstract" },
+
+  { "id": "2-Tone Abstract Scenic",
+    "src": "/gallery/2-Tone Abstract Scenic.png",
+    "category": ["Abstract", "Scenic"]  },
+
+  { "id": "3d ombre", "src": "/gallery/3d ombre.png", "category": "Ombré" },
+  { "id": "Abstract 10", "src": "/gallery/Abstract 10.jpg", "category": "Abstract" },
+  { "id": "Abstract Distorted Colored Glass", "src": "/gallery/Abstract Distorted Colored Glass.png", "category": "Abstract" },
+  { "id": "abstract foilabstract1", "src": "/gallery/abstract foilabstract1.png", "category": "Abstract" },
+  { "id": "Abstract Quilt", "src": "/gallery/Abstract Quilt.png", "category": "Abstract" },
+  { "id": "Abstract red sky beyond window", "src": "/gallery/Abstract red sky beyond window.png", "category": "Abstract" },
+  { "id": "Abstract Sunset", "src": "/gallery/Abstract Sunset.png", "category": "Abstract" },
+  { "id": "abstract mtn blend 2-tone", "src": "/gallery/abstract mtn blend 2-tone.png", "category": "Abstract" },
+
+  { "id": "Alien moonrise scenic", "src": "/gallery/Alien moonrise scenic.png", "category": "Scenic" },
+
+  { "id": "Alien atmospheric drift", "src": "/gallery/Alien atmospheric drift.png", "category": "Atmosphere" },
+  { "id": "almostdark degrade", "src": "/gallery/almostdark degrade.png", "category": "Dégradé" },
+  { "id": "amber sepia terraces scenic", "src": "/gallery/amber sepia terraces scenic.png", "category": "Scenic" },
+  { "id": "American Scenic 2", "src": "/gallery/American Scenic 2.png", "category": "Scenic" },
+  { "id": "American Scenic 3", "src": "/gallery/American Scenic 3.jpg", "category": "Scenic" },
+  { "id": "American scenic", "src": "/gallery/American scenic.png", "category": "Scenic" },
+  { "id": "Asian 2-headeddog chinoiserie", "src": "/gallery/Asian 2-headeddog chinoiserie.png", "category": "Chinoiserie" },
+
+  { "id": "Atmospheric blue-green valley", "src": "/gallery/Atmospheric blue-green valley.png", "category": "Abstract" },
+  { "id": "atmospheric boat drift", "src": "/gallery/atmospheric boat drift.jpg", "category": "Abstract" },
+
+  { "id": "Atmospheric diffuse scenic with crimson sky",
+    "src": "/gallery/Atmospheric diffuse scenic with crimson sky.png",
+    "category": ["Atmosphere", "Scenic"]  },
+
+  { "id": "Atmospheric Drift in Brown", "src": "/gallery/Atmospheric Drift in Brown.png", "category": "Abstract" },
+  { "id": "Atmospheric Drift blue-green dusk", "src": "/gallery/Atmospheric Drift blue-green dusk.png", "category": "Abstract" },
+  { "id": "Atmospheric drift blue", "src": "/gallery/Atmospheric drift blue.jpg", "category": "Abstract" },
+  { "id": "Atmospheric drift Burning Cold Dead Forest", "src": "/gallery/Atmospheric drift Burning Cold Dead Forest.png", "category": "Abstract" },
+
+  { "id": "Atmospheric green hills portrait", "src": "/gallery/Atmospheric green hills portrait.png", "category": "Scenic" },
+  { "id": "Atmospheric green hills", "src": "/gallery/Atmospheric green hills.png", "category": "Scenic" },
+
+  { "id": "Atmospheric human silhouettes", "src": "/gallery/Atmospheric human silhouettes.png", "category": "Graphic" },
+  { "id": "Atmospheric lake nebula", "src": "/gallery/Atmospheric lake nebula.png", "category": "Atmosphere" },
+  { "id": "Atmospheric water", "src": "/gallery/Atmospheric water.jpg", "category": "Abstract" },
+  { "id": "Atmospheric with silhouettes", "src": "/gallery/Atmospheric with silhouettes.jpg", "category": "Graphic" },
+
+  { "id": "autumn autumn scenic", "src": "/gallery/autumn autumn scenic.png", "category": "Scenic" },
+
+  { "id": "banana leaves botanical", "src": "/gallery/banana leaves botanical.png", "category": "Botanical" },
+  { "id": "banana on rice paper botanical", "src": "/gallery/banana on rice paper botanical.png", "category": "Botanical" },
+
+  { "id": "Birds in blue green world scenic", "src": "/gallery/Birds in blue green world scenic.png", "category": "Scenic" },
+
+  { "id": "Blue blue ombre", "src": "/gallery/Blue blue ombre.png", "category": "Ombré" },
+
+  { "id": "blue cherry botanical", "src": "/gallery/blue cherry botanical.png", "category": "Botanical" },
+
+  { "id": "blue cliffs over water scenic", "src": "/gallery/blue cliffs over water scenic.png", "category": "Scenic" },
+
+  { "id": "Blue EastAsian Chinoiserie Lake Pavilion", "src": "/gallery/Blue EastAsian Chinoiserie Lake Pavilion.png", "category": "Chinoiserie" },
+
+  { "id": "blue green ombre", "src": "/gallery/blue green ombre.png", "category": "Ombré" },
+
+  { "id": "Blue Peony botanical", "src": "/gallery/Blue Peony botanical.png", "category": "Botanical" },
+
+  { "id": "Bluejean mtns scenic", "src": "/gallery/Bluejean mtns scenic.png", "category": "Scenic" },
+
+  { "id": "bluesky greenhills scenic", "src": "/gallery/bluesky greenhills scenic.png", "category": "Scenic" },
+
+  { "id": "boat-bridge on rice chinoiserie", "src": "/gallery/boat-bridge on rice chinoiserie.png", "category": "Chinoiserie" },
+
+  { "id": "Botanical 3", "src": "/gallery/Botanical 3.jpg", "category": "Botanical" },
+  { "id": "botanical blue", "src": "/gallery/botanical blue.jpg", "category": "Botanical" },
+  { "id": "Botanical Cherry with fog", "src": "/gallery/Botanical Cherry with fog.png", "category": "Botanical" },
+  { "id": "botanical colors over sepia backdrop", "src": "/gallery/botanical colors over sepia backdrop.png", "category": "Botanical" },
+  { "id": "botanical early morning forest edge", "src": "/gallery/botanical early morning forest edge.png", "category": "Botanical" },
+  { "id": "Botanical Green Mist", "src": "/gallery/Botanical Green Mist.png", "category": "Botanical" },
+  { "id": "Botanical Lavender morning", "src": "/gallery/Botanical Lavender morning.jpg", "category": "Botanical" },
+  { "id": "Botanical magnolia fade", "src": "/gallery/Botanical magnolia fade.png", "category": "Botanical" },
+  { "id": "Botanical pink cherry orchard", "src": "/gallery/Botanical pink cherry orchard.png", "category": "Botanical" },
+  { "id": "Botanical Std Wildflowers", "src": "/gallery/Botanical Std Wildflowers.png", "category": "Botanical" },
+  { "id": "Botanical tree past kitchen window early", "src": "/gallery/Botanical tree past kitchen window early.png", "category": "Botanical" },
+
+  { "id": "Butterfly botanical", "src": "/gallery/Butterfly botanical.jpg", "category": "Botanical" },
+
+
+
+
+ { "id": "chenoiserie mural std", "src": "/gallery/chenoiserie mural std.png", "category": "Chinoiserie" },
+
+{ "id": "Cherry lake botanical", "src": "/gallery/Cherry lake botanical.png", "category": "Botanical" },
+{ "id": "cherry mystical botanical", "src": "/gallery/cherry mystical botanical.png", "category": "Botanical" },
+{ "id": "cherry on gray botanical", "src": "/gallery/cherry on gray botanical.png", "category": "Botanical" },
+{ "id": "cherry on red botanical", "src": "/gallery/cherry on red botanical.png", "category": "Botanical" },
+
+{ "id": "chinoiserie birds on distressed backdrop", "src": "/gallery/chinoiserie birds on distressed backdrop.png", "category": "Chinoiserie" },
+{ "id": "chinoiserie bridge over tranquil water", "src": "/gallery/chinoiserie bridge over tranquil water.png", "category": "Chinoiserie" },
+{ "id": "chinoiserie Cherry Green Asian Path", "src": "/gallery/chinoiserie Cherry Green Asian Path.png", "category": "Chinoiserie" },
+
+{ "id": "chinoiserie mural", "src": "/gallery/chinoiserie mural.png", "category": "Chinoiserie" },
+{ "id": "chinoiserie willow with fog", "src": "/gallery/chinoiserie willow with fog.png", "category": "Chinoiserie" },
+{ "id": "chinoiserie with bridge", "src": "/gallery/chinoiserie with bridge.png", "category": "Chinoiserie" },
+{ "id": "Chinoiserie with Cherry on manilla background", "src": "/gallery/Chinoiserie with Cherry on manilla background.png", "category": "Chinoiserie" },
+{ "id": "chinoiserie with red pavilion", "src": "/gallery/chinoiserie with red pavilion.png", "category": "Chinoiserie" },
+{ "id": "chinoiserie4", "src": "/gallery/chinoiserie4.jpg", "category": "Chinoiserie" },
+
+{ "id": "Cool cartoony mtn village scenic", "src": "/gallery/Cool cartoony mtn village scenic.png", "category": "Scenic" },
+
+{ "id": "Crane overhead chinoiserie", "src": "/gallery/Crane overhead chinoiserie.png", "category": "Chinoiserie" },
+
+{ "id": "crazy blue with red boat scenic", "src": "/gallery/crazy blue with red boat scenic.png", "category": "Scenic" },
+
+{ "id": "crimson cherry on gray botanical", "src": "/gallery/crimson cherry on gray botanical.png", "category": "Botanical" },
+
+{ "id": "deep blue degrade", "src": "/gallery/deep blue degrade.png", "category": "Dégradé" },
+{ "id": "deep space degrade", "src": "/gallery/deep space degrade.png", "category": "Dégradé" },
+{ "id": "Degrade cartoon mural", "src": "/gallery/Degrade cartoon mural.png", "category": "Dégradé" },
+{ "id": "Degrade closeup", "src": "/gallery/Degrade closeup.png", "category": "Dégradé" },
+{ "id": "degrade commercial tranquility", "src": "/gallery/degrade commercial tranquility.png", "category": "Dégradé" },
+{ "id": "degrade quietly just rippled lake horizon", "src": "/gallery/degrade quietly just rippled lake horizon.png", "category": "Dégradé" },
+{ "id": "degrade skyatdusk", "src": "/gallery/degrade skyatdusk.png", "category": "Dégradé" },
+{ "id": "degrade SkytoSeaSunsetbutNoSun", "src": "/gallery/degrade SkytoSeaSunsetbutNoSun.png", "category": "Dégradé" },
+{ "id": "degrade", "src": "/gallery/degrade.jpg", "category": "Dégradé" },
+{ "id": "degrade2", "src": "/gallery/degrade2.jpg", "category": "Dégradé" },
+
+{ "id": "EastAsian Lake Pavilion chinoiserie", "src": "/gallery/EastAsian Lake Pavilion chinoiserie.png", "category": "Chinoiserie" },
+
+{ "id": "Evening Degrade 2", "src": "/gallery/Evening Degrade 2.jpg", "category": "Dégradé" },
+{ "id": "Evening Degrade", "src": "/gallery/Evening Degrade.jpg", "category": "Dégradé" },
+
+{ "id": "flattish scenic", "src": "/gallery/flattish scenic.jpg", "category": "Scenic" },
+
+{ "id": "foggy walk to huts Scenic", "src": "/gallery/foggy walk to huts Scenic.png", "category": "Scenic" },
+
+{ "id": "Forest Opening Trees Scenic", "src": "/gallery/Forest Opening Trees Scenic.png", "category": "Scenic" },
+
+{ "id": "graphic scenic", 
+  "src": "/gallery/graphic scenic.jpg", 
+  "category": ["Graphic", "Scenic"] },
+
+{ "id": "Graphic Scenic", 
+  "src": "/gallery/Graphic Scenic.png", 
+  "category": ["Graphic", "Scenic"] },
+
+{ "id": "Graphic silhouttes with flowers", "src": "/gallery/Graphic silhouttes with flowers.png", "category": "Graphic" },
+
+{ "id": "grass and blue mountain scenic", "src": "/gallery/grass and blue mountain scenic.png", "category": "Scenic" },
+
+{ "id": "Green & BLue Leaf flood botanical", "src": "/gallery/Green & BLue Leaf flood botanical.png", "category": "Botanical" },
+
+{ "id": "green alien sky scenic", "src": "/gallery/green alien sky scenic.png", "category": "Scenic" },
+
+{ "id": "Green gray chenoiserie with reeds on river", "src": "/gallery/Green gray chenoiserie with reeds on river.png", "category": "Chinoiserie" },
+
+{ "id": "green ombre", "src": "/gallery/green ombre.png", "category": "Ombré" },
+
+{ "id": "green on green botanical", "src": "/gallery/green on green botanical.jpg", "category": "Botanical" },
+
+{ "id": "green rolling hills scenic with man and dog", "src": "/gallery/green rolling hills scenic with man and dog.png", "category": "Scenic" },
+{ "id": "green rolling hills scenic with man and dog2", "src": "/gallery/green rolling hills scenic with man and dog2.png", "category": "Scenic" },
+
+{ "id": "Italyish Scenic", "src": "/gallery/Italyish Scenic.jpg", "category": "Scenic" },
+
+{ "id": "japanese maple scenic with cool texture", "src": "/gallery/japanese maple scenic with cool texture.png", "category": "Scenic" },
+
+{ "id": "kids heavy equip", "src": "/gallery/kids heavy equip.jpg", "category": "Prints & Pattern" },
+{ "id": "kids mural", "src": "/gallery/kids mural.png", "category": "Prints & Pattern" },
+{ "id": "kids pastels", "src": "/gallery/kids pastels.jpg", "category": "Prints & Pattern" },
+{ "id": "kids planes trains autos", "src": "/gallery/kids planes trains autos.jpg", "category": "Prints & Pattern" },
+{ "id": "kids rainbow over clouds", "src": "/gallery/kids rainbow over clouds.png", "category": "Prints & Pattern" },
+
+{ "id": "kids scenic rolling hills", 
+  "src": "/gallery/kids scenic rolling hills.png", 
+  "category": ["Prints & Pattern", "Scenic"] },
+
+{ "id": "kids sky & space ceiling", 
+  "src": "/gallery/kids sky & space ceiling.png", 
+  "category": ["Prints & Pattern", "Atmosphere"] },
+
+{ "id": "Kids Story Book", "src": "/gallery/Kids Story Book.png", "category": "Prints & Pattern" },
+{ "id": "kids story book2", "src": "/gallery/kids story book2.png", "category": "Prints & Pattern" },
+{ "id": "Kids Story Book3", "src": "/gallery/Kids Story Book3.png", "category": "Prints & Pattern" },
+{ "id": "kids storybook4", "src": "/gallery/kids storybook4.jpg", "category": "Prints & Pattern" },
+
+{ "id": "leafy green botanical", "src": "/gallery/leafy green botanical.png", "category": "Botanical" },
+{ "id": "lotus on green", "src": "/gallery/lotus on green.png", "category": "Botanical" },
+{ "id": "magnolia  botanical on green fade", "src": "/gallery/magnolia  botanical on green fade.png", "category": "Botanical" },
+{ "id": "majical botanical", "src": "/gallery/majical botanical.png", "category": "Botanical" },
+
+{ "id": "monotone chinoiserie", "src": "/gallery/monotone chinoiserie.jpg", "category": "Chinoiserie" },
+
+{ "id": "mtn-water-bridge scenic", "src": "/gallery/mtn-water-bridge scenic.png", "category": "Scenic" },
+{ "id": "mtnvillagepastoral scenic", "src": "/gallery/mtnvillagepastoral scenic.png", "category": "Scenic" },
+{ "id": "mtnvillagepastorbluehue scenic", "src": "/gallery/mtnvillagepastorbluehue scenic.png", "category": "Scenic" },
+
+{ "id": "nz greenblue scape scenic", "src": "/gallery/nz greenblue scape scenic.png", "category": "Scenic" },
+
+{ "id": "Degrade oily", "src": "/gallery/Degrade oily.png", "category": "Ombré" },
+
+{ "id": "old path to nowhere scenic", "src": "/gallery/old path to nowhere scenic.png", "category": "Scenic" },
+
+
+  { "id": "ombre 20", "src": "/gallery/ombre 20.jpg", "category": "Ombré" },
+  { "id": "ombre exploration", "src": "/gallery/ombre exploration.png", "category": "Ombré" },
+  { "id": "Ombre10", "src": "/gallery/Ombre10.jpg", "category": "Ombré" },
+  { "id": "Ombre11", "src": "/gallery/Ombre11.jpg", "category": "Ombré" },
+  { "id": "Ombre12", "src": "/gallery/Ombre12.jpg", "category": "Ombré" },
+  { "id": "Ombre13", "src": "/gallery/Ombre13.jpg", "category": "Ombré" },
+  { "id": "Ombre14", "src": "/gallery/Ombre14.jpg", "category": "Ombré" },
+  { "id": "Ombre15", "src": "/gallery/Ombre15.jpg", "category": "Ombré" },
+  { "id": "Ombre16", "src": "/gallery/Ombre16.jpg", "category": "Ombré" },
+  { "id": "Ombre17", "src": "/gallery/Ombre17.jpg", "category": "Ombré" },
+  { "id": "Ombre18", "src": "/gallery/Ombre18.jpg", "category": "Ombré" },
+  { "id": "ombre19", "src": "/gallery/ombre19.jpg", "category": "Ombré" },
+  { "id": "Ombre6", "src": "/gallery/Ombre6.jpg", "category": "Ombré" },
+  { "id": "Ombre7", "src": "/gallery/Ombre7.jpg", "category": "Ombré" },
+  { "id": "Ombre8", "src": "/gallery/Ombre8.jpg", "category": "Ombré" },
+  { "id": "Ombre9", "src": "/gallery/Ombre9.jpg", "category": "Ombré" },
+
+  { "id": "overlook scenic", "src": "/gallery/overlook scenic.jpg", "category": "Scenic" },
+
+  { "id": "P&P  greengraypatter", "src": "/gallery/P&P  greengraypatter.jpg", "category": "Prints & Pattern" },
+  { "id": "P&P Birds & Thistle", "src": "/gallery/P&P Birds & Thistle.jpg", "category": "Prints & Pattern" },
+  { "id": "p&p damask", "src": "/gallery/p&p damask.jpg", "category": "Prints & Pattern" },
+  { "id": "P&P kids giraffe", "src": "/gallery/P&P kids giraffe.png", "category": "Prints & Pattern" },
+
+  { "id": "Plum Tree Mosaic Scenic", "src": "/gallery/Plum Tree Mosaic Scenic.png", "category": "Prints & Pattern" },
+
+  { "id": "Red Atmospheric", "src": "/gallery/Red Atmospheric.jpg", "category": "Abstract" },
+
+  { "id": "Red lens scenic", "src": "/gallery/Red lens scenic.png", "category": "Scenic" },
+  { "id": "red maple scenic", "src": "/gallery/red maple scenic.jpg", "category": "Scenic" },
+
+  { "id": "red sun wide chinoiserie", "src": "/gallery/red sun wide chinoiserie.png", "category": "Chinoiserie" },
+
+  { "id": "rgby color run abstract", "src": "/gallery/rgby color run abstract.png", "category": "Abstract" },
+
+  { "id": "rivers edge scenic", "src": "/gallery/rivers edge scenic.png", "category": "Scenic" },
+
+  { "id": "rolled green pastures scenic", "src": "/gallery/rolled green pastures scenic.png", "category": "Scenic" },
+
+  { "id": "rolling hills scenic 3", "src": "/gallery/rolling hills scenic 3.jpg", "category": "Scenic" },
+  { "id": "Rolling hills scenic", "src": "/gallery/Rolling hills scenic.jpg", "category": "Scenic" },
+  { "id": "Rolling Hills Tree up scenic", "src": "/gallery/Rolling Hills Tree up scenic.png", "category": "Scenic" },
+
+  { "id": "round distressed graphic", "src": "/gallery/round distressed graphic.png", "category": "Graphic" },
+
+  { "id": "Atmospheric drift running horses", "src": "/gallery/Atmospheric drift running horses.png", "category": "Scenic" },
+
+  { "id": "Scenic crimson sunset behind blue rock lake", "src": "/gallery/Scenic crimson sunset behind blue rock lake.png", "category": "Scenic" },
+
+  { "id": "scenic in pencil1", "src": "/gallery/scenic in pencil1.jpg", "category": "Scenic" },
+
+  { "id": "Scenic Mist", "src": "/gallery/Scenic Mist.jpg", "category": "Scenic" },
+
+  { "id": "Scenic scenewatcher blue orange 2", "src": "/gallery/Scenic scenewatcher blue orange 2.png", "category": "Scenic" },
+  { "id": "Scenic scenewatcher blue orange", "src": "/gallery/Scenic scenewatcher blue orange.png", "category": "Scenic" },
+
+  { "id": "Scenic Trees", "src": "/gallery/Scenic Trees.png", "category": "Scenic" },
+
+  { "id": "jewel tone scenic", "src": "/gallery/jewel tone scenic.jpg", "category": "Scenic" },
+  { "id": "degrade botanical", "src": "/gallery/degrade botanical.jpg", "category": ["Dégradé", "Botanical"] },
+
+  { "id": "sepia chenoiserie", "src": "/gallery/sepia chenoiserie.png", "category": "Chinoiserie" },
+
+  { "id": "Sepia flowers over hills botanical", "src": "/gallery/Sepia flowers over hills botanical.png", "category": "Botanical" },
+
+  { "id": "sepia palms botanical", "src": "/gallery/sepia palms botanical.png", "category": "Botanical" },
+
+  { "id": "sepia scenic", "src": "/gallery/sepia scenic.jpg", "category": "Scenic" },
+
+  { "id": "Scenic sepia terraced farland", "src": "/gallery/Scenic sepia terraced farland.png", "category": "Scenic" },
+
+  { "id": "Scenic small dingy on cracked water's end", "src": "/gallery/Scenic small dingy on cracked water's end.png", "category": "Scenic" },
+
+    { "id": "space clouds planets", "src": "/gallery/space clouds planets.png", "category": "Atmosphere" },
+  { "id": "space nebula", "src": "/gallery/space nebula.png", "category": "Atmosphere" },
+
+  { "id": "scenic blue green rolling hills", "src": "/gallery/scenic blue green rolling hills.png", "category": "Scenic" },
+
+  { "id": "sunset brushwork ombre", "src": "/gallery/sunset brushwork ombre.png", "category": "Ombré" },
+
+  { "id": "sunset degrade", "src": "/gallery/sunset degrade.png", "category": "Dégradé" },
+
+  { "id": "Tan waters scenic", "src": "/gallery/Tan waters scenic.png", "category": "Scenic" },
+
+  { "id": "textured color grid abstract", "src": "/gallery/textured color grid abstract.png", "category": "Abstract" },
+
+  { "id": "Tree Brook Fade Scenic", "src": "/gallery/Tree Brook Fade Scenic.png", "category": "Scenic" },
+
+  { "id": "Trees Abstract Scenic", "src": "/gallery/Trees Abstract Scenic.png", "category": ["Abstract", "Scenic"] },
+
+  { "id": "Trees Atmospheric", "src": "/gallery/Trees Atmospheric.jpg", "category": "Abstract" },
+
+  { "id": "trees scenic 2", "src": "/gallery/trees scenic 2.jpg", "category": "Scenic" },
+
+  { "id": "Trees Scenic 5", "src": "/gallery/Trees Scenic 5.jpg", "category": "Scenic" },
+
+  { "id": "VermilionRed&Gold Ombre", "src": "/gallery/VermilionRed&Gold Ombre.png", "category": "Ombré" },
+
+  { "id": "violet misty violets botanical", "src": "/gallery/violet misty violets botanical.png", "category": "Botanical" },
+
+  { "id": "water degrade", "src": "/gallery/water degrade.png", "category": "Dégradé" },
+
+  { "id": "water orange lifting fog scenic", "src": "/gallery/water orange lifting fog scenic.png", "category": "Scenic" },
+
+  { "id": "Western Desert Scenic", "src": "/gallery/Western Desert Scenic.jpg", "category": "Scenic" },
+
+  { "id": "wide east asian mtn walk chinoiserie", "src": "/gallery/wide east asian mtn walk chinoiserie.png", "category": "Chinoiserie" },
+
+  { "id": "wildflowers botanical", "src": "/gallery/wildflowers botanical.png", "category": "Botanical" },
+  
+  { "id": "Jewel Tone Scenic 2", "src": "/gallery/Jewel Tone Scenic 2.png", "category": "Scenic" },
+  { "id": "Lavender Monotone Botanical", "src": "/gallery/Lavender Monotone Botanical.png", "category": "Botanical" },
+  { "id": "P&P damask vintage", "src": "/gallery/P&P damask vintage.png", "category": "Prints & Pattern" },
+  { "id": "P&P Mural 1", "src": "/gallery/P&P Mural 1.png", "category": "Prints & Pattern" },
+  { "id": "P&P Mural 2", "src": "/gallery/P&P Mural 2.png", "category": "Prints & Pattern" },
+  { "id": "P&P Mural 3", "src": "/gallery/P&P Mural 3.png", "category": "Prints & Pattern" },
+  { "id": "Scenic grounded fog", "src": "/gallery/Scenic grounded fog.png", "category": "Scenic" },
+  { "id": "Scenic highland morning", "src": "/gallery/Scenic highland morning.png", "category": "Scenic" },
+  { "id": "Yellowed Atmospheric drift", "src": "/gallery/Yellowed Atmospheric drift.png", "category": "Abstract" },
+  { "id": "Yellowed River Scenic", "src": "/gallery/Yellowed River Scenic.png", "category": "Scenic" }
+]

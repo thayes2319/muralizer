@@ -1,0 +1,225 @@
+{
+  family: "Red",
+  colors: [
+    { name: "brick red", hex: "#CB4154", rgb: [203, 65, 84], modifiers: { tone: "medium", saturation: "strong", temperature: "warm", style: "earth", filters: [] } },
+    { name: "carmine", hex: "#960018", rgb: [150, 0, 24], modifiers: { tone: "deep", saturation: "strong", temperature: "warm", style: "jewel", filters: [] } },
+    { name: "crimson", hex: "#DC143C", rgb: [220, 20, 60], modifiers: { tone: "deep", saturation: "strong", temperature: "warm", style: "jewel", filters: [] } },
+    { name: "fire engine red", hex: "#CE2029", rgb: [206, 32, 41], modifiers: { tone: "medium", saturation: "strong", temperature: "warm", style: "vivid", filters: [] } },
+    { name: "garnet", hex: "#733635", rgb: [115, 54, 53], modifiers: { tone: "deep", saturation: "moderate", temperature: "warm", style: "jewel", filters: [] } },
+    { name: "maroon", hex: "#800000", rgb: [128, 0, 0], modifiers: { tone: "deep", saturation: "strong", temperature: "warm", style: "earth", filters: [] } },
+    { name: "oxblood", hex: "#4A0000", rgb: [74, 0, 0], modifiers: { tone: "deep", saturation: "strong", temperature: "warm", style: "earth", filters: ["aged"] } },
+    { name: "ruby", hex: "#E0115F", rgb: [224, 17, 95], modifiers: { tone: "medium", saturation: "strong", temperature: "warm", style: "jewel", filters: [] } },
+    { name: "scarlet", hex: "#FF2400", rgb: [255, 36, 0], modifiers: { tone: "medium", saturation: "vivid", temperature: "warm", style: "vivid", filters: [] } },
+    { name: "vermilion", hex: "#E34234", rgb: [227, 66, 52], modifiers: { tone: "medium", saturation: "strong", temperature: "warm", style: "vivid", filters: [] } }
+  ]
+},
+
+
+{
+  family: "Red-Orange",
+  colors: [
+    { name: "burnt sienna", hex: "#E97451", rgb: [233, 116, 81], modifiers: { tone: "medium", saturation: "strong", temperature: "warm", style: "earth", filters: [] } },
+    { name: "coral", hex: "#FF7F50", rgb: [255, 127, 80], modifiers: { tone: "medium", saturation: "strong", temperature: "warm", style: "vivid", filters: [] } },
+    { name: "coral red", hex: "#FF4040", rgb: [255, 64, 64], modifiers: { tone: "medium", saturation: "vivid", temperature: "warm", style: "vivid", filters: [] } },
+    { name: "persimmon", hex: "#EC5800", rgb: [236, 88, 0], modifiers: { tone: "medium", saturation: "strong", temperature: "warm", style: "earth", filters: [] } },
+    { name: "salmon", hex: "#FA8072", rgb: [250, 128, 114], modifiers: { tone: "light", saturation: "moderate", temperature: "warm", style: "soft", filters: [] } },
+    { name: "tomato", hex: "#FF6347", rgb: [255, 99, 71], modifiers: { tone: "medium", saturation: "strong", temperature: "warm", style: "vivid", filters: [] } }
+  ]
+},
+
+
+{
+  family: "Orange",
+  colors: [
+    { name: "amber", hex: "#FFBF00", rgb: [255, 191, 0], modifiers: { tone: "medium", saturation: "strong", temperature: "warm", style: "vivid", filters: [] } },
+    { name: "apricot", hex: "#FBCEB1", rgb: [251, 206, 177], modifiers: { tone: "light", saturation: "moderate", temperature: "warm", style: "pastel", filters: [] } },
+    { name: "burnt orange", hex: "#CC5500", rgb: [204, 85, 0], modifiers: { tone: "deep", saturation: "strong", temperature: "warm", style: "earth", filters: [] } },
+    { name: "carrot orange", hex: "#ED9121", rgb: [237, 145, 33], modifiers: { tone: "medium", saturation: "strong", temperature: "warm", style: "vivid", filters: [] } },
+    { name: "pumpkin", hex: "#FF7518", rgb: [255, 117, 24], modifiers: { tone: "medium", saturation: "strong", temperature: "warm", style: "earth", filters: [] } },
+    { name: "tangerine", hex: "#F28500", rgb: [242, 133, 0], modifiers: { tone: "medium", saturation: "strong", temperature: "warm", style: "vivid", filters: [] } }
+  ]
+},
+
+
+
+{
+  family: "Yellow",
+  colors: [
+    { name: "butter", hex: "#FFF1B5", rgb: [255, 241, 181], modifiers: { tone: "light", saturation: "soft", temperature: "warm", style: "pastel", filters: [] } },
+    { name: "canary yellow", hex: "#FFEF00", rgb: [255, 239, 0], modifiers: { tone: "light", saturation: "vivid", temperature: "warm", style: "vivid", filters: [] } },
+    { name: "lemon", hex: "#FFF44F", rgb: [255, 244, 79], modifiers: { tone: "light", saturation: "strong", temperature: "warm", style: "vivid", filters: [] } },
+    { name: "mustard", hex: "#FFDB58", rgb: [255, 219, 88], modifiers: { tone: "medium", saturation: "moderate", temperature: "warm", style: "earth", filters: ["yellowed"] } },
+    { name: "tennis ball yellow", hex: "#DFFF00", rgb: [223, 255, 0], modifiers: { tone: "medium", saturation: "vivid", temperature: "warm", style: "neon", filters: [] } },
+    { name: "vanilla", hex: "#F3E5AB", rgb: [243, 229, 171], modifiers: { tone: "light", saturation: "soft", temperature: "warm", style: "pastel", filters: [] } }
+  ]
+},
+
+
+
+{
+  family: "Yellow-Green",
+  colors: [
+    { name: "chartreuse", hex: "#7FFF00", rgb: [127, 255, 0], modifiers: { tone: "medium", saturation: "vivid", temperature: "warm", style: "neon", filters: [] } },
+    { name: "lime", hex: "#BFFF00", rgb: [191, 255, 0], modifiers: { tone: "light", saturation: "vivid", temperature: "warm", style: "neon", filters: [] } },
+    { name: "olive", hex: "#808000", rgb: [128, 128, 0], modifiers: { tone: "medium", saturation: "moderate", temperature: "warm", style: "earth", filters: ["yellowed"] } },
+    { name: "pea green", hex: "#8CBF26", rgb: [140, 191, 38], modifiers: { tone: "medium", saturation: "strong", temperature: "warm", style: "earth", filters: [] } },
+    { name: "spring green", hex: "#00FF7F", rgb: [0, 255, 127], modifiers: { tone: "medium", saturation: "vivid", temperature: "cool", style: "neon", filters: [] } }
+  ]
+},
+
+
+
+{
+  family: "Green",
+  colors: [
+    { name: "emerald", hex: "#50C878", rgb: [80, 200, 120], modifiers: { tone: "medium", saturation: "strong", temperature: "cool", style: "jewel", filters: [] } },
+    { name: "forest green", hex: "#228B22", rgb: [34, 139, 34], modifiers: { tone: "deep", saturation: "strong", temperature: "cool", style: "earth", filters: [] } },
+    { name: "hunter green", hex: "#355E3B", rgb: [53, 94, 59], modifiers: { tone: "deep", saturation: "moderate", temperature: "cool", style: "earth", filters: [] } },
+    { name: "kelly green", hex: "#4CBB17", rgb: [76, 187, 23], modifiers: { tone: "medium", saturation: "strong", temperature: "cool", style: "vivid", filters: [] } },
+    { name: "mint", hex: "#98FF98", rgb: [152, 255, 152], modifiers: { tone: "light", saturation: "soft", temperature: "cool", style: "pastel", filters: [] } },
+    { name: "okra green", hex: "#6E6E3A", rgb: [110, 110, 58], modifiers: { tone: "medium", saturation: "muted", temperature: "warm", style: "earth", filters: ["yellowed"] } },
+    { name: "pine green", hex: "#01796F", rgb: [1, 121, 111], modifiers: { tone: "deep", saturation: "strong", temperature: "cool", style: "earth", filters: [] } },
+    { name: "seafoam green", hex: "#9FE2BF", rgb: [159, 226, 191], modifiers: { tone: "light", saturation: "soft", temperature: "cool", style: "pastel", filters: [] } }
+  ]
+},
+
+
+
+{
+  family: "Blue-Green / Teal",
+  colors: [
+    { name: "aqua", hex: "#00FFFF", rgb: [0, 255, 255], modifiers: { tone: "medium", saturation: "vivid", temperature: "cool", style: "neon", filters: [] } },
+    { name: "cyan", hex: "#00B7EB", rgb: [0, 183, 235], modifiers: { tone: "medium", saturation: "strong", temperature: "cool", style: "vivid", filters: [] } },
+    { name: "teal", hex: "#008080", rgb: [0, 128, 128], modifiers: { tone: "medium", saturation: "moderate", temperature: "cool", style: "earth", filters: [] } },
+    { name: "turquoise", hex: "#40E0D0", rgb: [64, 224, 208], modifiers: { tone: "light", saturation: "strong", temperature: "cool", style: "jewel", filters: [] } },
+    { name: "viridian", hex: "#40826D", rgb: [64, 130, 109], modifiers: { tone: "medium", saturation: "moderate", temperature: "cool", style: "earth", filters: [] } }
+  ]
+},
+
+
+
+{
+  family: "Blue",
+  colors: [
+    { name: "cerulean", hex: "#007BA7", rgb: [0, 123, 167], modifiers: { tone: "medium", saturation: "strong", temperature: "cool", style: "jewel", filters: [] } },
+    { name: "cobalt blue", hex: "#0047AB", rgb: [0, 71, 171], modifiers: { tone: "deep", saturation: "strong", temperature: "cool", style: "jewel", filters: [] } },
+    { name: "cornflower blue", hex: "#6495ED", rgb: [100, 149, 237], modifiers: { tone: "medium", saturation: "moderate", temperature: "cool", style: "soft", filters: [] } },
+    { name: "electric blue", hex: "#7DF9FF", rgb: [125, 249, 255], modifiers: { tone: "light", saturation: "vivid", temperature: "cool", style: "neon", filters: [] } },
+    { name: "navy", hex: "#000080", rgb: [0, 0, 128], modifiers: { tone: "deep", saturation: "strong", temperature: "cool", style: "classic", filters: [] } },
+    { name: "royal blue", hex: "#4169E1", rgb: [65, 105, 225], modifiers: { tone: "medium", saturation: "strong", temperature: "cool", style: "jewel", filters: [] } },
+    { name: "sky blue", hex: "#87CEEB", rgb: [135, 206, 235], modifiers: { tone: "light", saturation: "soft", temperature: "cool", style: "soft", filters: [] } },
+    { name: "ultramarine", hex: "#3F00FF", rgb: [63, 0, 255], modifiers: { tone: "deep", saturation: "vivid", temperature: "cool", style: "jewel", filters: [] } }
+  ]
+},
+
+
+
+
+{
+  family: "Indigo",
+  colors: [
+    { name: "indigo", hex: "#4B0082", rgb: [75, 0, 130], modifiers: { tone: "deep", saturation: "strong", temperature: "cool", style: "jewel", filters: [] } },
+    { name: "midnight blue", hex: "#191970", rgb: [25, 25, 112], modifiers: { tone: "deep", saturation: "strong", temperature: "cool", style: "classic", filters: [] } }
+  ]
+},
+
+
+
+{
+  family: "Violet / Purple",
+  colors: [
+    { name: "amethyst", hex: "#9966CC", rgb: [153, 102, 204], modifiers: { tone: "medium", saturation: "moderate", temperature: "cool", style: "jewel", filters: [] } },
+    { name: "eggplant", hex: "#311432", rgb: [49, 20, 50], modifiers: { tone: "deep", saturation: "strong", temperature: "cool", style: "earth", filters: ["aged"] } },
+    { name: "heliotrope", hex: "#DF73FF", rgb: [223, 115, 255], modifiers: { tone: "light", saturation: "vivid", temperature: "cool", style: "neon", filters: [] } },
+    { name: "lavender", hex: "#E6E6FA", rgb: [230, 230, 250], modifiers: { tone: "light", saturation: "soft", temperature: "cool", style: "pastel", filters: [] } },
+    { name: "mauve", hex: "#E0B0FF", rgb: [224, 176, 255], modifiers: { tone: "light", saturation: "soft", temperature: "cool", style: "pastel", filters: [] } },
+    { name: "orchid", hex: "#DA70D6", rgb: [218, 112, 214], modifiers: { tone: "medium", saturation: "strong", temperature: "cool", style: "soft", filters: [] } },
+    { name: "plum", hex: "#8E4585", rgb: [142, 69, 133], modifiers: { tone: "medium", saturation: "moderate", temperature: "cool", style: "earth", filters: [] } },
+    { name: "violet", hex: "#8F00FF", rgb: [143, 0, 255], modifiers: { tone: "medium", saturation: "vivid", temperature: "cool", style: "jewel", filters: [] } }
+  ]
+},
+
+
+
+
+
+{
+  family: "Magenta / Pink / Rose",
+  colors: [
+    { name: "blush", hex: "#F9C0C4", rgb: [249, 192, 196], modifiers: { tone: "light", saturation: "soft", temperature: "warm", style: "pastel", filters: [] } },
+    { name: "bubblegum", hex: "#FFC1CC", rgb: [255, 193, 204], modifiers: { tone: "light", saturation: "moderate", temperature: "warm", style: "pastel", filters: [] } },
+    { name: "cerise", hex: "#DE3163", rgb: [222, 49, 99], modifiers: { tone: "medium", saturation: "strong", temperature: "warm", style: "vivid", filters: [] } },
+    { name: "fuchsia", hex: "#FF00FF", rgb: [255, 0, 255], modifiers: { tone: "medium", saturation: "vivid", temperature: "cool", style: "neon", filters: [] } },
+    { name: "hot pink", hex: "#FF69B4", rgb: [255, 105, 180], modifiers: { tone: "medium", saturation: "vivid", temperature: "warm", style: "neon", filters: [] } },
+    { name: "magenta", hex: "#FF00FF", rgb: [255, 0, 255], modifiers: { tone: "medium", saturation: "vivid", temperature: "cool", style: "neon", filters: [] } },
+    { name: "raspberry", hex: "#E30B5C", rgb: [227, 11, 92], modifiers: { tone: "deep", saturation: "strong", temperature: "cool", style: "jewel", filters: [] } },
+    { name: "rose", hex: "#FF007F", rgb: [255, 0, 127], modifiers: { tone: "medium", saturation: "vivid", temperature: "warm", style: "vivid", filters: [] } },
+    { name: "salmon pink", hex: "#FF91A4", rgb: [255, 145, 164], modifiers: { tone: "light", saturation: "moderate", temperature: "warm", style: "soft", filters: [] } }
+  ]
+},
+
+
+
+{
+  family: "Brown / Earth Tones",
+  colors: [
+    { name: "beige", hex: "#F5F5DC", rgb: [245, 245, 220], modifiers: { tone: "light", saturation: "soft", temperature: "warm", style: "neutral", filters: [] } },
+    { name: "bronze", hex: "#CD7F32", rgb: [205, 127, 50], modifiers: { tone: "medium", saturation: "strong", temperature: "warm", style: "metallic", filters: [] } },
+    { name: "chestnut", hex: "#954535", rgb: [149, 69, 53], modifiers: { tone: "medium", saturation: "moderate", temperature: "warm", style: "earth", filters: [] } },
+    { name: "chocolate", hex: "#7B3F00", rgb: [123, 63, 0], modifiers: { tone: "deep", saturation: "strong", temperature: "warm", style: "earth", filters: [] } },
+    { name: "coffee", hex: "#6F4E37", rgb: [111, 78, 55], modifiers: { tone: "deep", saturation: "moderate", temperature: "warm", style: "earth", filters: ["aged"] } },
+    { name: "copper", hex: "#B87333", rgb: [184, 115, 51], modifiers: { tone: "medium", saturation: "strong", temperature: "warm", style: "metallic", filters: [] } },
+    { name: "khaki", hex: "#C3B091", rgb: [195, 176, 145], modifiers: { tone: "light", saturation: "muted", temperature: "warm", style: "neutral", filters: ["dusty"] } },
+    { name: "mahogany", hex: "#C04000", rgb: [192, 64, 0], modifiers: { tone: "deep", saturation: "strong", temperature: "warm", style: "earth", filters: [] } },
+    { name: "raw umber", hex: "#826644", rgb: [130, 102, 68], modifiers: { tone: "medium", saturation: "moderate", temperature: "warm", style: "earth", filters: ["aged"] } },
+    { name: "sand", hex: "#C2B280", rgb: [194, 178, 128], modifiers: { tone: "light", saturation: "soft", temperature: "warm", style: "neutral", filters: [] } },
+    { name: "sepia", hex: "#704214", rgb: [112, 66, 20], modifiers: { tone: "deep", saturation: "moderate", temperature: "warm", style: "earth", filters: ["aged"] } },
+    { name: "sienna", hex: "#A0522D", rgb: [160, 82, 45], modifiers: { tone: "medium", saturation: "strong", temperature: "warm", style: "earth", filters: [] } },
+    { name: "tan", hex: "#D2B48C", rgb: [210, 180, 140], modifiers: { tone: "light", saturation: "soft", temperature: "warm", style: "neutral", filters: [] } },
+    { name: "taupe", hex: "#483C32", rgb: [72, 60, 50], modifiers: { tone: "deep", saturation: "muted", temperature: "warm", style: "neutral", filters: ["dusty"] } },
+    { name: "umber", hex: "#635147", rgb: [99, 81, 71], modifiers: { tone: "deep", saturation: "muted", temperature: "warm", style: "earth", filters: ["aged"] } }
+  ]
+},
+
+
+
+
+{
+  family: "Neutrals / Grays / Blacks",
+  colors: [
+    { name: "ash gray", hex: "#B2BEB5", rgb: [178, 190, 181], modifiers: { tone: "light", saturation: "muted", temperature: "cool", style: "neutral", filters: ["dusty"] } },
+    { name: "charcoal", hex: "#36454F", rgb: [54, 69, 79], modifiers: { tone: "deep", saturation: "muted", temperature: "cool", style: "neutral", filters: [] } },
+    { name: "cool gray", hex: "#8C92AC", rgb: [140, 146, 172], modifiers: { tone: "medium", saturation: "muted", temperature: "cool", style: "neutral", filters: [] } },
+    { name: "graphite", hex: "#474A51", rgb: [71, 74, 81], modifiers: { tone: "deep", saturation: "muted", temperature: "cool", style: "neutral", filters: [] } },
+    { name: "ivory", hex: "#FFFFF0", rgb: [255, 255, 240], modifiers: { tone: "light", saturation: "soft", temperature: "warm", style: "neutral", filters: [] } },
+    { name: "jet black", hex: "#0A0A0A", rgb: [10, 10, 10], modifiers: { tone: "deep", saturation: "strong", temperature: "neutral", style: "classic", filters: [] } },
+    { name: "pearl", hex: "#EAE0C8", rgb: [234, 224, 200], modifiers: { tone: "light", saturation: "soft", temperature: "warm", style: "neutral", filters: [] } },
+    { name: "silver", hex: "#C0C0C0", rgb: [192, 192, 192], modifiers: { tone: "light", saturation: "muted", temperature: "cool", style: "metallic", filters: [] } },
+    { name: "slate gray", hex: "#708090", rgb: [112, 128, 144], modifiers: { tone: "medium", saturation: "muted", temperature: "cool", style: "neutral", filters: [] } },
+    { name: "smoke", hex: "#738276", rgb: [115, 130, 118], modifiers: { tone: "medium", saturation: "muted", temperature: "cool", style: "neutral", filters: ["smoky"] } },
+    { name: "snow", hex: "#FFFAFA", rgb: [255, 250, 250], modifiers: { tone: "light", saturation: "soft", temperature: "cool", style: "neutral", filters: [] } },
+    { name: "warm gray", hex: "#A8A29E", rgb: [168, 162, 158], modifiers: { tone: "medium", saturation: "muted", temperature: "warm", style: "neutral", filters: [] } }
+  ]
+},
+
+
+
+{
+  family: "White Tones",
+  colors: [
+    { name: "alabaster", hex: "#FAFAF0", rgb: [250, 250, 240], modifiers: { tone: "light", saturation: "soft", temperature: "warm", style: "neutral", filters: [] } },
+    { name: "cream", hex: "#FFFDD0", rgb: [255, 253, 208], modifiers: { tone: "light", saturation: "soft", temperature: "warm", style: "neutral", filters: [] } },
+    { name: "eggshell", hex: "#F0EAD6", rgb: [240, 234, 214], modifiers: { tone: "light", saturation: "soft", temperature: "warm", style: "neutral", filters: [] } },
+    { name: "linen", hex: "#FAF0E6", rgb: [250, 240, 230], modifiers: { tone: "light", saturation: "soft", temperature: "warm", style: "neutral", filters: [] } },
+    { name: "porcelain", hex: "#FFFEFA", rgb: [255, 254, 250], modifiers: { tone: "light", saturation: "soft", temperature: "cool", style: "neutral", filters: [] } },
+    { name: "snow white", hex: "#FFFFFF", rgb: [255, 255, 255], modifiers: { tone: "light", saturation: "none", temperature: "neutral", style: "neutral", filters: [] } }
+  ]
+}
+
+
+
+
+
+
+
+
