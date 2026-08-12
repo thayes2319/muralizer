@@ -1819,7 +1819,12 @@ margin-top: 15px;
 .cpc-session-modal {
   position: fixed;
   inset: 0;
-  z-index: 1200;
+  /* Must outrank .signature-gallery-modal (z-index: 99999) -- the Save
+     Concept decision prompt (#cpcSaveConceptModal, this class) can open
+     while the gallery's full-view modal is still up (triggered from its
+     "Add to Project" button), and previously rendered invisibly behind it
+     until the gallery modal was separately closed. */
+  z-index: 100000;
   display: none;
   align-items: center;
   justify-content: center;
