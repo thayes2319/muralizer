@@ -672,32 +672,50 @@ async function handleReferenceGenerateProxy(req, res) {
   }
 
   const influence = Number(body.reference_influence);
-  // Same slider/value the UI already exposes as "Source influence" (0.3-0.65)
-  // -- reused as-is here, just aimed at a different Stability parameter now
-  // (see below).
-  const controlStrength = Number.isFinite(influence)
+  // Same slider/value the UI exposes as "Source influence" (0.3-0.65) --
+  // reused for whichever Stability parameter applies to this mode (see
+  // below).
+  const influenceValue = Number.isFinite(influence)
     ? Math.max(0.3, Math.min(0.65, influence))
     : 0.45;
+
+  // Pure Inspiration vs Inspired Blend need genuinely different Stability
+  // endpoints, not just different prompt text -- see the branch below.
+  const isBlend = body.reference_mode === 'blend';
+
   const form = new FormData();
   const imageExtension = reference.mimeType === 'image/jpeg' ? 'jpg' : reference.mimeType.split('/')[1];
   form.append('image', new Blob([reference.buffer], { type: reference.mimeType }), `inspiration.${imageExtension}`);
   const muralOnly = 'Create a flat, front-facing original mural artwork only. The full canvas must be the mural design itself, with no interior scene or installed-mural mockup.';
-  // Switched from Stability's /control/style to /control/structure. Style
-  // control explicitly extracts and reapplies the reference image's own
-  // stylistic qualities (color, texture, photographic-ness) -- for a
-  // photographic reference (e.g. a foliage/water inspiration photo, not
-  // just an installed-wallcovering snapshot), that pulled the output toward
-  // photorealism no matter how strongly worded this instruction was, even
-  // at low influence. Structure control only constrains composition/layout
-  // from the reference, leaving style entirely up to this text -- sandboxed
-  // side-by-side against both a photographic and an already-painterly
-  // reference, across the full influence range, with consistently painterly
-  // results either way.
+  // Applies to both modes -- reinforces the same never-photorealistic goal
+  // regardless of which endpoint below actually enforces it.
   const paintedStyle = 'Render this as a hand-painted or hand-illustrated mural artwork with visible painterly brushwork, artistic texture, and hand-rendered color blending -- never as a photograph or photorealistic image, no matter how photographic the reference image itself looks. Abstract and simplify all natural elements such as foliage, water, and light into visible brushstrokes, not photographic detail. Ignore any glare, reflections, or lighting artifacts from the reference photo being captured under real light; those are not part of the artwork.';
   const exclusions = 'Never depict furniture, chairs, tables, sofas, beds, lamps, windows, doors, rooms, walls, floors, ceilings, architecture, people, text, logos, frames, or borders.';
   form.append('prompt', `${prompt}\n\n${muralOnly} ${paintedStyle} ${exclusions}`);
   form.append('output_format', 'png');
-  form.append('control_strength', String(controlStrength));
+
+  // Pure Inspiration: prompt text is just a description of the reference
+  // photo itself (assessedDescription), so locking the output's
+  // composition/layout to that same photo via /control/structure is a
+  // strict improvement -- sandboxed side-by-side against both a
+  // photographic and an already-painterly reference across the full
+  // influence range, consistently painterly either way, no regression.
+  //
+  // Inspired Blend: prompt text instead comes from the user's own Creative
+  // Direction selections (Category/Feel/Elements/etc.), which describe
+  // whatever content the user picked -- with no guaranteed relationship to
+  // what's structurally in the reference photo. /control/structure forces
+  // the output to conform to the reference's edges/layout regardless, which
+  // fights a prompt describing different content and broke this mode in
+  // real device testing. Kept on the original /control/style endpoint,
+  // which transfers color/texture-level "visual character" rather than
+  // rigid structural conformance, so it can actually blend divergent
+  // content with the reference instead of fighting it.
+  const endpoint = isBlend
+    ? 'https://api.stability.ai/v2beta/stable-image/control/style'
+    : 'https://api.stability.ai/v2beta/stable-image/control/structure';
+  form.append(isBlend ? 'fidelity' : 'control_strength', String(influenceValue));
+
   const negativePrompt = String(body.negative_prompt || '').trim();
   if (negativePrompt) form.append('negative_prompt', negativePrompt);
   const aspectRatio = String(body.aspect_ratio || '').trim();
@@ -706,7 +724,7 @@ async function handleReferenceGenerateProxy(req, res) {
     form.append('seed', String(body.seed));
   }
 
-  const response = await fetch('https://api.stability.ai/v2beta/stable-image/control/structure', {
+  const response = await fetch(endpoint, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${upstreamApiKey}`,

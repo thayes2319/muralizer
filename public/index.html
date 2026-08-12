@@ -14486,11 +14486,17 @@ function updateReferenceInfluence(value) {
   const hint = document.getElementById("referenceInfluenceHint");
   if (label) label.textContent = `${normalized}%`;
   if (hint) {
+    // Same slider, different Stability parameter depending on mode (see
+    // handleReferenceGenerateProxy) -- Pure Inspiration maps it to
+    // control_strength (composition/layout adherence), Inspired Blend maps
+    // it to fidelity (visual-character/style adherence). Keep the copy
+    // honest about which one is actually in effect.
+    const aspect = referenceReimagineState.blendWithMuralizer ? "visual character" : "composition/layout";
     hint.textContent = normalized < 40
-      ? "Fresh interpretation: lighter adherence to the reference's composition/layout."
+      ? `Fresh interpretation: lighter adherence to the reference's ${aspect}.`
       : normalized > 52
-        ? "Strong source influence: closer adherence to the reference's composition/layout."
-        : "Balanced guidance: moderate adherence to the reference's composition/layout.";
+        ? `Strong source influence: closer adherence to the reference's ${aspect}.`
+        : `Balanced guidance: moderate adherence to the reference's ${aspect}.`;
   }
 }
 
@@ -14560,7 +14566,7 @@ function updateSelectionGroupsVisibility() {
 
 const REFERENCE_REIMAGINE_COPY = {
   inspiration: "Add one inspiration image. No selections or build required — Muralizer creates a new, original painterly mural, composed to echo this image's layout.",
-  blend: "Add one inspiration image. Your selections and build below still inform the outcome, composed to echo your upload's layout."
+  blend: "Add one inspiration image. Your selections and build below still inform the outcome, rendered in the style of your upload."
 };
 
 function updateReferenceReimagineCopy() {
@@ -14578,6 +14584,10 @@ function updateReferenceDirectionMode(mode) {
   });
   updateReferenceReimagineCopy();
   applyReferenceMuralDescription();
+  // The influence slider's hint text depends on blendWithMuralizer (see
+  // updateReferenceInfluence) -- refresh it so switching modes doesn't
+  // leave stale wording from the mode you just left.
+  updateReferenceInfluence(document.getElementById("referenceInfluence")?.value);
   // Showing/hiding 11 selector groups in the same synchronous tick as the
   // pill highlight can make the click itself feel laggy on slower devices
   // -- the browser batches paint until the whole handler returns, so the
@@ -16164,6 +16174,9 @@ async function generateImage() {
         reference_image: hasReference ? buildReferenceCropDataUrl() : undefined,
         reference_influence: hasReference
           ? Number(document.getElementById("referenceInfluence")?.value || 45) / 100
+          : undefined,
+        reference_mode: hasReference
+          ? (referenceReimagineState.blendWithMuralizer ? "blend" : "inspiration")
           : undefined
       })
     });
