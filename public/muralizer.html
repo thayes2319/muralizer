@@ -1674,7 +1674,12 @@ margin-top: 15px;
 .cpc-actions-row {
   width: calc(100% - 40px);
   max-width: calc(100% - 40px);
-  margin: -27px 0 0 40px;
+  /* Pulled up to sit level with .cpc-projects-tools (the C+/P+/... column)
+     instead of trailing below it -- but pulling up this far collides with
+     #cpc-open-set's horizontal scrollbar when it's actually rendered
+     (native scrollbars can render taller than the 6px custom webkit
+     styling accounts for). Reduced from -27px to leave clearance. */
+  margin: -18px 0 0 40px;
   padding-top: 0;
   display: flex;
   flex-wrap: nowrap;
@@ -2274,7 +2279,8 @@ margin-top: 15px;
     flex-wrap: nowrap;
     align-items: flex-end;
     gap: 8px;
-    margin-top: -28px;
+    /* Same scrollbar-clearance reduction as the desktop rule above. */
+    margin-top: -19px;
     padding-top: 0;
     border-top: none;
   }
@@ -3737,6 +3743,14 @@ button, select {
   display: inline-flex;
 }
 
+/* Plain wrapping div, position:static (the default -- left unset
+   deliberately) -- purely a DOM grouping so the mobile media query below
+   can turn the 4 buttons into one real flex row without disturbing
+   desktop, where they stay position:absolute floating pills (unaffected
+   by being wrapped in a static ancestor -- their containing block is
+   still #imageWrapper). With no absolutely-positioned content of its own
+   on desktop it collapses to zero height, adding no layout impact there. */
+
 .concept-room-btn {
   display: none;
   position: absolute;
@@ -3772,7 +3786,7 @@ button, select {
   top: 44px;
 }
 
-/* EXPERIMENTAL / TEMPORARY -- see the button's HTML comment above. */
+/* "See It In A Room (Scale View)" trigger -- see the modal's HTML comment below. */
 .concept-composite-room-btn {
   top: 78px;
   background: rgba(120, 12, 90, 0.55);
@@ -3860,6 +3874,69 @@ button, select {
 .generic-room-stage.has-image img,
 .generic-room-stage.has-image canvas { display: block; }
 
+/* #compositeRoomStage overrides .generic-room-stage's fixed 4:3 box: the 5
+   stock-room photos span 21:9 down to 9:16, and the scale-calibration
+   overlay (0-1-normalized SVG, position:absolute; inset:0) needs the stage
+   to match the canvas's own aspect ratio exactly, not a cropped/letterboxed
+   view of it, or the overlay coordinates won't line up with what's shown. */
+#compositeRoomStage { aspect-ratio: auto; }
+#compositeRoomStage canvas { width: 100%; height: auto; object-fit: initial; }
+
+/* Scroll-wheel/pinch zoom on the composite result and the mural-reference
+   preview -- both stages get an inner wrap that a CSS transform (scale +
+   translate) is applied to, so zooming is a cheap transform on already-
+   rendered pixels, not a re-render at a different resolution. touch-action:
+   none claims the gesture for our own JS instead of the browser's native
+   page-pinch-zoom/scroll. transform-origin:0 0 matches the top-left-anchored
+   math in computeZoomTransform(). */
+#compositeRoomStage, #compositeMuralCalStage { touch-action: none; }
+/* position:relative (not the default static) makes this the containing
+   block for its position:absolute overlay child (.composite-cal-layer),
+   so the overlay zooms/pans together with the canvas/img it's laid over
+   instead of staying anchored to the outer, untransformed stage. No
+   explicit width/height: default block width already fills the parent,
+   and default height:auto correctly shrink-wraps to the canvas/img's own
+   rendered height -- an explicit height:100% here was a real bug (this
+   wrap's parent is ALSO auto-height, and percentage-height against an
+   auto-height containing block doesn't reliably resolve, which is almost
+   certainly what caused the mural preview to not match the image's own
+   size/aspect and to intermittently vanish on reflow, e.g. on scroll). */
+.composite-zoom-wrap { position: relative; transform-origin: 0 0; }
+
+.composite-zoom-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.composite-zoom-slider-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: #173d53;
+}
+
+.composite-zoom-slider-label input[type="range"] { flex: 1; min-width: 0; accent-color: #218fc9; }
+
+.composite-zoom-reset {
+  flex: 0 0 auto;
+  border: 1px solid #218FC9;
+  border-radius: 999px;
+  background: #fff;
+  color: #216d87;
+  font-family: Candara, sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
 .generic-room-status {
   margin: 10px 0 0;
   color: #58636a;
@@ -3931,6 +4008,323 @@ button, select {
   font-size: 10.5px;
   line-height: 1.4;
   text-align: center;
+}
+
+/* Scale-calibration overlay -- a 2-point simplification of
+   .room-preview-feature (SVG line + hit-circle/visible-circle handle pairs
+   instead of a polygon), same interaction paradigm, same palette. Used on
+   #compositeRoomStage (room segment) and #compositeMuralCalStage (mural
+   segment). */
+.composite-cal-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* "Nodes off" toggle -- display:none both hides the overlay and pulls it
+   out of hit-testing (wireCompositeCalStage's pointerdown looks for
+   event.target.closest(".composite-cal-handle, ..."), which can never
+   match a display:none subtree), so this is a clean, complete disable,
+   not just a visual one. */
+.composite-cal-layer.composite-cal-nodes-hidden {
+  display: none;
+}
+
+.composite-cal-segment {
+  position: absolute;
+  inset: 0;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.composite-cal-segment svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  touch-action: none;
+}
+
+.composite-cal-line {
+  stroke: #f4c649;
+  stroke-width: 0.35;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+
+.composite-cal-line-hit {
+  stroke: rgba(244,196,73,0.001);
+  stroke-width: 3.6;
+  vector-effect: non-scaling-stroke;
+  pointer-events: stroke;
+  touch-action: none;
+}
+
+.composite-cal-handle {
+  fill: #f4c649;
+  stroke: #ffffff;
+  stroke-width: 0.35;
+  vector-effect: non-scaling-stroke;
+  cursor: grab;
+  pointer-events: auto;
+  touch-action: none;
+}
+
+
+.composite-cal-handle-hit {
+  fill: rgba(244,196,73,0.001);
+  pointer-events: all;
+  touch-action: none;
+}
+
+/* The on-mural segment sits directly on top of the mural artwork itself
+   (often busy/colorful, unlike the plain room photo the other segments
+   overlay), so a static yellow marker can disappear into the image.
+   Flash between two high-contrast colors and pulse the handle radius so
+   it stays findable regardless of what's underneath. Scoped to
+   data-cal-segment="mural" only -- the room/wallQuad segments sit on the
+   stock photo and don't need it. */
+@keyframes compositeMuralHandleFlash {
+  0%, 100% { fill: #f4c649; stroke: #ffffff; }
+  50% { fill: #ff2f6e; stroke: #12202b; }
+}
+
+@keyframes compositeMuralLineFlash {
+  0%, 100% { stroke: #f4c649; }
+  50% { stroke: #ff2f6e; }
+}
+
+@keyframes compositeMuralHandlePulse {
+  0%, 100% { r: 0.7; }
+  50% { r: 1.4; }
+}
+
+.composite-cal-segment[data-cal-segment="mural"] .composite-cal-handle {
+  animation: compositeMuralHandleFlash 0.9s ease-in-out infinite, compositeMuralHandlePulse 0.9s ease-in-out infinite;
+}
+
+.composite-cal-segment[data-cal-segment="mural"] .composite-cal-line {
+  animation: compositeMuralLineFlash 0.9s ease-in-out infinite;
+  stroke-width: 0.55;
+}
+
+/* Wall-placement quad -- deliberately blue, not the calibration segments'
+   yellow, matching #roomPreviewWallGuide's own "structural placement"
+   color in the sibling feature. Visually distinct from the room-reference
+   calibration segment sharing the same overlay layer. */
+.composite-wall-quad-outline {
+  fill: transparent;
+  stroke: #218fc9;
+  stroke-width: 0.45;
+  vector-effect: non-scaling-stroke;
+  stroke-dasharray: 3 3;
+  pointer-events: none;
+}
+
+.composite-wall-quad-handle {
+  fill: #218fc9;
+  stroke: #ffffff;
+  stroke-width: 0.35;
+  vector-effect: non-scaling-stroke;
+  cursor: grab;
+  pointer-events: auto;
+  touch-action: none;
+}
+
+.composite-mural-cal-stage {
+  position: relative;
+  margin: 10px auto;
+  background: #d9e2e6;
+  border-radius: 6px;
+  overflow: hidden; /* clips zoomed-in content -- was "visible" before zoom existed */
+}
+
+.composite-mural-cal-stage img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.composite-cal-panel {
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px solid rgba(23,111,157,0.28);
+  border-radius: 6px;
+  background: rgba(255,255,255,0.7);
+  text-align: left;
+}
+
+.composite-cal-panel summary {
+  cursor: pointer;
+  font-weight: 700;
+  color: #173d53;
+  font-size: 12px;
+}
+
+.composite-cal-panel label {
+  display: grid;
+  gap: 4px;
+  margin-top: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #173d53;
+}
+
+.composite-cal-panel input[type="number"] {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid rgba(23,111,157,0.35);
+  border-radius: 4px;
+  font-family: Candara, sans-serif;
+  font-size: 13px;
+}
+
+/* Explicit commit button next to the mural-inches field -- the input
+   already commits on blur/Enter (wireCompositeCalInchesInput), but on
+   mobile it wasn't always obvious that tapping away actually "took" the
+   number. This gives an unambiguous single tap: type, then Set, and the
+   Stretched-to-fill note/reveal fires off the exact same commit path
+   (the button just blurs the input). */
+.composite-cal-inches-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.composite-cal-inches-row input[type="number"] {
+  flex: 1;
+  min-width: 0;
+}
+
+.composite-cal-inches-row .composite-zoom-reset {
+  flex: 0 0 auto;
+}
+
+.composite-cal-stretch-group {
+  display: grid;
+  gap: 4px;
+  margin-top: 10px;
+}
+
+.composite-cal-stretch-group legend {
+  padding: 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: #173d53;
+}
+
+.composite-cal-stretch-option {
+  position: relative; /* containing block for the visually-hidden input below */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #218FC9;
+  border-radius: 999px;
+  background: #fff;
+  color: #216d87;
+  font-family: Candara, sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 8px 14px;
+  cursor: pointer;
+  text-align: center;
+}
+
+/* The pill's own background/color swap (below) already shows which one is
+   selected -- a separate visible radio dot inside an already-highlighted
+   pill is redundant, and the native dot's default size doesn't match this
+   button styling. Hidden via position+opacity, not display:none, so the
+   input stays keyboard-focusable and screen-reader-visible; the label text
+   is still the accessible name. */
+.composite-cal-stretch-option input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  opacity: 0;
+}
+
+.composite-cal-stretch-option:has(input:checked) {
+  background: #218FC9;
+  color: #fff;
+}
+
+.composite-cal-stretch-option:has(input:focus-visible) {
+  outline: 2px solid #216d87;
+  outline-offset: 2px;
+}
+
+.composite-cal-panel .room-preview-note { margin-top: 8px; }
+
+.composite-wall-quad-coords {
+  margin: 8px 0 0;
+  padding: 8px 10px;
+  background: #173d53;
+  color: #d7ecf7;
+  border-radius: 6px;
+  font-family: "Courier New", monospace;
+  font-size: 11px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+  user-select: all; /* one click/tap selects the whole block, ready to copy */
+}
+
+/* Deliberately louder than .room-preview-note -- this is telling the user
+   their actual on-wall result differs from what they typed, which is
+   important enough to not read as a footnote. Amber, matching the
+   calibration handles' own accent color, so it visually reads as "about
+   your calibration" rather than blending into the panel's blue chrome. */
+.composite-cal-effective-note {
+  margin: 8px 0 0;
+  padding: 8px 12px;
+  background: rgba(244,196,73,0.18);
+  border: 1px solid rgba(244,196,73,0.65);
+  border-radius: 6px;
+  color: #6b4f0a;
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+/* One-shot attention ring, triggered the instant this note first appears
+   while the user is actively dragging a mural-segment node (see the
+   compositeCalActiveSegment === "mural" check in renderCompositeCalSegments)
+   -- the note lives below the mural drag stage, easy to drag right past
+   without noticing it just changed. Not infinite (unlike the mural
+   handles' flash) since it only needs to catch the eye once per reveal. */
+@keyframes compositeEffectiveNotePulse {
+  0% { box-shadow: 0 0 0 0 rgba(244,196,73,0.75); }
+  70% { box-shadow: 0 0 0 10px rgba(244,196,73,0); }
+  100% { box-shadow: 0 0 0 0 rgba(244,196,73,0); }
+}
+
+.composite-cal-effective-note.composite-cal-effective-note-pulse {
+  animation: compositeEffectiveNotePulse 0.7s ease-out;
+}
+
+/* Always-visible scope note at the top of the Scale View modal -- distinct
+   blue (not the amber used by .composite-cal-effective-note, which flags a
+   conditional stretch/crop result) so it doesn't read as the same kind of
+   message. Exists because a viewer mistook this feature's output for a
+   finished installed rendering; this states the actual scope up front,
+   before any interaction, not buried in a collapsed panel or a trailing
+   disclaimer. */
+.composite-scope-note {
+  margin: 10px 0 0;
+  padding: 9px 12px;
+  background: rgba(33,143,201,0.12);
+  border: 1px solid rgba(33,143,201,0.45);
+  border-radius: 6px;
+  color: #173d53;
+  font-size: 12px;
+  line-height: 1.45;
+  text-align: left;
+}
+
+.composite-scope-note strong {
+  color: #12384f;
 }
 
 .room-preview-modal {
@@ -7253,6 +7647,34 @@ select[multiple].collapsible-multi.expanded option:first-child {
     justify-content:flex-end;
   }
 
+  /* The "See It..." trio + Share used to float as position:absolute pills
+     stacked in the image's top-left/top-right corners -- fine on desktop's
+     wide images, but on narrow mobile widths the stack overlapped
+     #muralPaletteStrip (the color-swatch row), which renders in normal
+     flow at the top of the same wrapper. Here they become one real flex
+     row in normal flow instead, so the swatch strip (next in DOM,
+     unaffected) is always pushed to its own row below -- never overlapped,
+     regardless of width. flex-wrap is a safety net for the narrowest
+     phones where all 4 labels can't fit on one line. */
+  .concept-room-btn-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    margin: 0 0 8px;
+  }
+
+  .concept-room-btn-row .concept-room-btn,
+  .concept-room-btn-row .concept-share-btn {
+    position: static;
+    top: auto;
+    left: auto;
+    right: auto;
+    font-size: 10px;
+    padding: 4px 8px;
+  }
+
 }
 
 
@@ -8638,15 +9060,17 @@ If you’re exploring a new direction, try adjusting just 1-2 elements at a time
       <div id="cpcCompareTray" class="cpc-compare-tray" aria-label="Concept compare tray"></div>
 
       <div id="imageWrapper" class="mural-wrapper">
+        <div id="conceptRoomBtnRow" class="concept-room-btn-row">
+          <button id="conceptRoomBtn" class="concept-room-btn" type="button" title="Preview this concept in a room" onclick="openRoomPreview()">See It In Your Room</button>
+          <button id="conceptGenericRoomBtn" class="concept-room-btn concept-generic-room-btn" type="button" title="Preview this concept in a generic room, no photo needed" onclick="openGenericRoomPreview()">See It In A Room</button>
+          <!-- Canvas-composite room preview, calibrated to real-world scale -- exact pixel placement onto a stock room photo, no AI reinterpretation. -->
+          <button id="conceptCompositeRoomBtn" class="concept-room-btn concept-composite-room-btn" type="button" title="Check this mural's real-world size on a stock room photo -- a size check, not a finished installed look" onclick="openCompositeRoomPreview()">See It In A Room (Scale View)</button>
+          <button id="conceptShareBtn" class="concept-share-btn" type="button" title="Present &amp; share this concept" onclick="openConceptPresentation()">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+            Share
+          </button>
+        </div>
         <div id="muralPaletteStrip" class="palette-strip" style="display:none;" aria-label="Dominant mural colors for paint transfer"></div>
-        <button id="conceptRoomBtn" class="concept-room-btn" type="button" title="Preview this concept in a room" onclick="openRoomPreview()">See It In Your Room</button>
-        <button id="conceptGenericRoomBtn" class="concept-room-btn concept-generic-room-btn" type="button" title="Preview this concept in a generic room, no photo needed" onclick="openGenericRoomPreview()">See It In A Room</button>
-        <!-- EXPERIMENTAL / TEMPORARY -- canvas-composite alternative, see [[Canvas-composite room alternative]] memory. Discard freely if it doesn't hold up. -->
-        <button id="conceptCompositeRoomBtn" class="concept-room-btn concept-composite-room-btn" type="button" title="Preview this concept composited onto a stock room photo (experimental, exact placement, no AI reinterpretation)" onclick="openCompositeRoomPreview()">See It In A Room (Composite Test)</button>
-        <button id="conceptShareBtn" class="concept-share-btn" type="button" title="Present &amp; share this concept" onclick="openConceptPresentation()">
-          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
-          Share
-        </button>
         <img id="muralImage">
         <div class="mural-watermark">Scénique Murals</div>
       </div>
@@ -8759,30 +9183,80 @@ If you’re exploring a new direction, try adjusting just 1-2 elements at a time
         </div>
       </div>
 
-      <!-- EXPERIMENTAL / TEMPORARY -- canvas-composite proof of concept.
-           Reuses the "See It In Your Room" perspective-warp + shadow-map
-           pipeline (drawImageTriangle/createRoomPreviewShadowMap) with a
-           built-in stock photo instead of an upload, so the mural can never
-           bleed onto furniture/floors -- it's a literal masked composite,
-           not an AI reinterpretation. Discard freely if it doesn't hold up
-           next to the AI version above. -->
+      <!-- "See It In A Room (Scale View)" -- canvas-composite room preview,
+           calibrated to real-world scale. Reuses the "See It In Your Room"
+           perspective-warp + shadow-map pipeline
+           (drawImageTriangle/createRoomPreviewShadowMap) with a built-in
+           stock photo instead of an upload, so the mural can never bleed
+           onto furniture/floors -- it's a literal masked composite, not an
+           AI reinterpretation. A viewer mistook this for a finished
+           installed rendering, so .composite-scope-note below states the
+           real scope (size check, not a finished look) up front. -->
       <div id="compositeRoomModal" class="generic-room-modal" role="dialog" aria-modal="true" aria-labelledby="compositeRoomTitle" aria-hidden="true">
         <div class="generic-room-card">
           <div class="generic-room-head">
             <div>
-              <h3 id="compositeRoomTitle">See It In A Room (Composite Test)</h3>
-              <p>Experimental: exact pixel placement on a stock room photo, no AI reinterpretation. Always the same stock room for now.</p>
+              <h3 id="compositeRoomTitle">See It In A Room (Scale View)</h3>
+              <p>Checks how big this mural reads on a wall, calibrated to real-world measurements -- not a finished installed look.</p>
             </div>
             <button id="compositeRoomClose" class="generic-room-close" type="button" aria-label="Close">×</button>
           </div>
+          <p class="composite-scope-note"><strong>This is a size check, not a finished install.</strong> It shows the mural at the scale you enter below, on a stock room photo -- your actual install will be laid out and panelized for the real wall separately.</p>
           <div id="compositeRoomStage" class="generic-room-stage">
-            <canvas id="compositeRoomCanvas"></canvas>
+            <div id="compositeRoomZoomWrap" class="composite-zoom-wrap">
+              <canvas id="compositeRoomCanvas"></canvas>
+              <div id="compositeCalLayer" class="composite-cal-layer" aria-label="Scale calibration handles"></div>
+            </div>
           </div>
+          <div class="composite-zoom-controls">
+            <label class="composite-zoom-slider-label">Zoom
+              <input id="compositeRoomZoomSlider" type="range" min="25" max="800" step="5" value="100">
+            </label>
+            <button id="compositeRoomZoomReset" class="composite-zoom-reset" type="button">Reset zoom</button>
+            <button id="compositeCalNodesToggle" class="composite-zoom-reset" type="button" aria-pressed="false">Nodes off</button>
+          </div>
+          <details class="composite-cal-panel">
+            <summary>Wall placement corners (dev tool)</summary>
+            <p class="room-preview-note">Drag the blue dashed corners on the photo above to fix the wall placement for this stock room, then copy the coordinates below into this profile's <code>points</code> in ROOM_PROFILES.</p>
+            <pre id="compositeWallQuadCoords" class="composite-wall-quad-coords"></pre>
+          </details>
           <p id="compositeRoomStatus" class="generic-room-status" aria-live="polite"></p>
           <div class="generic-room-actions">
             <button id="compositeRoomShare" type="button">Share</button>
           </div>
-          <p class="generic-room-disclaimer">Test build -- one fixed stock photo, hand-estimated wall corners. Not yet a real feature.</p>
+          <details class="composite-cal-panel" open>
+            <summary>Calibrate real-world size</summary>
+            <label>Reference on room photo (inches)
+              <input id="compositeCalRoomInches" type="number" min="1" step="0.5">
+            </label>
+            <div id="compositeMuralCalStage" class="composite-mural-cal-stage">
+              <div id="compositeMuralZoomWrap" class="composite-zoom-wrap">
+                <img id="compositeMuralCalImage" alt="Mural, for placing a size reference">
+                <div id="compositeMuralCalLayer" class="composite-cal-layer"></div>
+              </div>
+            </div>
+            <div class="composite-zoom-controls">
+              <label class="composite-zoom-slider-label">Zoom
+                <input id="compositeMuralZoomSlider" type="range" min="100" max="800" step="5" value="100">
+              </label>
+              <button id="compositeMuralZoomReset" class="composite-zoom-reset" type="button">Reset zoom</button>
+            </div>
+            <label for="compositeCalMuralInches">This part of the mural should read as (inches)</label>
+            <div class="composite-cal-inches-row">
+              <input id="compositeCalMuralInches" type="number" min="0.5" step="0.5" value="12" placeholder="e.g. 12">
+              <button id="compositeCalMuralInchesSet" class="composite-zoom-reset" type="button">Set</button>
+              <button id="compositeCalMuralInchesReset" class="composite-zoom-reset" type="button">Reset</button>
+            </div>
+            <p id="compositeCalEffectiveSize" class="composite-cal-effective-note" hidden></p>
+            <fieldset id="compositeCalStretchGroup" class="composite-cal-stretch-group">
+              <legend>If it doesn't fill the wall:</legend>
+              <label class="composite-cal-stretch-option"><input type="radio" name="compositeCalStretchMode" value="stretch" checked> Stretch to fill</label>
+              <label class="composite-cal-stretch-option"><input type="radio" name="compositeCalStretchMode" value="stopShort"> True Scale</label>
+              <label class="composite-cal-stretch-option"><input type="radio" name="compositeCalStretchMode" value="tile"> Tile to fill</label>
+            </fieldset>
+            <p class="room-preview-note">Scale is a rough guide, not a measurement -- verify before ordering.</p>
+          </details>
+          <p class="generic-room-disclaimer">Stock room photos with hand-estimated wall corners -- if they look off for your photo, drag them in "Wall placement corners" above.</p>
         </div>
       </div>
 
@@ -13344,6 +13818,18 @@ function drawImageTriangle(context, image, source, destination) {
   context.restore();
 }
 
+// pixelsPerInch for a calibration segment in its own image's pixel space
+// (spaceWidth/spaceHeight = that image's natural/canvas pixel dimensions).
+// Returns 0 (not NaN/Infinity) when inches is null/0/invalid or the
+// segment has zero length, so callers can treat 0 as "not calibrated" with
+// a single falsy check rather than also guarding against NaN.
+function computeCalSegmentPixelsPerInch(segment, spaceWidth, spaceHeight) {
+  if (!segment || segment.inches == null || segment.inches <= 0) return 0;
+  const [a, b] = segment.points;
+  const pixelLength = Math.hypot((b.x - a.x) * spaceWidth, (b.y - a.y) * spaceHeight);
+  return pixelLength > 0 ? pixelLength / segment.inches : 0;
+}
+
 function renderRoomPreview() {
   const stage = document.getElementById("roomPreviewStage");
   const canvas = document.getElementById("roomPreviewCanvas");
@@ -14630,15 +15116,17 @@ async function shareGenericRoomPreview() {
 }
 
 // ============================================================
-// EXPERIMENTAL / TEMPORARY -- canvas-composite proof of concept for
-// "See It In A Room". Reuses loadRoomPreviewImage/drawImageTriangle/
+// "SEE IT IN A ROOM (SCALE VIEW)" -- canvas-composite room preview, the
+// scale-calibrated sibling of "See It In A Room" (AI reinterpretation,
+// mood-only) and "See It In Your Room" (user's own photo, no calibration
+// yet). Reuses loadRoomPreviewImage/drawImageTriangle/
 // createRoomPreviewShadowMap from the "SEE IT IN YOUR ROOM" pipeline above,
 // with a bundled stock photo and hand-estimated wall corners instead of a
 // user-uploaded photo + manual corner placement. No AI call at all for the
 // compositing step -- the mural is pasted, not reinterpreted, so it
-// structurally cannot bleed onto furniture. See the
-// "Canvas-composite room alternative" memory. Discard freely if this
-// doesn't hold up against the AI version.
+// structurally cannot bleed onto furniture. Started as a rough proof of
+// concept; the scale-calibration system (room/mural reference segments,
+// Stretch/Stop Short/Tile placement, zoom) is what it actually is now.
 // ============================================================
 // 5 stock rooms spanning the aspect-ratio spectrum so a mural of any shape
 // lands on a wall built for a similar shape, rather than always being
@@ -14647,6 +15135,14 @@ async function shareGenericRoomPreview() {
 // given mural) and hand-estimated corners of that photo's flat back wall
 // (normalized 0-1, order: top-left, top-right, bottom-right, bottom-left --
 // same convention as roomPreviewPoints/resetRoomPreviewPoints above).
+// referenceSegment: a pre-seeded calibration segment for the scale-matching
+// tool -- placed on the side-wall corner (the floor-to-ceiling vertical edge
+// where the back wall meets the receding side wall), the only landmark
+// visible and unambiguous in all 5 of these minimalist "white cube" stock
+// photos (no furniture/doors/switches in any of them). inches:108 (9ft) is
+// an eyeballed default assuming a commercial/gallery ceiling height, same
+// "hand-estimated, verify visually" category as points above -- not a
+// measurement.
 const ROOM_PROFILES = [
   {
     id: "panoramic",
@@ -14657,7 +15153,8 @@ const ROOM_PROFILES = [
       { x: 0.68, y: 0.27 },
       { x: 0.68, y: 0.565 },
       { x: 0.32, y: 0.565 }
-    ]
+    ],
+    referenceSegment: { points: [{ x: 0.17, y: 0.20 }, { x: 0.17, y: 0.60 }], inches: 108 }
   },
   {
     id: "landscape",
@@ -14668,7 +15165,8 @@ const ROOM_PROFILES = [
       { x: 0.773, y: 0.234 },
       { x: 0.773, y: 0.655 },
       { x: 0.234, y: 0.655 }
-    ]
+    ],
+    referenceSegment: { points: [{ x: 0.10, y: 0.20 }, { x: 0.10, y: 0.66 }], inches: 108 }
   },
   {
     id: "square",
@@ -14679,7 +15177,8 @@ const ROOM_PROFILES = [
       { x: 0.76, y: 0.19 },
       { x: 0.76, y: 0.66 },
       { x: 0.22, y: 0.655 }
-    ]
+    ],
+    referenceSegment: { points: [{ x: 0.06, y: 0.16 }, { x: 0.06, y: 0.62 }], inches: 108 }
   },
   {
     id: "portrait",
@@ -14690,7 +15189,8 @@ const ROOM_PROFILES = [
       { x: 0.915, y: 0.09 },
       { x: 0.915, y: 0.69 },
       { x: 0.10, y: 0.69 }
-    ]
+    ],
+    referenceSegment: { points: [{ x: 0.045, y: 0.10 }, { x: 0.045, y: 0.70 }], inches: 108 }
   },
   {
     id: "tall",
@@ -14701,9 +15201,112 @@ const ROOM_PROFILES = [
       { x: 0.73, y: 0.10 },
       { x: 0.73, y: 0.685 },
       { x: 0.28, y: 0.655 }
-    ]
+    ],
+    referenceSegment: { points: [{ x: 0.85, y: 0.10 }, { x: 0.85, y: 0.66 }], inches: 108 }
   }
 ];
+
+// ============================================================
+// SCALE CALIBRATION -- ties both the room photo and the mural to real-world
+// inches so the composite renders the design at a physically meaningful
+// size instead of always stretching/cropping to fill the wall edge-to-edge
+// regardless of whether the design should read as a 6in repeat or a 6ft
+// panel (Stability doesn't reliably follow scale instructions in a prompt,
+// so there's no way to get this from generation itself).
+//
+// Two 2-point segments, each drag-or-type editable. Deliberately just these
+// two, not a third "preview" segment on the wall itself -- that was
+// considered and dropped: once these two feed the actual compositing math
+// below, the rendered composite already shows what the calibrated scale
+// looks like at every point on the (perspective-warped) wall, correctly. A
+// separate ruler wouldn't reveal anything the composite doesn't already
+// show, and since it wouldn't feed back into the math either, it wasn't
+// pulling its weight against the added complexity.
+//  - room:  pre-seeded per ROOM_PROFILES entry, on a real landmark off the
+//           wall quad. Establishes roomPixelsPerInch.
+//  - mural: user-placed on a motif in the mural image itself. Its inches
+//           value is a declared INTENT ("I want this to read as ~12in"),
+//           not a measurement -- starts null, nothing to compute until the
+//           user provides it. Establishes muralPixelsPerInch.
+//
+// With mural.inches left null (the default), every composite renders
+// exactly as it did before this feature existed -- see the guard in
+// computeCompositeStretchFactor and renderCompositeRoomComposite.
+// ============================================================
+let compositeRoomActive = null; // { mural, photo, profile } -- cache so calibration edits re-render without re-fetching/re-decoding
+let compositeCalSegments = {
+  room: { points: [{ x: 0.17, y: 0.20 }, { x: 0.17, y: 0.60 }], inches: 108 }, // reseeded from profile.referenceSegment on profile change
+  // inches defaults to 12 (not null) so the "Stretched to fill" note is
+  // live from the moment the modal opens -- reading whatever the segment's
+  // current position (default or freshly dragged) implies -- instead of
+  // requiring the user to type a number first. null is still reachable (by
+  // clearing the field), which still falls back to the pre-calibration
+  // uncalibrated cover-fill path unchanged.
+  mural: { points: [{ x: 0.3, y: 0.5 }, { x: 0.7, y: 0.5 }], inches: 12 },
+  // The 4 wall-placement corners actually used for compositing -- reseeded
+  // from profile.points on profile change, same pattern as room above, but
+  // draggable so the hand-estimated defaults baked into ROOM_PROFILES can
+  // be visually corrected against the real photo instead of guessed again.
+  // Not a measurement segment (no "inches"), reuses the same {points:[...]}
+  // shape purely so the existing 2-point drag system (wireCompositeCalStage,
+  // which indexes generically into whatever .points array is there) works
+  // unchanged for this 4-point case too.
+  wallQuad: { points: [{ x: 0.32, y: 0.27 }, { x: 0.68, y: 0.27 }, { x: 0.68, y: 0.565 }, { x: 0.32, y: 0.565 }] }
+};
+let compositeCalStretchMode = "stretch"; // "stretch" | "stopShort" | "tile" -- resets on every modal open, radio group in the HTML
+let compositeCalEffectiveStretchFactor = 1; // k from the most recent render -- see renderCompositeRoomComposite
+let compositeCalActiveSegment = "";      // "" | "room" | "mural"
+let compositeCalActivePoint = -1;        // 0 | 1 -- endpoints are dragged directly (absolute position), not
+                                          // delta-from-snapshot like roomPreviewFeatures' whole-shape move, so no
+                                          // pointerdown-snapshot state is needed here.
+let compositeCalNodesVisible = true;     // "Nodes off" toggle -- hides both overlays (room/wallQuad + mural) at
+                                          // once when the calibration handles (esp. the flashing mural ones) are
+                                          // in the way of just looking at the result. Resets to true on every
+                                          // modal open, same pattern as stretch mode/zoom above.
+
+// Scroll-wheel/pinch zoom for the two calibration stages -- a CSS
+// scale+translate applied to a wrap div around the already-rendered
+// content (no re-render at a different resolution). Deliberately does NOT
+// add single-finger pan-drag: that would need to distinguish "empty-space
+// drag to pan" from "drag to move a calibration handle" on the exact same
+// pointer events, which is real gesture-conflict risk for uncertain
+// benefit. Wheel and 2-finger-pinch are both already distinct input
+// channels from handle-dragging (a drag always starts exactly on a
+// handle), so they can be wired on fully independent listeners with no
+// such ambiguity.
+let compositeZoomStates = {
+  room: { scale: 1, x: 0, y: 0 },
+  mural: { scale: 1, x: 0, y: 0 }
+};
+// Room stage allows zooming below 100% (see its slider's min="25") to see
+// the composite smaller-than-fit, with the stage's own background showing
+// as a border around it -- useful for viewing the room with some breathing
+// room, or prepping a share/screenshot with margin. The center-anchored
+// slider handler means zooming out lands centered (equal border on all
+// sides), not flush to one corner -- verified from the same anchor-
+// preservation property the zoom-toward-a-point math already guarantees.
+// Mural stage's slider keeps min="100" (zoom-in only) since shrinking an
+// already-small reference preview has no real use case there.
+const COMPOSITE_ZOOM_MIN = 0.25;
+const COMPOSITE_ZOOM_MAX = 8;
+
+// Standard "zoom toward a point" formula: given the current {scale,x,y} of
+// a translate(x,y) scale(s) transform (transform-origin 0 0, so a LOCAL
+// content point (px,py) appears on screen -- relative to the untransformed
+// stage -- at (x + px*s, y + py*s)), returns the new transform state such
+// that the content point currently under (anchorX, anchorY) stays under
+// that same screen position after the scale changes. scaleFactor is a
+// multiplier on the CURRENT scale (>1 zooms in, <1 zooms out), clamped to
+// [COMPOSITE_ZOOM_MIN, COMPOSITE_ZOOM_MAX].
+function computeZoomTransform(oldZoom, scaleFactor, anchorX, anchorY) {
+  const newScale = Math.max(COMPOSITE_ZOOM_MIN, Math.min(COMPOSITE_ZOOM_MAX, oldZoom.scale * scaleFactor));
+  const appliedFactor = newScale / oldZoom.scale; // may differ from scaleFactor once clamped
+  return {
+    scale: newScale,
+    x: anchorX - (anchorX - oldZoom.x) * appliedFactor,
+    y: anchorY - (anchorY - oldZoom.y) * appliedFactor
+  };
+}
 
 // Nearest profile by aspect ratio, compared in log space so a mural twice
 // as wide as a room and one twice as tall count as equally mismatched.
@@ -14724,15 +15327,20 @@ function pointDistance(a, b) {
   return Math.hypot(b.x - a.x, b.y - a.y);
 }
 
-// Average of top/bottom edge lengths over average of left/right edge
-// lengths, so a slightly trapezoidal wall quad (e.g. the square profile's
-// sloped top edge) still gets a representative aspect ratio.
-function computeWallAspect(points) {
+// Average top/bottom edge length (px) and average left/right edge length
+// (px) of the wall quad, so a slightly trapezoidal quad (e.g. the square
+// profile's sloped top edge) still gets a representative width/height.
+function computeWallPixelSpan(points) {
   const topWidth = pointDistance(points[0], points[1]);
   const bottomWidth = pointDistance(points[3], points[2]);
   const leftHeight = pointDistance(points[0], points[3]);
   const rightHeight = pointDistance(points[1], points[2]);
-  return ((topWidth + bottomWidth) / 2) / ((leftHeight + rightHeight) / 2);
+  return { width: (topWidth + bottomWidth) / 2, height: (leftHeight + rightHeight) / 2 };
+}
+
+function computeWallAspect(points) {
+  const span = computeWallPixelSpan(points);
+  return span.width / span.height;
 }
 
 // Centered "cover" crop: trims whichever axis is oversized so the cropped
@@ -14750,6 +15358,405 @@ function computeCoverCropRect(sourceWidth, sourceHeight, targetAspect) {
   return { x: 0, y: (sourceHeight - height) / 2, width: sourceWidth, height };
 }
 
+// Bilinear interpolation inside the 4-corner (TL,TR,BR,BL) wall quad at UV
+// fraction (u,v) -- lets "shrink the destination rect by a margin" respect
+// the quad's own perspective skew instead of doing axis-aligned pixel math.
+function bilerpQuad(points, u, v) {
+  const top = { x: points[0].x + (points[1].x - points[0].x) * u, y: points[0].y + (points[1].y - points[0].y) * u };
+  const bottom = { x: points[3].x + (points[2].x - points[3].x) * u, y: points[3].y + (points[2].y - points[3].y) * u };
+  return { x: top.x + (bottom.x - top.x) * v, y: top.y + (bottom.y - top.y) * v };
+}
+
+// Combines the two axes' undersized-vs-oversized states into a single
+// uniform scale factor k (uniform so the mural's own aspect ratio is never
+// distorted -- same principle computeCoverCropRect already followed).
+// Oversized axes never contribute to k -- they always just crop later in
+// computeCalibratedPlacement, regardless of stretchMode. Only undersized
+// axes are affected by the Stretch/Stop Short toggle:
+//  - "stopShort": k stays 1 -- true calibrated scale, no exceptions.
+//  - "stretch": k = the largest ratio needed among undersized axes, so the
+//    most-undersized axis lands exactly on the wall boundary (the others
+//    may now overshoot slightly, which computeCalibratedPlacement handles
+//    by cropping them like any other oversized axis).
+// With both axes undersized and stretchMode "stretch", this is provably
+// pixel-identical to the pre-calibration computeCoverCropRect behavior --
+// see plan notes / commit message for the derivation.
+function computeCompositeStretchFactor(stretchMode, wallPx, demandPx) {
+  const undersizedAxes = ["x", "y"].filter((axis) => demandPx[axis] < wallPx[axis]);
+  if (stretchMode !== "stretch" || !undersizedAxes.length) return 1;
+  return Math.max(...undersizedAxes.map((axis) => wallPx[axis] / demandPx[axis]));
+}
+
+// Per-axis crop-or-margin placement, generalizing computeCoverCropRect: an
+// axis that's still oversized after applying k gets cropped (source shrinks,
+// no margin, exactly like computeCoverCropRect's single-axis crop); an axis
+// that's still undersized after k shows the mural in full with a centered
+// margin of real wall around it -- the "Stop Short" outcome, whether reached
+// because the toggle is set that way or because a uniform "stretch" k driven
+// by the OTHER axis still wasn't enough to fill this one.
+function computeCalibratedPlacement(muralPx, wallPx, demandPx, k, points) {
+  const effective = { x: demandPx.x * k, y: demandPx.y * k };
+  const sourceCrop = {};
+  const marginFrac = {};
+  ["x", "y"].forEach((axis) => {
+    if (effective[axis] >= wallPx[axis]) {
+      sourceCrop[axis] = (wallPx[axis] / effective[axis]) * muralPx[axis];
+      marginFrac[axis] = 0;
+    } else {
+      sourceCrop[axis] = muralPx[axis];
+      marginFrac[axis] = (1 - effective[axis] / wallPx[axis]) / 2;
+    }
+  });
+  const crop = {
+    x: (muralPx.x - sourceCrop.x) / 2,
+    y: (muralPx.y - sourceCrop.y) / 2,
+    width: sourceCrop.x,
+    height: sourceCrop.y
+  };
+  const destQuad = [
+    bilerpQuad(points, marginFrac.x, marginFrac.y),
+    bilerpQuad(points, 1 - marginFrac.x, marginFrac.y),
+    bilerpQuad(points, 1 - marginFrac.x, 1 - marginFrac.y),
+    bilerpQuad(points, marginFrac.x, 1 - marginFrac.y)
+  ];
+  return { crop, destQuad };
+}
+
+// Divides the wall quad into a grid of repeated cells, each showing the
+// full mural at true calibrated scale -- used by "Tile to fill" mode.
+// Anchored at the wall's top-left corner; the last column/row is trimmed
+// (not squished) to the wall boundary via visibleFracX/Y, matching how a
+// real tiled/repeating wallcovering gets cut at a physical wall edge rather
+// than distorted to fit. Degenerates to a single full-mural cell when
+// neither axis is undersized -- same visual result as
+// computeCalibratedPlacement's oversized-both-axes case, just via a
+// 1-element array instead of a bare object.
+const MAX_TILE_CELLS = 400; // sanity cap against a pathological tiny-declared-inches typo
+function computeTiledPlacements(muralPx, wallPx, demandPx, points) {
+  const cols = demandPx.x < wallPx.x ? Math.max(1, Math.ceil(wallPx.x / demandPx.x)) : 1;
+  const rows = demandPx.y < wallPx.y ? Math.max(1, Math.ceil(wallPx.y / demandPx.y)) : 1;
+  const clampedCols = Math.min(cols, MAX_TILE_CELLS);
+  const clampedRows = Math.min(rows, Math.max(1, Math.floor(MAX_TILE_CELLS / clampedCols)));
+  const placements = [];
+  for (let row = 0; row < clampedRows; row++) {
+    const destV0 = Math.min(1, (row * demandPx.y) / wallPx.y);
+    const destV1 = Math.min(1, ((row + 1) * demandPx.y) / wallPx.y);
+    const visibleFracY = ((destV1 - destV0) * wallPx.y) / demandPx.y;
+    for (let col = 0; col < clampedCols; col++) {
+      const destU0 = Math.min(1, (col * demandPx.x) / wallPx.x);
+      const destU1 = Math.min(1, ((col + 1) * demandPx.x) / wallPx.x);
+      const visibleFracX = ((destU1 - destU0) * wallPx.x) / demandPx.x;
+      if (visibleFracX <= 0 || visibleFracY <= 0) continue;
+      const crop = { x: 0, y: 0, width: muralPx.x * visibleFracX, height: muralPx.y * visibleFracY };
+      const destQuad = [
+        bilerpQuad(points, destU0, destV0),
+        bilerpQuad(points, destU1, destV0),
+        bilerpQuad(points, destU1, destV1),
+        bilerpQuad(points, destU0, destV1)
+      ];
+      placements.push({ crop, destQuad });
+    }
+  }
+  return placements;
+}
+
+// Renders the 2 calibration segments (room on the room-photo stage, mural
+// on its own standalone stage) and syncs the inches inputs/toggle label to
+// current state. A 2-point simplification of
+// renderRoomPreviewFeatures (SVG line + hit-circle/visible-circle handle
+// pairs per endpoint, normalized-0-1-to-percent coordinates) -- same
+// interaction paradigm as that feature's Window/Door masks, no new pattern.
+// Pure "reflect current state" -- event handlers below decide what changes,
+// this only displays it.
+// hitRadius/handleRadius are in viewBox units (0-100 = % of the container),
+// so the SAME numeric radius renders far larger on a small preview box than
+// on the full-size composite canvas -- callers pass a smaller radius for
+// small containers (the mural preview) rather than sharing one size tuned
+// for the much bigger room-photo stage.
+function renderCalSegmentMarkup(key, segment, hitRadius = 5.2, handleRadius = 1.45) {
+  const isActive = compositeCalActiveSegment === key;
+  const [a, b] = segment.points;
+  const handles = [a, b].map((point, index) =>
+    `<circle class="composite-cal-handle-hit" data-cal-point="${index}" cx="${point.x * 100}" cy="${point.y * 100}" r="${hitRadius}"></circle>` +
+    `<circle class="composite-cal-handle" data-cal-point="${index}" cx="${point.x * 100}" cy="${point.y * 100}" r="${handleRadius}"></circle>`
+  ).join("");
+  return `<div class="composite-cal-segment${isActive ? " active" : ""}" data-cal-segment="${key}">` +
+    `<svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-label="${key} calibration segment">` +
+    `<line class="composite-cal-line" x1="${a.x * 100}" y1="${a.y * 100}" x2="${b.x * 100}" y2="${b.y * 100}"></line>` +
+    `<line class="composite-cal-line-hit" x1="${a.x * 100}" y1="${a.y * 100}" x2="${b.x * 100}" y2="${b.y * 100}"></line>` +
+    handles + `</svg></div>`;
+}
+
+// 4-point variant of renderCalSegmentMarkup, for the wall-placement corners
+// -- a dashed polygon (matching #roomPreviewWallGuide's own styling, same
+// blue used for "structural placement" throughout this app) plus one
+// handle per corner, same hit-circle/visible-circle pairing as the 2-point
+// segments. TL/TR/BR/BL order, same convention as ROOM_PROFILES/
+// roomPreviewPoints.
+function renderWallQuadMarkup(segment, hitRadius = 3.2, handleRadius = 1.1) {
+  const isActive = compositeCalActiveSegment === "wallQuad";
+  const points = segment.points;
+  const polygon = points.map((point) => `${point.x * 100},${point.y * 100}`).join(" ");
+  const handles = points.map((point, index) =>
+    `<circle class="composite-cal-handle-hit" data-cal-point="${index}" cx="${point.x * 100}" cy="${point.y * 100}" r="${hitRadius}"></circle>` +
+    `<circle class="composite-wall-quad-handle" data-cal-point="${index}" cx="${point.x * 100}" cy="${point.y * 100}" r="${handleRadius}"></circle>`
+  ).join("");
+  return `<div class="composite-cal-segment${isActive ? " active" : ""}" data-cal-segment="wallQuad">` +
+    `<svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-label="Wall placement corners">` +
+    `<polygon class="composite-wall-quad-outline" points="${polygon}"></polygon>` +
+    handles + `</svg></div>`;
+}
+
+function renderCompositeCalSegments() {
+  const roomLayer = document.getElementById("compositeCalLayer");
+  if (roomLayer) {
+    roomLayer.innerHTML = renderCalSegmentMarkup("room", compositeCalSegments.room) +
+      renderWallQuadMarkup(compositeCalSegments.wallQuad);
+  }
+
+  const coordsEl = document.getElementById("compositeWallQuadCoords");
+  if (coordsEl) {
+    const formatted = compositeCalSegments.wallQuad.points
+      .map((point) => `{ x: ${Math.round(point.x * 1000) / 1000}, y: ${Math.round(point.y * 1000) / 1000} }`)
+      .join(",\n      ");
+    coordsEl.textContent = `points: [\n      ${formatted}\n    ]`;
+  }
+
+  const muralLayer = document.getElementById("compositeMuralCalLayer");
+  if (muralLayer) muralLayer.innerHTML = renderCalSegmentMarkup("mural", compositeCalSegments.mural, 2.2, 0.7);
+
+  // Skip an input currently focused -- the user is mid-keystroke, stomping
+  // .value here would jump the cursor/discard what they just typed.
+  const roomInput = document.getElementById("compositeCalRoomInches");
+  if (roomInput && document.activeElement !== roomInput) roomInput.value = compositeCalSegments.room.inches ?? "";
+  const muralInput = document.getElementById("compositeCalMuralInches");
+  if (muralInput && document.activeElement !== muralInput) muralInput.value = compositeCalSegments.mural.inches ?? "";
+
+  // "Stretch to fill" scales the whole mural (and everything in it,
+  // including whatever the user just calibrated) up by k beyond its
+  // declared true size -- show what that actually works out to, so a
+  // declared "4 inches" doesn't silently read as something else on the
+  // wall without the user knowing why.
+  const effectiveEl = document.getElementById("compositeCalEffectiveSize");
+  if (effectiveEl) {
+    const declared = compositeCalSegments.mural.inches;
+    const k = compositeCalEffectiveStretchFactor;
+    const wasHidden = effectiveEl.hidden;
+    if (declared != null && Math.abs(k - 1) > 0.01) {
+      effectiveEl.hidden = false;
+      effectiveEl.textContent = `Stretched to fill: this part will actually read as about ${(declared * k).toFixed(1)}in on the wall, not ${declared}in.`;
+      // Entering the mural-inches number (the common case), dragging the
+      // mural-reference segment onto a subject, or switching the stretch
+      // mode radio can all cause this note to flip from hidden to shown --
+      // and it sits below the field/stage that triggered it, easy to miss.
+      // Scroll it into view and ring-pulse it at the exact render where it
+      // FIRST appears (not on every render once already visible/onscreen,
+      // which would just yank the page around).
+      if (wasHidden) {
+        effectiveEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        effectiveEl.classList.remove("composite-cal-effective-note-pulse");
+        void effectiveEl.offsetWidth;
+        effectiveEl.classList.add("composite-cal-effective-note-pulse");
+      }
+    } else {
+      effectiveEl.hidden = true;
+    }
+  }
+
+  const stretchGroup = document.getElementById("compositeCalStretchGroup");
+  const checkedRadio = stretchGroup?.querySelector(`input[value="${compositeCalStretchMode}"]`);
+  if (checkedRadio) checkedRadio.checked = true;
+}
+
+// Endpoint-drag wiring for a calibration stage. Two separate DOM subtrees
+// (#compositeRoomStage for the room segment, #compositeMuralCalStage for
+// the mural segment) exist simultaneously in the DOM (modal visibility is
+// just a CSS class), so this can't share #roomPreviewStage's pointer
+// listeners (a different, unrelated feature's globals) -- one small generic
+// wiring function, called once per stage with which segment key it owns.
+// Endpoints move to the pointer's absolute position (not delta-from-
+// snapshot) since there's no whole-segment body-drag to support, only the
+// two endpoints.
+function wireCompositeCalStage(stageEl, segmentKeys) {
+  if (!stageEl) return;
+  // The overlay is sized to (and zooms/pans with) the inner .composite-
+  // zoom-wrap, not the outer stageEl -- stageEl's own box never moves or
+  // resizes, only its child wrap does (CSS transform doesn't affect
+  // layout). Once zoom != 1, stageEl.getBoundingClientRect() no longer
+  // matches what's actually on screen, so drag math has to read the
+  // wrap's rect instead -- getBoundingClientRect() already reflects the
+  // wrap's live transform (scale + translate), so this alone fixes handles
+  // drifting/misplacing themselves as soon as you zoom.
+  const wrapEl = stageEl.querySelector(".composite-zoom-wrap") || stageEl;
+  stageEl.addEventListener("pointerdown", (event) => {
+    const handle = event.target.closest(".composite-cal-handle, .composite-cal-handle-hit, .composite-wall-quad-handle");
+    const segmentEl = handle?.closest("[data-cal-segment]");
+    const key = segmentEl?.dataset.calSegment;
+    if (!key || !segmentKeys.includes(key)) return;
+    event.preventDefault();
+    compositeCalActiveSegment = key;
+    compositeCalActivePoint = Number(handle.dataset.calPoint);
+    stageEl.setPointerCapture(event.pointerId);
+  });
+  stageEl.addEventListener("pointermove", (event) => {
+    if (!compositeCalActiveSegment || compositeCalActivePoint < 0 || !segmentKeys.includes(compositeCalActiveSegment)) return;
+    event.preventDefault();
+    const bounds = wrapEl.getBoundingClientRect();
+    if (!bounds.width || !bounds.height) return;
+    // Wall corners get the same modest overscan as the sibling "See It In
+    // Your Room" feature's own wall handles (clampRoomPreviewWallPoint) --
+    // real wall corners are often near/at the photo's edge, so a hard 0-1
+    // clamp would make some corners unreachable.
+    const overscan = compositeCalActiveSegment === "wallQuad" ? 0.35 : 0;
+    compositeCalSegments[compositeCalActiveSegment].points[compositeCalActivePoint] = {
+      x: Math.max(-overscan, Math.min(1 + overscan, (event.clientX - bounds.left) / bounds.width)),
+      y: Math.max(-overscan, Math.min(1 + overscan, (event.clientY - bounds.top) / bounds.height))
+    };
+    renderCompositeRoomComposite();
+  });
+  stageEl.addEventListener("pointerup", clearCompositeCalPointerState);
+  stageEl.addEventListener("pointercancel", clearCompositeCalPointerState);
+}
+
+function clearCompositeCalPointerState(event) {
+  compositeCalActiveSegment = "";
+  compositeCalActivePoint = -1;
+  if (event?.target?.hasPointerCapture?.(event.pointerId)) event.target.releasePointerCapture(event.pointerId);
+}
+
+function applyCompositeZoomTransform(wrapEl, zoom) {
+  wrapEl.style.transform = `translate(${zoom.x}px, ${zoom.y}px) scale(${zoom.scale})`;
+}
+
+// Applies compositeCalNodesVisible to both overlays (room+wallQuad,
+// mural) and syncs the toggle button -- one flag, one function, called
+// from the click handler and from openCompositeRoomPreview's reset.
+function applyCompositeCalNodesVisibility() {
+  const hidden = !compositeCalNodesVisible;
+  document.getElementById("compositeCalLayer")?.classList.toggle("composite-cal-nodes-hidden", hidden);
+  document.getElementById("compositeMuralCalLayer")?.classList.toggle("composite-cal-nodes-hidden", hidden);
+  const toggleBtn = document.getElementById("compositeCalNodesToggle");
+  if (toggleBtn) {
+    toggleBtn.textContent = compositeCalNodesVisible ? "Nodes off" : "Nodes on";
+    toggleBtn.setAttribute("aria-pressed", String(hidden));
+  }
+}
+
+// Wheel-zoom (desktop) + 2-finger-pinch-zoom (touch) + double-click/double-
+// tap reset, for one calibration stage. Uses raw TouchEvent for the pinch
+// specifically (not Pointer Events) because tracking two simultaneous touch
+// points needs them delivered together in one event's `touches` list, which
+// Pointer Events don't do (they fire once per pointer). Explicitly gated to
+// exactly 2 touches so a single touch is never claimed here -- it stays
+// entirely the handle-drag system's (wireCompositeCalStage) to handle,
+// avoiding any overlap between the two gesture systems.
+// resetButtonEl is a plain, always-reliable click target -- deliberately
+// Commits on blur or Enter, not on every keystroke -- a live per-keystroke
+// re-render (the previous behavior) meant the composite briefly reflected
+// whatever partial digits had been typed so far (e.g. re-rendering at "1"
+// while typing "12"), which read as ambiguous about whether the finished
+// value had actually been taken. Enter forces a blur so keyboard users get
+// an explicit, obvious way to commit without having to tab away.
+function wireCompositeCalInchesInput(inputEl, onCommit) {
+  if (!inputEl) return;
+  inputEl.addEventListener("change", () => onCommit(Number(inputEl.value)));
+  inputEl.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") inputEl.blur();
+  });
+}
+
+// Wheel deltaY magnitude is notoriously inconsistent across devices/
+// browsers: a trackpad fires many small events per swipe (deltaMode
+// pixel, small values), a notched mouse wheel fires few large ones
+// (deltaMode line, or a big pixel jump depending on OS/driver). The
+// previous version applied a FIXED zoom step per wheel EVENT regardless
+// of that event's size, so a trackpad swipe (many events) compounded the
+// same step dozens of times in one gesture while a mouse click (one
+// event) only applied it once -- same code, wildly different felt
+// sensitivity depending on input device, exactly matching the "behaved
+// differently once" report. This normalizes deltaMode to a common pixel
+// scale, clamps it (so one unusually large single event still can't
+// produce an oversized jump), and maps that to a smooth scale factor --
+// so the TOTAL zoom change is proportional to how far you actually
+// scrolled, consistently, regardless of how many events it arrived in.
+function computeWheelScaleFactor(event) {
+  const pixelDelta = event.deltaMode === 1 ? event.deltaY * 16
+    : event.deltaMode === 2 ? event.deltaY * 800
+    : event.deltaY;
+  const clamped = Math.max(-120, Math.min(120, pixelDelta));
+  return Math.pow(1.0025, -clamped);
+}
+
+function wireCompositeZoom(stageEl, wrapEl, resetButtonEl, sliderEl, key) {
+  if (!stageEl || !wrapEl) return;
+
+  const applyZoom = () => {
+    applyCompositeZoomTransform(wrapEl, compositeZoomStates[key]);
+    if (sliderEl && document.activeElement !== sliderEl) {
+      sliderEl.value = String(Math.round(compositeZoomStates[key].scale * 100));
+    }
+  };
+
+  stageEl.addEventListener("wheel", (event) => {
+    event.preventDefault();
+    const bounds = stageEl.getBoundingClientRect();
+    compositeZoomStates[key] = computeZoomTransform(
+      compositeZoomStates[key], computeWheelScaleFactor(event), event.clientX - bounds.left, event.clientY - bounds.top
+    );
+    applyZoom();
+  }, { passive: false });
+
+  resetButtonEl?.addEventListener("click", () => {
+    compositeZoomStates[key] = { scale: 1, x: 0, y: 0 };
+    applyZoom();
+  });
+
+  // Slider reports an ABSOLUTE target percentage (100-800), not a step --
+  // convert to the multiplicative factor computeZoomTransform expects and
+  // anchor on the stage's own center (a slider has no cursor/touch point
+  // of its own to zoom toward). "input" (not "change") is correct here,
+  // unlike the numeric calibration fields -- continuous live feedback
+  // while dragging IS the expected behavior for a zoom slider, and
+  // there's no "did my entry take" ambiguity since the thumb position
+  // itself is the visible confirmation.
+  sliderEl?.addEventListener("input", () => {
+    const bounds = stageEl.getBoundingClientRect();
+    const targetScale = Number(sliderEl.value) / 100;
+    const scaleFactor = targetScale / compositeZoomStates[key].scale;
+    compositeZoomStates[key] = computeZoomTransform(compositeZoomStates[key], scaleFactor, bounds.width / 2, bounds.height / 2);
+    applyCompositeZoomTransform(wrapEl, compositeZoomStates[key]);
+  });
+
+  // Pinch-zoom: 2 simultaneous touches. Gated to exactly 2 so a single
+  // touch is never claimed here -- it stays entirely the handle-drag
+  // system's (wireCompositeCalStage) to handle.
+  let pinch = null;
+  stageEl.addEventListener("touchstart", (event) => {
+    if (event.touches.length !== 2) { pinch = null; return; }
+    event.preventDefault();
+    const bounds = stageEl.getBoundingClientRect();
+    const [t0, t1] = event.touches;
+    pinch = {
+      startDistance: Math.hypot(t1.clientX - t0.clientX, t1.clientY - t0.clientY),
+      midX: (t0.clientX + t1.clientX) / 2 - bounds.left,
+      midY: (t0.clientY + t1.clientY) / 2 - bounds.top,
+      startZoom: { ...compositeZoomStates[key] }
+    };
+  }, { passive: false });
+  stageEl.addEventListener("touchmove", (event) => {
+    if (!pinch || event.touches.length !== 2) return;
+    event.preventDefault();
+    const [t0, t1] = event.touches;
+    const distance = Math.hypot(t1.clientX - t0.clientX, t1.clientY - t0.clientY);
+    const scaleFactor = pinch.startDistance ? distance / pinch.startDistance : 1;
+    compositeZoomStates[key] = computeZoomTransform(pinch.startZoom, scaleFactor, pinch.midX, pinch.midY);
+    applyZoom();
+  }, { passive: false });
+  const endPinch = (event) => { if (event.touches.length < 2) pinch = null; };
+  stageEl.addEventListener("touchend", endPinch);
+  stageEl.addEventListener("touchcancel", endPinch);
+}
+
 async function openCompositeRoomPreview() {
   const modal = document.getElementById("compositeRoomModal");
   const muralImage = document.getElementById("muralImage");
@@ -14758,6 +15765,23 @@ async function openCompositeRoomPreview() {
 
   modal.classList.add("open");
   modal.setAttribute("aria-hidden", "false");
+  // Every fresh open starts from the cover-fill default so the toggle's
+  // visible state always matches what's on screen -- never carries a stale
+  // "Stop Short" choice over from a previous mural/session.
+  compositeCalStretchMode = "stretch";
+  // Same reasoning for zoom -- don't carry a zoomed-in view over from a
+  // previous open.
+  compositeZoomStates = { room: { scale: 1, x: 0, y: 0 }, mural: { scale: 1, x: 0, y: 0 } };
+  applyCompositeZoomTransform(document.getElementById("compositeRoomZoomWrap"), compositeZoomStates.room);
+  applyCompositeZoomTransform(document.getElementById("compositeMuralZoomWrap"), compositeZoomStates.mural);
+  const roomSlider = document.getElementById("compositeRoomZoomSlider");
+  if (roomSlider) roomSlider.value = "100";
+  const muralSlider = document.getElementById("compositeMuralZoomSlider");
+  if (muralSlider) muralSlider.value = "100";
+  // Same reasoning again -- always start with the calibration nodes on so
+  // they're never invisibly stuck off from a previous session.
+  compositeCalNodesVisible = true;
+  applyCompositeCalNodesVisibility();
   await runCompositeRoomPreview(rawSource);
 }
 
@@ -14786,41 +15810,134 @@ async function runCompositeRoomPreview(rawSource) {
     const profile = pickRoomProfile(mural.naturalWidth / mural.naturalHeight);
     const photo = await loadRoomPreviewImage(profile.src);
 
-    const width = photo.naturalWidth;
-    const height = photo.naturalHeight;
-    canvas.width = width;
-    canvas.height = height;
-    const context = canvas.getContext("2d");
-    context.drawImage(photo, 0, 0, width, height);
+    // Reseed the room-reference segment from this profile's pre-placed
+    // default only when the profile actually changed -- runCompositeRoomPreview
+    // only ever runs once per modal open (calibration drags/edits call
+    // renderCompositeRoomComposite() directly, they never re-enter this
+    // function), but a *closed and reopened* modal with a similar-aspect
+    // mural can land on the same profile again, and shouldn't discard
+    // whatever room-segment adjustment the user already made.
+    if (compositeRoomActive?.profile?.id !== profile.id) {
+      compositeCalSegments.room = {
+        points: profile.referenceSegment.points.map((point) => ({ ...point })),
+        inches: profile.referenceSegment.inches
+      };
+      compositeCalSegments.wallQuad = { points: profile.points.map((point) => ({ ...point })) };
+    }
+    // The mural-reference segment, unlike the room one, is meaningless
+    // once the underlying mural image changes -- a position dragged onto
+    // one design's motif has no relationship to a different design, and a
+    // carried-over declared inches value would silently misrepresent the
+    // new mural's scale. Reset it (not just on profile change) whenever
+    // the actual mural source differs from last time.
+    if (compositeRoomActive?.muralSource !== muralSource) {
+      compositeCalSegments.mural = { points: [{ x: 0.3, y: 0.5 }, { x: 0.7, y: 0.5 }], inches: 12 };
+    }
+    compositeRoomActive = { mural, photo, profile, muralSource };
 
-    const points = profile.points.map(point => ({ x: point.x * width, y: point.y * height }));
-    const wallAspect = computeWallAspect(points);
-    const crop = computeCoverCropRect(mural.naturalWidth, mural.naturalHeight, wallAspect);
-    const source = [
-      { x: crop.x, y: crop.y },
-      { x: crop.x + crop.width, y: crop.y },
-      { x: crop.x + crop.width, y: crop.y + crop.height },
-      { x: crop.x, y: crop.y + crop.height }
-    ];
-    drawImageTriangle(context, mural, [source[0], source[1], source[2]], [points[0], points[1], points[2]]);
-    drawImageTriangle(context, mural, [source[0], source[2], source[3]], [points[0], points[2], points[3]]);
+    const muralCalImage = document.getElementById("compositeMuralCalImage");
+    if (muralCalImage) muralCalImage.src = muralSource;
 
-    const shadowMap = createRoomPreviewShadowMap(photo);
-    context.save();
-    context.beginPath();
-    points.forEach((point, index) => index ? context.lineTo(point.x, point.y) : context.moveTo(point.x, point.y));
-    context.closePath();
-    context.clip();
-    context.globalAlpha = 0.65;
-    context.drawImage(shadowMap, 0, 0, width, height);
-    context.restore();
-
-    stage.classList.add("has-image");
-    if (status) status.textContent = "Composite test -- edge-to-edge fit, adaptive room.";
+    renderCompositeRoomComposite();
   } catch (error) {
     console.error("Composite room preview error:", error);
     if (status) status.textContent = error.message || "This composite could not be built.";
   }
+}
+
+// Synchronous re-render from compositeRoomActive + compositeCalSegments/
+// compositeCalStretchMode -- everything runCompositeRoomPreview used to do
+// inline, now callable on its own from calibration drags/edits without
+// re-fetching or re-decoding either image. With mural.inches left null (the
+// default -- nothing declared yet), this renders IDENTICALLY to the
+// original pre-calibration behavior: same computeCoverCropRect crop, same
+// full points quad, same status text.
+function renderCompositeRoomComposite() {
+  const stage = document.getElementById("compositeRoomStage");
+  const canvas = document.getElementById("compositeRoomCanvas");
+  const status = document.getElementById("compositeRoomStatus");
+  if (!stage || !canvas || !compositeRoomActive) return;
+  const { mural, photo, profile } = compositeRoomActive;
+
+  const width = photo.naturalWidth;
+  const height = photo.naturalHeight;
+  canvas.width = width;
+  canvas.height = height;
+  const context = canvas.getContext("2d");
+  context.drawImage(photo, 0, 0, width, height);
+
+  // The CURRENT (possibly user-dragged) wall corners, not the profile's
+  // static hand-estimated default -- see compositeCalSegments.wallQuad.
+  const points = compositeCalSegments.wallQuad.points.map(point => ({ x: point.x * width, y: point.y * height }));
+  const muralPx = { x: mural.naturalWidth, y: mural.naturalHeight };
+  const wallSpan = computeWallPixelSpan(points);
+  const wallPx = { x: wallSpan.width, y: wallSpan.height };
+
+  const roomPixelsPerInch = computeCalSegmentPixelsPerInch(compositeCalSegments.room, width, height);
+  const muralPixelsPerInch = computeCalSegmentPixelsPerInch(compositeCalSegments.mural, muralPx.x, muralPx.y);
+
+  // Each entry in placements is one mural copy to draw: a {source, destQuad}
+  // pair, both 4-point quads (drawn as 2 triangles below). Uncalibrated and
+  // non-tile calibrated modes always produce exactly one; "Tile to fill"
+  // can produce many (one per repeat needed to cover the wall).
+  const cropToQuad = (crop) => [
+    { x: crop.x, y: crop.y },
+    { x: crop.x + crop.width, y: crop.y },
+    { x: crop.x + crop.width, y: crop.y + crop.height },
+    { x: crop.x, y: crop.y + crop.height }
+  ];
+  // k=1 (the "no change from declared size" default) applies whenever
+  // there's nothing to stretch: uncalibrated, tile mode (which never
+  // stretches, only repeats at true scale), or Stop Short. Only the
+  // "stretch" branch below can set this away from 1 -- see the mural-
+  // inches-effective-size readout this feeds (compositeCalMuralEffective).
+  compositeCalEffectiveStretchFactor = 1;
+  let placements;
+  if (!muralPixelsPerInch || !roomPixelsPerInch) {
+    // Uncalibrated fallback -- exactly today's original behavior.
+    const wallAspect = wallPx.x / wallPx.y;
+    const crop = computeCoverCropRect(mural.naturalWidth, mural.naturalHeight, wallAspect);
+    placements = [{ source: cropToQuad(crop), destQuad: points }];
+  } else {
+    // demandPx = how many WALL-PHOTO pixels the mural's full extent should
+    // occupy at true calibrated scale. Real-world inches spanned by the
+    // mural = muralPx / muralPixelsPerInch; wall-photo pixels needed to
+    // show that many inches = inches * roomPixelsPerInch. So the multiplier
+    // from mural pixels to wall-photo pixels is roomPixelsPerInch /
+    // muralPixelsPerInch -- NOT the other way around (that inversion was a
+    // real bug: it made declaring a LARGER real-world size for a motif
+    // shrink the mural on the wall instead of growing it, and vice versa).
+    const commonScale = roomPixelsPerInch / muralPixelsPerInch;
+    const demandPx = { x: muralPx.x * commonScale, y: muralPx.y * commonScale };
+    if (compositeCalStretchMode === "tile") {
+      placements = computeTiledPlacements(muralPx, wallPx, demandPx, points)
+        .map((placement) => ({ source: cropToQuad(placement.crop), destQuad: placement.destQuad }));
+    } else {
+      const k = computeCompositeStretchFactor(compositeCalStretchMode, wallPx, demandPx);
+      compositeCalEffectiveStretchFactor = k;
+      const placement = computeCalibratedPlacement(muralPx, wallPx, demandPx, k, points);
+      placements = [{ source: cropToQuad(placement.crop), destQuad: placement.destQuad }];
+    }
+  }
+  placements.forEach(({ source, destQuad }) => {
+    drawImageTriangle(context, mural, [source[0], source[1], source[2]], [destQuad[0], destQuad[1], destQuad[2]]);
+    drawImageTriangle(context, mural, [source[0], source[2], source[3]], [destQuad[0], destQuad[2], destQuad[3]]);
+  });
+
+  const shadowMap = createRoomPreviewShadowMap(photo);
+  context.save();
+  context.beginPath();
+  points.forEach((point, index) => index ? context.lineTo(point.x, point.y) : context.moveTo(point.x, point.y));
+  context.closePath();
+  context.clip();
+  context.globalAlpha = 0.65;
+  context.drawImage(shadowMap, 0, 0, width, height);
+  context.restore();
+
+  stage.classList.add("has-image");
+  if (status) status.textContent = "Composite test -- edge-to-edge fit, adaptive room.";
+
+  renderCompositeCalSegments();
 }
 
 // Same native-share -> Web Share -> download fallback chain as
@@ -14903,6 +16020,88 @@ document.addEventListener("DOMContentLoaded", () => {
   const compositeShare = document.getElementById("compositeRoomShare");
   compositeClose?.addEventListener("click", closeCompositeRoomPreview);
   compositeShare?.addEventListener("click", shareCompositeRoomPreview);
+
+  const compositeCalNodesToggle = document.getElementById("compositeCalNodesToggle");
+  compositeCalNodesToggle?.addEventListener("click", () => {
+    compositeCalNodesVisible = !compositeCalNodesVisible;
+    applyCompositeCalNodesVisibility();
+  });
+
+  wireCompositeCalStage(document.getElementById("compositeRoomStage"), ["room", "wallQuad"]);
+  wireCompositeCalStage(document.getElementById("compositeMuralCalStage"), ["mural"]);
+  wireCompositeZoom(
+    document.getElementById("compositeRoomStage"),
+    document.getElementById("compositeRoomZoomWrap"),
+    document.getElementById("compositeRoomZoomReset"),
+    document.getElementById("compositeRoomZoomSlider"),
+    "room"
+  );
+  wireCompositeZoom(
+    document.getElementById("compositeMuralCalStage"),
+    document.getElementById("compositeMuralZoomWrap"),
+    document.getElementById("compositeMuralZoomReset"),
+    document.getElementById("compositeMuralZoomSlider"),
+    "mural"
+  );
+
+  const compositeCalRoomInches = document.getElementById("compositeCalRoomInches");
+  wireCompositeCalInchesInput(compositeCalRoomInches, (value) => {
+    compositeCalSegments.room.inches = value > 0 ? value : 0;
+    renderCompositeRoomComposite();
+  });
+
+  const compositeCalMuralInches = document.getElementById("compositeCalMuralInches");
+  const commitMuralInches = (value) => {
+    // Declared intent, not a measurement -- empty/invalid goes back to null
+    // (the uncalibrated fallback), not 0.
+    // Deliberately does NOT touch compositeCalStretchMode on its own --
+    // stays on whatever it already is (default "Stretch to fill"), so
+    // entering a number is the one action that both applies the default
+    // stretch behavior AND surfaces the "Stretched to fill" note (see
+    // renderCompositeCalSegments' reveal-on-first-appear logic below) --
+    // no second click on a mode radio required to see it.
+    const previous = compositeCalSegments.mural.inches;
+    const next = value > 0 ? value : null;
+    // EXCEPT: under Stretch mode, an undersized axis always gets scaled up
+    // to fill the wall no matter how small the declared number is -- so
+    // shrinking the number has NO visible effect while Stretch stays
+    // selected, which reads as the edit being silently ignored. Switch to
+    // True Scale specifically when the new number is smaller than what it
+    // was, so a deliberate "make it smaller" edit is actually visible.
+    // Never auto-switches back to Stretch on an increase -- that stays a
+    // manual choice so it doesn't fight a deliberate True Scale pick.
+    if (previous != null && next != null && next < previous) {
+      compositeCalStretchMode = "stopShort";
+    }
+    compositeCalSegments.mural.inches = next;
+    renderCompositeRoomComposite();
+  };
+  wireCompositeCalInchesInput(compositeCalMuralInches, commitMuralInches);
+  // A visible, explicit commit action alongside blur/Enter -- reads the
+  // input directly rather than just calling .blur() so it still works even
+  // if the field was never focused (blur() on an unfocused element is a
+  // silent no-op).
+  document.getElementById("compositeCalMuralInchesSet")?.addEventListener("click", () => {
+    commitMuralInches(Number(compositeCalMuralInches?.value));
+  });
+  // Raising the declared inches shrinks the source crop needed to cover the
+  // same real-world wall span (fewer mural pixels now = more inches), which
+  // reads as zooming in on the mural -- and there was no way back to the
+  // starting point except guessing your way back to the original number.
+  // This snaps everything the calibration touches back to its opened-modal
+  // defaults: 12in declared, default segment position, Stretch mode.
+  document.getElementById("compositeCalMuralInchesReset")?.addEventListener("click", () => {
+    compositeCalSegments.mural = { points: [{ x: 0.3, y: 0.5 }, { x: 0.7, y: 0.5 }], inches: 12 };
+    compositeCalStretchMode = "stretch";
+    renderCompositeRoomComposite();
+  });
+
+  const compositeCalStretchGroup = document.getElementById("compositeCalStretchGroup");
+  compositeCalStretchGroup?.addEventListener("change", (event) => {
+    if (event.target.name !== "compositeCalStretchMode") return;
+    compositeCalStretchMode = event.target.value;
+    renderCompositeRoomComposite();
+  });
 });
 
 async function generateImage() {
