@@ -9312,6 +9312,7 @@ If you’re exploring a new direction, try adjusting just 1-2 elements at a time
             <label>Reference on room photo (inches)
               <input id="compositeCalRoomInches" type="number" min="1" step="0.5">
             </label>
+            <p id="compositeApproxRoomWidth" class="composite-cal-effective-note" hidden></p>
             <div id="compositeMuralCalStage" class="composite-mural-cal-stage">
               <div id="compositeMuralZoomWrap" class="composite-zoom-wrap">
                 <img id="compositeMuralCalImage" alt="Mural, for placing a size reference">
@@ -13934,6 +13935,17 @@ function computeCalSegmentPixelsPerInch(segment, spaceWidth, spaceHeight) {
   return pixelLength > 0 ? pixelLength / segment.inches : 0;
 }
 
+// e.g. 174 -> "14'6\"" -- rounds to the nearest whole inch since this
+// already carries the room-reference segment's own "hand-estimated,
+// verify visually" imprecision; a fractional inch would be false
+// precision on top of that.
+function formatFeetInches(totalInches) {
+  const rounded = Math.round(totalInches);
+  const feet = Math.floor(rounded / 12);
+  const inches = rounded % 12;
+  return inches ? `${feet}'${inches}"` : `${feet}'`;
+}
+
 function renderRoomPreview() {
   const stage = document.getElementById("roomPreviewStage");
   const canvas = document.getElementById("roomPreviewCanvas");
@@ -15271,8 +15283,14 @@ async function shareGenericRoomPreview() {
 // tool -- placed on the side-wall corner (the floor-to-ceiling vertical edge
 // where the back wall meets the receding side wall), the only landmark
 // visible and unambiguous in all 5 of these minimalist "white cube" stock
-// photos (no furniture/doors/switches in any of them). inches:108 (9ft) is
-// an eyeballed default assuming a commercial/gallery ceiling height, same
+// photos (no furniture/doors/switches in any of them). Positioned right
+// beside the wall quad's own nearest vertical edge (~0.06-0.08 outside it,
+// matching that edge's own top/bottom y so it silhouettes the wall's
+// height) rather than off at an independent guess elsewhere in the frame --
+// close enough to read as "calibrating against this wall" at a glance,
+// while staying just outside the wall corner handles' own hit radius so
+// the two don't fight for the same click/tap. inches:108 (9ft) is an
+// eyeballed default assuming a commercial/gallery ceiling height, same
 // "hand-estimated, verify visually" category as points above -- not a
 // measurement.
 const ROOM_PROFILES = [
@@ -15286,7 +15304,7 @@ const ROOM_PROFILES = [
       { x: 0.68, y: 0.565 },
       { x: 0.32, y: 0.565 }
     ],
-    referenceSegment: { points: [{ x: 0.17, y: 0.20 }, { x: 0.17, y: 0.60 }], inches: 108 }
+    referenceSegment: { points: [{ x: 0.24, y: 0.27 }, { x: 0.24, y: 0.565 }], inches: 108 }
   },
   {
     id: "landscape",
@@ -15298,7 +15316,7 @@ const ROOM_PROFILES = [
       { x: 0.773, y: 0.655 },
       { x: 0.234, y: 0.655 }
     ],
-    referenceSegment: { points: [{ x: 0.10, y: 0.20 }, { x: 0.10, y: 0.66 }], inches: 108 }
+    referenceSegment: { points: [{ x: 0.155, y: 0.226 }, { x: 0.155, y: 0.655 }], inches: 108 }
   },
   {
     id: "square",
@@ -15310,7 +15328,7 @@ const ROOM_PROFILES = [
       { x: 0.76, y: 0.66 },
       { x: 0.22, y: 0.655 }
     ],
-    referenceSegment: { points: [{ x: 0.06, y: 0.16 }, { x: 0.06, y: 0.62 }], inches: 108 }
+    referenceSegment: { points: [{ x: 0.14, y: 0.22 }, { x: 0.14, y: 0.655 }], inches: 108 }
   },
   {
     id: "portrait",
@@ -15322,7 +15340,7 @@ const ROOM_PROFILES = [
       { x: 0.915, y: 0.69 },
       { x: 0.10, y: 0.69 }
     ],
-    referenceSegment: { points: [{ x: 0.045, y: 0.10 }, { x: 0.045, y: 0.70 }], inches: 108 }
+    referenceSegment: { points: [{ x: 0.04, y: 0.09 }, { x: 0.04, y: 0.69 }], inches: 108 }
   },
   {
     id: "tall",
@@ -15334,7 +15352,7 @@ const ROOM_PROFILES = [
       { x: 0.73, y: 0.685 },
       { x: 0.28, y: 0.655 }
     ],
-    referenceSegment: { points: [{ x: 0.85, y: 0.10 }, { x: 0.85, y: 0.66 }], inches: 108 }
+    referenceSegment: { points: [{ x: 0.81, y: 0.10 }, { x: 0.81, y: 0.685 }], inches: 108 }
   }
 ];
 
@@ -16007,6 +16025,22 @@ function renderCompositeRoomComposite() {
 
   const roomPixelsPerInch = computeCalSegmentPixelsPerInch(compositeCalSegments.room, width, height);
   const muralPixelsPerInch = computeCalSegmentPixelsPerInch(compositeCalSegments.mural, muralPx.x, muralPx.y);
+
+  // Rough "how wide is this room" readout -- the room-reference segment
+  // only calibrates its own local depth plane, so applying that same
+  // pixels-per-inch uniformly across the whole photo width ignores
+  // perspective (near/far parts of the room aren't really at the same
+  // scale) -- hence "approx.", same spirit as the rest of this tool's
+  // "verify visually" numbers, not a measurement.
+  const approxRoomWidthEl = document.getElementById("compositeApproxRoomWidth");
+  if (approxRoomWidthEl) {
+    if (roomPixelsPerInch) {
+      approxRoomWidthEl.textContent = `Approx. room width: ${formatFeetInches(width / roomPixelsPerInch)}`;
+      approxRoomWidthEl.hidden = false;
+    } else {
+      approxRoomWidthEl.hidden = true;
+    }
+  }
 
   // Each entry in placements is one mural copy to draw: a {source, destQuad}
   // pair, both 4-point quads (drawn as 2 triangles below). Uncalibrated and
