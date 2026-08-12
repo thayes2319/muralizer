@@ -666,6 +666,17 @@ html {
   box-shadow: none !important;              /* ⭐ remove shadow */
   position: relative;
   overflow: visible;
+  /* Same heavy blur as .top-container (the logo/nav header above), applied
+     here too so content scrolling up underneath is blurred all the way
+     down through the eyebrow and the concept-stage progress bar it
+     contains -- previously only .top-container had this, so content
+     passing under the eyebrow/progress-bar area stayed sharp. Safe despite
+     the wavy SVG background shape: backdrop-filter blurs based on this
+     element's own (rectangular) box regardless of what's painted on it, so
+     it still reads correctly through the opaque parts of the shape and
+     softens the thin sliver areas near its curved edges too. */
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
 .bg-eyebrow::before {
@@ -12981,12 +12992,35 @@ modalImg.addEventListener('click', (e) => {
 
 
 // ============================================================
-// ⭐ VISUAL CHECKBOX TOGGLE (☐ → ☑ → ☐)
+// ⭐ CHECKBOX = ADD TO PROJECT (☐ → ☑, straight to the active concept slot)
 // ============================================================
-document.addEventListener("click", (e) => {
-  if (e.target.classList.contains("thumb-check")) {
-    e.target.classList.toggle("checked");
-    e.target.textContent = e.target.classList.contains("checked") ? "☑" : "☐";
+// Checking the box on a thumbnail invokes the same
+// addGalleryConceptToActiveProject path as the full-view modal's "Add to
+// Project" button -- one tap from the grid instead of open-modal-then-
+// click-Add. Unchecking is purely visual (no slot removal -- that's a
+// separate, riskier operation with no clear "undo" story, not attempted
+// here).
+document.addEventListener("click", async (e) => {
+  if (!e.target.classList.contains("thumb-check")) return;
+  const checkEl = e.target;
+  const wasChecked = checkEl.classList.contains("checked");
+  if (wasChecked) {
+    checkEl.classList.remove("checked");
+    checkEl.textContent = "☐";
+    return;
+  }
+  const img = checkEl.closest(".signature-gallery-thumb-wrapper")?.querySelector("img");
+  const src = img?.getAttribute("src");
+  if (!src || !window.addGalleryConceptToActiveProject) return;
+  checkEl.classList.add("checked");
+  checkEl.textContent = "☑";
+  const added = await window.addGalleryConceptToActiveProject(src);
+  if (!added) {
+    // No active client/project to add to -- revert, same silent-no-op
+    // behavior the modal's Add to Project button already has for this
+    // edge case.
+    checkEl.classList.remove("checked");
+    checkEl.textContent = "☐";
   }
 }); // END checkbox toggle
 
