@@ -2901,25 +2901,36 @@ margin-top: 15px;
   position: relative;
   width: 100%;
   max-width: 420px;
-  height: 16px;
-  margin: 0 auto;
+  /* 28px total (was 26px = 10px gap + 16px branch pre-touch-up) -- keeps
+     at least as much room between the two rows as before, all of it now
+     filled by an actual line instead of partly blank gap. */
+  height: 28px;
+  /* Negative top margin cancels .creative-direction-mode's own 10px bottom
+     margin, so the stem starts flush against "Via inspiration"'s bottom
+     edge (touching it) instead of floating in a blank gap. */
+  margin: -10px auto 0;
 }
 .creative-direction-branch.is-visible { display: block; }
-.creative-direction-branch .branch-stem,
-.creative-direction-branch .branch-drop {
+.creative-direction-branch .branch-stem {
   position: absolute;
   top: 0;
+  left: 75%;
+  width: 1px;
+  height: 20px;
+  background: rgba(33,143,201,.42);
+}
+.creative-direction-branch .branch-drop {
+  position: absolute;
+  top: 20px;
   width: 1px;
   height: 8px;
   background: rgba(33,143,201,.42);
 }
-.creative-direction-branch .branch-stem { left: 75%; }
-.creative-direction-branch .branch-drop { top: 8px; }
 .creative-direction-branch .branch-drop-left { left: 25%; }
 .creative-direction-branch .branch-drop-right { left: 75%; }
 .creative-direction-branch .branch-bar {
   position: absolute;
-  top: 8px;
+  top: 20px;
   left: 25%;
   width: 50%;
   height: 1px;
@@ -14136,6 +14147,11 @@ document.addEventListener("DOMContentLoaded", () => {
     if (status) status.textContent = "Preparing room photo...";
     try {
       roomPreviewPhoto = await loadRoomPreviewImage(await readRoomPreviewFile(file));
+      // Same reasoning as handleReferenceReimagineFile -- release the
+      // input's hold on this File now that we have our own decoded copy,
+      // so a stale platform read grant (e.g. an expired Android content://
+      // URI permission) can't be reused on a later pick.
+      upload.value = "";
       resetRoomPreviewPoints();
       roomPreviewFeatures = [];
       roomPreviewSelectedFeature = -1;
@@ -14810,6 +14826,18 @@ async function handleReferenceReimagineFile(file) {
     clearReferenceReimagine();
     return;
   }
+
+  // Everything we need is now in `normalized` (our own in-memory copy) --
+  // the raw file/its underlying platform handle (e.g. an Android content://
+  // URI grant) is never touched again after this point. The Web platform
+  // has no explicit "close" method on a File, but resetting the <input>'s
+  // value is the equivalent release: it drops the input element's own hold
+  // on that FileList/File so the browser/OS can reclaim the handle instead
+  // of it sitting retained for the rest of the session, and it lets
+  // re-selecting the same file later register as a fresh pick (a fresh
+  // native picker read) rather than reusing a potentially-stale reference.
+  const inputEl = document.getElementById("referenceReimagineInput");
+  if (inputEl) inputEl.value = "";
 
   const dataUrl = normalized.dataUrl;
   referenceReimagineState.dataUrl = dataUrl;
@@ -21686,27 +21714,32 @@ document.addEventListener("DOMContentLoaded", () => {
     persistCpcState(activeIndex);
     renderOpenProjectChips(activeIndex);
 
+    // Mirrors saveActiveConcept's backend-save handling -- SceniqueBackend.post()
+    // already catches its own errors and resolves to null on failure (never
+    // throws), so no try/catch is needed here either. Previously this only
+    // logged a console.warn on failure, with nothing shown to the user --
+    // meaning a gallery-added concept could silently fail to persist to the
+    // backend while looking completely fine in the current session.
     if (window.SceniqueBackend?.saveConceptImage) {
       const imageBase64 = imageSrc.startsWith("data:") ? imageSrc.split(",").pop() || "" : "";
-      try {
-        const backendRecord = await window.SceniqueBackend.saveConceptImage({
-          id: `cpc_gallery_${Date.now()}`,
-          createdAt: new Date().toISOString(),
-          context: { client: ctx.client, project: ctx.project },
-          concept: conceptName,
-          imageKey: savedKey,
-          saveAction: "gallery-add",
-          savedConcept: true,
-          imageDataUrl: imageSrc,
-          imageBase64
-        });
-        if (backendRecord) {
-          const backendImageUrl = resolveBackendImageUrl(backendRecord.imageUrl);
-          if (backendImageUrl) cpcBackendImageStore[savedKey] = backendImageUrl;
-          flashActiveConceptStoredBadge();
-        }
-      } catch (error) {
-        console.warn("Unable to store gallery concept on backend:", error);
+      const backendRecord = await window.SceniqueBackend.saveConceptImage({
+        id: `cpc_gallery_${Date.now()}`,
+        createdAt: new Date().toISOString(),
+        context: { client: ctx.client, project: ctx.project },
+        concept: conceptName,
+        imageKey: savedKey,
+        saveAction: "gallery-add",
+        savedConcept: true,
+        imageDataUrl: imageSrc,
+        imageBase64
+      });
+      const backendStored = !!backendRecord;
+      if (backendStored) {
+        const backendImageUrl = resolveBackendImageUrl(backendRecord.imageUrl);
+        if (backendImageUrl) cpcBackendImageStore[savedKey] = backendImageUrl;
+        flashActiveConceptStoredBadge();
+      } else {
+        showBackendStoreFailureModal(`Client: ${ctx.client}\nProject: ${ctx.project}\nConcept: ${conceptName}`);
       }
     }
 
