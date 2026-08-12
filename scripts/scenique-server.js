@@ -51,7 +51,7 @@ async function writeJson(filePath, value) {
 async function appendJsonItem(filePath, item) {
   const current = await readJson(filePath, []);
   current.unshift(item);
-  await writeJson(filePath, current.slice(0, 500));
+  await writeJson(filePath, capRecordsPerOwner(current));
 }
 
 function sendJson(res, statusCode, payload) {
@@ -98,6 +98,30 @@ function sanitizeName(name) {
 function normalizeOwnerId(value) {
   const normalized = String(value || '').trim();
   return normalized || null;
+}
+
+const MAX_RECORDS_PER_OWNER = 500;
+
+// Keeps each owner's most-recent MAX_RECORDS_PER_OWNER records, independent
+// of every other owner -- `items` must already be newest-first (unshift'd).
+// Replaces a flat `slice(0, 500)` shared across ALL owners combined, which
+// meant one owner's heavy activity (including repeated automated test runs
+// against this same production index) could silently evict a completely
+// different owner's real saved concepts with no warning. Confirmed this had
+// already started happening: the concept-image index's oldest surviving
+// record had drifted to just ~3.5 days old under that flat cap.
+function capRecordsPerOwner(items) {
+  const seenCounts = new Map();
+  const kept = [];
+  for (const record of items) {
+    const key = normalizeOwnerId(record && record.ownerId) || '__unowned__';
+    const count = seenCounts.get(key) || 0;
+    if (count < MAX_RECORDS_PER_OWNER) {
+      kept.push(record);
+      seenCounts.set(key, count + 1);
+    }
+  }
+  return kept;
 }
 
 function normalizeMatchValue(value) {
@@ -547,7 +571,7 @@ async function handleSeedDefaultConcepts(req, res) {
     return;
   }
 
-  await writeJson(conceptIndexPath, nextItems.slice(0, 500));
+  await writeJson(conceptIndexPath, capRecordsPerOwner(nextItems));
   sendJson(res, 200, {
     ok: true,
     seeded,

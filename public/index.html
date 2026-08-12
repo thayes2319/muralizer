@@ -12932,11 +12932,11 @@ galleryRoomBtn?.addEventListener("click", () => {
 });
 galleryAddBtn?.addEventListener("click", async () => {
   const selected = currentGallerySet[currentIndex];
-  if (!selected?.src || !window.addGalleryConceptToActiveProject) return;
+  if (!selected?.src || !window.saveActiveConceptFromSource) return;
   galleryAddBtn.disabled = true;
   galleryAddBtn.textContent = "Adding...";
   try {
-    if (await window.addGalleryConceptToActiveProject(selected.src)) closeSignatureGalleryModal();
+    if (await window.saveActiveConceptFromSource(selected.src)) closeSignatureGalleryModal();
   } finally {
     galleryAddBtn.disabled = false;
     galleryAddBtn.textContent = "Add to Project";
@@ -12992,14 +12992,17 @@ modalImg.addEventListener('click', (e) => {
 
 
 // ============================================================
-// ⭐ CHECKBOX = ADD TO PROJECT (☐ → ☑, straight to the active concept slot)
+// ⭐ CHECKBOX = ADD TO PROJECT (☐ → ☑, via the Save Concept decision tree)
 // ============================================================
-// Checking the box on a thumbnail invokes the same
-// addGalleryConceptToActiveProject path as the full-view modal's "Add to
-// Project" button -- one tap from the grid instead of open-modal-then-
-// click-Add. Unchecking is purely visual (no slot removal -- that's a
-// separate, riskier operation with no clear "undo" story, not attempted
-// here).
+// Checking the box on a thumbnail invokes saveActiveConceptFromSource --
+// the exact same replace/create-new decision tree the full-view modal's
+// "Add to Project" button and the main Save Concept button both use, not a
+// simpler always-append-a-new-slot path. If the active concept slot already
+// has something saved, this can pop the Replace/Create New prompt, so the
+// checkbox only flips to checked once that's actually resolved (avoids a
+// checked-then-reverts flash if the user cancels that prompt). Unchecking
+// is purely visual (no slot removal -- that's a separate, riskier operation
+// with no clear "undo" story, not attempted here).
 document.addEventListener("click", async (e) => {
   if (!e.target.classList.contains("thumb-check")) return;
   const checkEl = e.target;
@@ -13011,16 +13014,11 @@ document.addEventListener("click", async (e) => {
   }
   const img = checkEl.closest(".signature-gallery-thumb-wrapper")?.querySelector("img");
   const src = img?.getAttribute("src");
-  if (!src || !window.addGalleryConceptToActiveProject) return;
-  checkEl.classList.add("checked");
-  checkEl.textContent = "☑";
-  const added = await window.addGalleryConceptToActiveProject(src);
-  if (!added) {
-    // No active client/project to add to -- revert, same silent-no-op
-    // behavior the modal's Add to Project button already has for this
-    // edge case.
-    checkEl.classList.remove("checked");
-    checkEl.textContent = "☐";
+  if (!src || !window.saveActiveConceptFromSource) return;
+  const added = await window.saveActiveConceptFromSource(src);
+  if (added) {
+    checkEl.classList.add("checked");
+    checkEl.textContent = "☑";
   }
 }); // END checkbox toggle
 
@@ -21574,15 +21572,22 @@ document.addEventListener("DOMContentLoaded", () => {
     persistCpcState(safeIndex);
   }
 
-  async function saveActiveConcept() {
+  // overrideImageSrc lets a source other than the currently-displayed mural
+  // (e.g. a gallery concept) go through this exact same replace/create-new
+  // decision tree instead of a separate, simpler path -- guarded to a
+  // string so the click listener below (which passes the click Event as
+  // the first arg when called bare) can't leak through as a bogus source.
+  async function saveActiveConcept(overrideImageSrc) {
     const activeIndex = getActiveProjectIndex();
     const ctx = contexts[activeIndex];
     const muralImage = document.getElementById("muralImage");
-    const imageSrc = muralImage && muralImage.src ? muralImage.src : "";
+    const imageSrc = typeof overrideImageSrc === "string" && overrideImageSrc
+      ? overrideImageSrc
+      : (muralImage && muralImage.src ? muralImage.src : "");
 
     if (!ctx || !imageSrc) {
       alert("Generate an image first, then save it as a concept.");
-      return;
+      return false;
     }
 
     const concepts = Array.isArray(ctx.concepts) && ctx.concepts.length ? ctx.concepts : [{ name: "c1" }];
@@ -21601,7 +21606,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const choice = hasExistingSaved
       ? await askSaveConceptDecision(ctx, currentConceptBadge, nextConceptBadge)
       : "create";
-    if (choice === "cancel") return;
+    if (choice === "cancel") return false;
 
     let savedConceptName = currentConceptName;
     let nextActiveConceptName = currentConceptName;
@@ -21631,7 +21636,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     } else {
       alert("Save canceled.");
-      return;
+      return false;
     }
 
     ctx.activeConceptIndex = nextActiveConceptIndex;
@@ -21715,71 +21720,17 @@ document.addEventListener("DOMContentLoaded", () => {
     if (backendStored) {
       flashActiveConceptStoredBadge();
     }
+    return true;
   }
 
   if (saveConceptBtn) {
     saveConceptBtn.addEventListener("click", saveActiveConcept);
   }
 
-  window.addGalleryConceptToActiveProject = async function addGalleryConceptToActiveProject(imageSrc) {
-    const activeIndex = getActiveProjectIndex();
-    const ctx = contexts[activeIndex];
-    if (!ctx || !imageSrc) return false;
-
-    const concepts = Array.isArray(ctx.concepts) && ctx.concepts.length ? ctx.concepts : [{ name: "c1" }];
-    if (!Array.isArray(ctx.concepts) || !ctx.concepts.length) ctx.concepts = concepts;
-
-    const usedConceptNames = new Set(ctx.concepts.map((concept, index) => (
-      String(concept?.name || `c${index + 1}`).trim().toLowerCase()
-    )));
-    let conceptNumber = 1;
-    while (usedConceptNames.has(`c${conceptNumber}`)) conceptNumber += 1;
-    const conceptName = `c${conceptNumber}`;
-    ctx.concepts.push({ name: conceptName });
-    ctx.activeConceptIndex = ctx.concepts.length - 1;
-
-    const savedKey = buildConceptImageKey(ctx, conceptName, "saved");
-    cpcRuntimeImageStore[savedKey] = imageSrc;
-    mergeConceptSessionCacheEntries({ [savedKey]: imageSrc }, "Unable to persist gallery concept in session cache:");
-
-    renderConceptSelector(ctx);
-    if (conceptEl) conceptEl.textContent = conceptName;
-    applyConceptImageForContext(ctx, conceptName);
-    persistCpcState(activeIndex);
-    renderOpenProjectChips(activeIndex);
-
-    // Mirrors saveActiveConcept's backend-save handling -- SceniqueBackend.post()
-    // already catches its own errors and resolves to null on failure (never
-    // throws), so no try/catch is needed here either. Previously this only
-    // logged a console.warn on failure, with nothing shown to the user --
-    // meaning a gallery-added concept could silently fail to persist to the
-    // backend while looking completely fine in the current session.
-    if (window.SceniqueBackend?.saveConceptImage) {
-      const imageBase64 = imageSrc.startsWith("data:") ? imageSrc.split(",").pop() || "" : "";
-      const backendRecord = await window.SceniqueBackend.saveConceptImage({
-        id: `cpc_gallery_${Date.now()}`,
-        createdAt: new Date().toISOString(),
-        context: { client: ctx.client, project: ctx.project },
-        concept: conceptName,
-        imageKey: savedKey,
-        saveAction: "gallery-add",
-        savedConcept: true,
-        imageDataUrl: imageSrc,
-        imageBase64
-      });
-      const backendStored = !!backendRecord;
-      if (backendStored) {
-        const backendImageUrl = resolveBackendImageUrl(backendRecord.imageUrl);
-        if (backendImageUrl) cpcBackendImageStore[savedKey] = backendImageUrl;
-        flashActiveConceptStoredBadge();
-      } else {
-        showBackendStoreFailureModal(`Client: ${ctx.client}\nProject: ${ctx.project}\nConcept: ${conceptName}`);
-      }
-    }
-
-    setSessionStatus(`Gallery mural added as ${toConceptBadge(conceptName, ctx.activeConceptIndex)} for ${ctx.project}.`);
-    return true;
-  };
+  // Lets the gallery (a separate script section, outside this closure) route
+  // a selected concept-gallery image through this exact same replace/
+  // create-new decision tree instead of a simpler always-append path.
+  window.saveActiveConceptFromSource = saveActiveConcept;
 
   if (clearCompareTrayBtn) {
     clearCompareTrayBtn.addEventListener("click", () => {
