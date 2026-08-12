@@ -672,25 +672,32 @@ async function handleReferenceGenerateProxy(req, res) {
   }
 
   const influence = Number(body.reference_influence);
-  const fidelity = Number.isFinite(influence)
+  // Same slider/value the UI already exposes as "Source influence" (0.3-0.65)
+  // -- reused as-is here, just aimed at a different Stability parameter now
+  // (see below).
+  const controlStrength = Number.isFinite(influence)
     ? Math.max(0.3, Math.min(0.65, influence))
     : 0.45;
   const form = new FormData();
   const imageExtension = reference.mimeType === 'image/jpeg' ? 'jpg' : reference.mimeType.split('/')[1];
   form.append('image', new Blob([reference.buffer], { type: reference.mimeType }), `inspiration.${imageExtension}`);
   const muralOnly = 'Create a flat, front-facing original mural artwork only. The full canvas must be the mural design itself, with no interior scene or installed-mural mockup.';
-  // The reference image fed to Stability's style-control endpoint below is
-  // frequently an actual camera photo (e.g. a snapshot of an installed wall
-  // covering), and its photographic pixels bias the style-conditioned output
-  // toward photorealism regardless of what the description text says. This
-  // has to be stated explicitly and every time -- the mural description text
-  // alone (even when the assessment step gets it right) isn't a strong enough
-  // counterweight to that image-conditioning pull on its own.
-  const paintedStyle = 'Render this as a hand-painted or hand-illustrated mural artwork with visible painterly brushwork, artistic texture, and hand-rendered color blending -- never as a photograph or photorealistic image, no matter how photographic the reference image itself looks. Ignore any glare, reflections, or lighting artifacts from the reference photo being captured under real light; those are not part of the artwork.';
+  // Switched from Stability's /control/style to /control/structure. Style
+  // control explicitly extracts and reapplies the reference image's own
+  // stylistic qualities (color, texture, photographic-ness) -- for a
+  // photographic reference (e.g. a foliage/water inspiration photo, not
+  // just an installed-wallcovering snapshot), that pulled the output toward
+  // photorealism no matter how strongly worded this instruction was, even
+  // at low influence. Structure control only constrains composition/layout
+  // from the reference, leaving style entirely up to this text -- sandboxed
+  // side-by-side against both a photographic and an already-painterly
+  // reference, across the full influence range, with consistently painterly
+  // results either way.
+  const paintedStyle = 'Render this as a hand-painted or hand-illustrated mural artwork with visible painterly brushwork, artistic texture, and hand-rendered color blending -- never as a photograph or photorealistic image, no matter how photographic the reference image itself looks. Abstract and simplify all natural elements such as foliage, water, and light into visible brushstrokes, not photographic detail. Ignore any glare, reflections, or lighting artifacts from the reference photo being captured under real light; those are not part of the artwork.';
   const exclusions = 'Never depict furniture, chairs, tables, sofas, beds, lamps, windows, doors, rooms, walls, floors, ceilings, architecture, people, text, logos, frames, or borders.';
   form.append('prompt', `${prompt}\n\n${muralOnly} ${paintedStyle} ${exclusions}`);
   form.append('output_format', 'png');
-  form.append('fidelity', String(fidelity));
+  form.append('control_strength', String(controlStrength));
   const negativePrompt = String(body.negative_prompt || '').trim();
   if (negativePrompt) form.append('negative_prompt', negativePrompt);
   const aspectRatio = String(body.aspect_ratio || '').trim();
@@ -699,7 +706,7 @@ async function handleReferenceGenerateProxy(req, res) {
     form.append('seed', String(body.seed));
   }
 
-  const response = await fetch('https://api.stability.ai/v2beta/stable-image/control/style', {
+  const response = await fetch('https://api.stability.ai/v2beta/stable-image/control/structure', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${upstreamApiKey}`,

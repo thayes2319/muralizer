@@ -6,3 +6,5 @@ android/build/
 android/.gradle/
 *.keystore
 *.jks
+.env
+.env.*

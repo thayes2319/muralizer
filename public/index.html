@@ -8149,7 +8149,7 @@ select[multiple].collapsible-multi.expanded option:first-child {
         </div>
 
         <div id="referenceReimagineBody" class="reference-reimagine-body">
-          <p id="referenceReimagineCopy" class="reference-reimagine-copy">Add one inspiration image. Muralizer creates a new, original composition guided entirely by its visual character — the selections below are not used.</p>
+          <p id="referenceReimagineCopy" class="reference-reimagine-copy">Add one inspiration image. No selections or build required — Muralizer creates a new, original painterly mural, composed to echo this image's layout.</p>
           <label id="referenceReimagineDropzone" class="reference-reimagine-upload" for="referenceReimagineInput">
             <span><strong>Drop inspiration artwork here</strong><span class="reference-reimagine-upload-copy">PNG, JPEG, or WebP up to 7 MB</span></span>
             <span class="reference-reimagine-upload-button">Choose file</span>
@@ -8183,7 +8183,7 @@ select[multiple].collapsible-multi.expanded option:first-child {
             <input id="referenceInfluence" type="range" min="30" max="65" value="45" step="1" oninput="updateReferenceInfluence(this.value)">
             <span id="referenceInfluenceValue" class="reference-influence-value">45%</span>
           </div>
-          <p id="referenceInfluenceHint" class="reference-influence-hint">Balanced guidance: moderate adherence to the artwork's visual character.</p>
+          <p id="referenceInfluenceHint" class="reference-influence-hint">Balanced guidance: moderate adherence to the reference's composition/layout.</p>
         </div>
       </div>
 
@@ -14487,10 +14487,10 @@ function updateReferenceInfluence(value) {
   if (label) label.textContent = `${normalized}%`;
   if (hint) {
     hint.textContent = normalized < 40
-      ? "Fresh interpretation: lighter adherence to the artwork's visual character."
+      ? "Fresh interpretation: lighter adherence to the reference's composition/layout."
       : normalized > 52
-        ? "Strong source influence: closer adherence to the artwork's visual character."
-        : "Balanced guidance: moderate adherence to the artwork's visual character.";
+        ? "Strong source influence: closer adherence to the reference's composition/layout."
+        : "Balanced guidance: moderate adherence to the reference's composition/layout.";
   }
 }
 
@@ -14559,8 +14559,8 @@ function updateSelectionGroupsVisibility() {
 }
 
 const REFERENCE_REIMAGINE_COPY = {
-  inspiration: "Add one inspiration image. No selections or build required — Muralizer creates a new, original composition guided entirely by its visual character.",
-  blend: "Add one inspiration image. Your selections and build below still inform the outcome, rendered in the style of your upload."
+  inspiration: "Add one inspiration image. No selections or build required — Muralizer creates a new, original painterly mural, composed to echo this image's layout.",
+  blend: "Add one inspiration image. Your selections and build below still inform the outcome, composed to echo your upload's layout."
 };
 
 function updateReferenceReimagineCopy() {
