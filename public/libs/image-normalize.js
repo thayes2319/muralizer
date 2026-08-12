@@ -205,7 +205,26 @@
       );
     }
 
-    const arrayBuffer = await file.arrayBuffer();
+    let arrayBuffer;
+    try {
+      arrayBuffer = await file.arrayBuffer();
+    } catch (error) {
+      // Android content:// URIs from the file/photo picker carry a
+      // temporary read grant that can expire (e.g. the picker's originating
+      // Activity lifecycle ended, or the app was backgrounded/closed long
+      // enough) -- reading then throws a native NotReadableError whose raw
+      // message ("...permission problems that have occurred after a
+      // reference to a file was acquired") is meaningless to a user and
+      // impossible for this app to prevent client-side. This is the very
+      // first read of the file, done immediately on selection, so there's
+      // no delay on our end contributing to it. Re-selecting the file gets
+      // a fresh grant, so point there instead of showing the raw browser text.
+      console.error("File handle unreadable (likely an expired platform read grant):", { name: file.name, type: file.type || "(empty)", size: file.size, error });
+      throw new ImageNormalizeError(
+        "stale-file-handle",
+        "This file couldn't be read -- its access may have expired. Please choose the photo again from your gallery."
+      );
+    }
     const header = new Uint8Array(arrayBuffer.slice(0, 32));
     const format = sniffImageFormat(header);
 

@@ -2791,6 +2791,16 @@ margin-top: 15px;
 .creative-direction-mode label.is-selected { background: #218FC9; color: #fff; }
 
 .reference-reimagine-body { display: none; padding-top: 12px; max-width: 420px; margin: 0 auto; }
+/* Pure Inspiration/Inspired Blend is a radiogroup (.reference-direction-mode),
+   not always visible -- when it IS showing (Via inspiration mode), pull the
+   copy box up flush against its bottom edge so the hint visually belongs to
+   whichever pill is selected, continuing the branch-line connection above it. */
+.reference-direction-mode.is-visible + .reference-reimagine-body { padding-top: 0; }
+.reference-direction-mode.is-visible + .reference-reimagine-body .reference-reimagine-copy {
+  border-top: 1px solid rgba(33,143,201,.42);
+  border-radius: 0 0 4px 4px;
+  margin-top: 0;
+}
 .reference-reimagine-body.is-visible { display: block; }
 
 .reference-reimagine-copy {
@@ -2876,12 +2886,51 @@ margin-top: 15px;
   font-weight: 700;
 }
 
+/* Tree connector from "Via inspiration" (the right-hand pill of
+   .creative-direction-mode, so its own center sits at the 75% mark of the
+   shared 420px-max-width row) down to Pure Inspiration/Inspired Blend
+   below (left pill center 25%, right pill center 75% -- same row width,
+   same centering, so the percentages line up across both rows without
+   needing to know the actual rendered width). Stem drops from 75%, a bar
+   spans 25%-75%, then two short drops land on each pill below. Purely
+   decorative (aria-hidden), only shown alongside
+   .reference-direction-mode.is-visible. */
+.creative-direction-branch {
+  display: none;
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  height: 16px;
+  margin: 0 auto;
+}
+.creative-direction-branch.is-visible { display: block; }
+.creative-direction-branch .branch-stem,
+.creative-direction-branch .branch-drop {
+  position: absolute;
+  top: 0;
+  width: 1px;
+  height: 8px;
+  background: rgba(33,143,201,.42);
+}
+.creative-direction-branch .branch-stem { left: 75%; }
+.creative-direction-branch .branch-drop { top: 8px; }
+.creative-direction-branch .branch-drop-left { left: 25%; }
+.creative-direction-branch .branch-drop-right { left: 75%; }
+.creative-direction-branch .branch-bar {
+  position: absolute;
+  top: 8px;
+  left: 25%;
+  width: 50%;
+  height: 1px;
+  background: rgba(33,143,201,.42);
+}
+
 .reference-direction-mode {
   display: none;
   gap: 0;
   width: 100%;
   max-width: 420px;
-  margin: 10px auto 0;
+  margin: 0 auto 0;
   padding: 0;
   border: 1px solid rgba(33,143,201,.42);
   border-radius: 6px;
@@ -8140,6 +8189,13 @@ select[multiple].collapsible-multi.expanded option:first-child {
         <div class="creative-direction-mode" role="radiogroup" aria-label="Creative direction">
           <label id="creativeDirectionMuralizerLabel" class="is-selected"><input type="radio" name="creativeDirectionMode" value="muralizer" checked onchange="updateCreativeDirectionMode(this.value)">Via selections</label>
           <label id="creativeDirectionInspirationLabel"><input type="radio" name="creativeDirectionMode" value="inspiration" onchange="updateCreativeDirectionMode(this.value)">Via inspiration</label>
+        </div>
+
+        <div id="creativeDirectionBranch" class="creative-direction-branch" aria-hidden="true">
+          <span class="branch-stem"></span>
+          <span class="branch-bar"></span>
+          <span class="branch-drop branch-drop-left"></span>
+          <span class="branch-drop branch-drop-right"></span>
         </div>
 
         <div id="referenceDirectionMode" class="reference-direction-mode" role="radiogroup" aria-label="Reimagine direction">
@@ -14668,6 +14724,7 @@ function updateCreativeDirectionMode(mode) {
   // an image existing -- all 3 generation paths (Solo, Inspiration only,
   // Blend with Muralizer) should be visible as soon as you're in this mode.
   document.getElementById("referenceDirectionMode")?.classList.toggle("is-visible", isInspiration);
+  document.getElementById("creativeDirectionBranch")?.classList.toggle("is-visible", isInspiration);
   if (!isInspiration) {
     clearReferenceReimagine();
   }
