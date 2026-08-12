@@ -681,12 +681,17 @@ async function handleReferenceGenerateProxy(req, res) {
   const muralOnly = 'Create a flat, front-facing original mural artwork only. The full canvas must be the mural design itself, with no interior scene or installed-mural mockup.';
   // The reference image fed to Stability's style-control endpoint below is
   // frequently an actual camera photo (e.g. a snapshot of an installed wall
-  // covering), and its photographic pixels bias the style-conditioned output
-  // toward photorealism regardless of what the description text says. This
-  // has to be stated explicitly and every time -- the mural description text
-  // alone (even when the assessment step gets it right) isn't a strong enough
-  // counterweight to that image-conditioning pull on its own.
-  const paintedStyle = 'Render this as a hand-painted or hand-illustrated mural artwork with visible painterly brushwork, artistic texture, and hand-rendered color blending -- never as a photograph or photorealistic image, no matter how photographic the reference image itself looks. Ignore any glare, reflections, or lighting artifacts from the reference photo being captured under real light; those are not part of the artwork.';
+  // covering, or a plain inspiration photo), and its photographic pixels
+  // bias the style-conditioned output toward photorealism regardless of
+  // what the description text says. This has to be stated explicitly and
+  // every time -- the mural description text alone (even when the
+  // assessment step gets it right) isn't a strong enough counterweight to
+  // that image-conditioning pull on its own. Foliage/water/landscape
+  // references held out against the generic "no matter how photographic"
+  // line even at low reference influence -- named explicitly below rather
+  // than left implicit, kept as a short inline clause since Stability
+  // prompts are sensitive to excess instruction.
+  const paintedStyle = 'Render this as a hand-painted or hand-illustrated mural artwork with visible painterly brushwork, artistic texture, and hand-rendered color blending -- never as a photograph or photorealistic image, including any foliage, water, sky, or landscape elements in the reference, no matter how photographic the reference image itself looks. Ignore any glare, reflections, or lighting artifacts from the reference photo being captured under real light; those are not part of the artwork.';
   const exclusions = 'Never depict furniture, chairs, tables, sofas, beds, lamps, windows, doors, rooms, walls, floors, ceilings, architecture, people, text, logos, frames, or borders.';
   form.append('prompt', `${prompt}\n\n${muralOnly} ${paintedStyle} ${exclusions}`);
   form.append('output_format', 'png');
