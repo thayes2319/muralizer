@@ -9462,7 +9462,6 @@ If you’re exploring a new direction, try adjusting just 1-2 elements at a time
           </details>
           <p id="compositeRoomStatus" class="generic-room-status" aria-live="polite"></p>
           <div class="generic-room-actions">
-            <button id="compositeRoomCycleBtn" type="button">Try another room</button>
             <button id="compositeRoomShare" type="button">Share</button>
           </div>
           <details class="composite-cal-panel" open>
@@ -15880,22 +15879,22 @@ const ROOM_PROFILES = [
       { x: 0.28, y: 0.655 }
     ],
     referenceSegment: { points: [{ x: 0.81, y: 0.10 }, { x: 0.81, y: 0.685 }], inches: 108 }
-  },
-  // ---- Residential stock rooms below: real (AI-generated) furnished
-  // rooms rather than the 5 minimalist "white cube" renders above, so
-  // referenceSegment uses realistic residential defaults (96in/8ft ceiling,
-  // or 80in standard door height where an actual door is in frame) instead
-  // of the white-cube set's 108in commercial-ceiling guess. Each wall quad
-  // below intentionally spans the FULL usable wall -- floor-to-ceiling,
-  // corner-to-corner -- rather than stopping short of furniture/fixtures.
-  // Everything in front of the wall that doesn't reveal wall through gaps
-  // in its own silhouette (a bed, a lamp, a picture frame, a pedestal sink)
-  // gets a foregroundOverlay redrawing its real pixels on top of the mural
-  // afterward (see the foregroundOverlay comment above ROOM_PROFILES).
-  // Furniture that DOES reveal wall/floor through its own structure (a
-  // dining table and chairs, a sawhorse-leg desk, an open-shelf console
-  // table) is the one exception -- there the quad boundary simply stops
-  // short of it instead, same as the original (pre-overlay) approach.
+  }
+];
+
+// ============================================================
+// ROLLED BACK (2026-08-13): the 12 residential profiles below were hand-
+// estimated (quad corners, reference segments, foregroundOverlay masks) by
+// eyeballing screenshots rather than precise custom cropping, and the
+// results weren't reliable enough to ship. Source images and their
+// foregroundOverlay PNGs are still sitting in public/stock-rooms/ (kept on
+// purpose, not deleted) -- once there's a real custom-cropping tool, these
+// definitions are the starting point for redoing this properly rather than
+// re-deriving the coordinates from scratch. Not currently referenced by
+// ROOM_PROFILES or anything else -- inert until re-enabled.
+// ============================================================
+/*
+const RETIRED_RESIDENTIAL_ROOM_PROFILES = [
   {
     id: "bedroom-1",
     src: "stock-rooms/bedroom-1.png",
@@ -16083,6 +16082,7 @@ const ROOM_PROFILES = [
     foregroundOverlay: "stock-rooms/mudroom-foreground.png"
   }
 ];
+*/
 
 // ============================================================
 // SCALE CALIBRATION -- ties both the room photo and the mural to real-world
@@ -16112,11 +16112,6 @@ const ROOM_PROFILES = [
 // computeCompositeStretchFactor and renderCompositeRoomComposite.
 // ============================================================
 let compositeRoomActive = null; // { mural, photo, profile } -- cache so calibration edits re-render without re-fetching/re-decoding
-// Per-profile.id memory of wherever the room/wallQuad nodes were last left
-// (hand-adjusted or still default) -- see the reseed logic in
-// runCompositeRoomPreview. Lives for the page session (not persisted to
-// storage); reset only by a full reload.
-let compositeRoomNodeOverrides = {};
 let compositeCalSegments = {
   room: { points: [{ x: 0.17, y: 0.20 }, { x: 0.17, y: 0.60 }], inches: 108 }, // reseeded from profile.referenceSegment on profile change
   // inches defaults to 12 (not null) so the "Stretched to fill" note is
@@ -16191,33 +16186,19 @@ function computeZoomTransform(oldZoom, scaleFactor, anchorX, anchorY) {
   };
 }
 
-// Index into ROOM_PROFILES currently shown. -1 is a sentinel meaning "pick
-// the best aspect match" -- set on every fresh modal open
-// (openCompositeRoomPreview) so a new mural always starts on its best-fit
-// room. "Try another room" then walks the ENTIRE list from there (wrapping),
-// not just profiles tied on aspect: the Stretch/Stop Short/Tile calibration
-// modes already handle a mismatched mural/wall pairing (a wide mural tiled
-// across a narrow room, a portrait mural tiled across a widescreen wall,
-// etc.), so aspect fit is only a starting suggestion, never a hard
-// restriction on which rooms are worth trying.
-let compositeRoomIndex = -1;
-
-// Index of the best-aspect-match profile, compared in log space so a mural
-// twice as wide as a room and one twice as tall count as equally
-// mismatched. Only used to pick the INITIAL room for a freshly opened
-// mural -- see compositeRoomIndex above for why cycling isn't limited to
-// this match (or ties with it).
-function pickRoomProfileIndex(muralAspect) {
-  let bestIndex = 0;
+// Nearest profile by aspect ratio, compared in log space so a mural twice
+// as wide as a room and one twice as tall count as equally mismatched.
+function pickRoomProfile(muralAspect) {
+  let best = ROOM_PROFILES[0];
   let bestDistance = Infinity;
-  ROOM_PROFILES.forEach((profile, index) => {
+  ROOM_PROFILES.forEach((profile) => {
     const distance = Math.abs(Math.log(muralAspect) - Math.log(profile.photoAspect));
     if (distance < bestDistance) {
       bestDistance = distance;
-      bestIndex = index;
+      best = profile;
     }
   });
-  return bestIndex;
+  return best;
 }
 
 function pointDistance(a, b) {
@@ -16679,21 +16660,6 @@ async function openCompositeRoomPreview() {
   // they're never invisibly stuck off from a previous session.
   compositeCalNodesVisible = true;
   applyCompositeCalNodesVisibility();
-  // And again -- always start on the best-aspect-match room for this
-  // mural, not wherever a previous session's "try another room" cycling
-  // left off.
-  compositeRoomIndex = -1;
-  await runCompositeRoomPreview(rawSource);
-}
-
-// Steps to the next room in the FULL ROOM_PROFILES list (wrapping) and
-// re-renders -- see compositeRoomIndex above for why this isn't limited to
-// aspect-matched rooms.
-async function cycleCompositeRoomProfile() {
-  const muralImage = document.getElementById("muralImage");
-  const rawSource = muralImage?.currentSrc || muralImage?.src;
-  if (!rawSource) return;
-  compositeRoomIndex = (compositeRoomIndex + 1) % ROOM_PROFILES.length;
   await runCompositeRoomPreview(rawSource);
 }
 
@@ -16719,44 +16685,25 @@ async function runCompositeRoomPreview(rawSource) {
   try {
     const muralSource = await ensureMuralDataUrl(rawSource);
     const mural = await loadRoomPreviewImage(muralSource);
-    if (compositeRoomIndex < 0) {
-      compositeRoomIndex = pickRoomProfileIndex(mural.naturalWidth / mural.naturalHeight);
-    }
-    const profile = ROOM_PROFILES[compositeRoomIndex];
+    const profile = pickRoomProfile(mural.naturalWidth / mural.naturalHeight);
     const photo = await loadRoomPreviewImage(profile.src);
     const foregroundOverlay = profile.foregroundOverlay
       ? await loadRoomPreviewImage(profile.foregroundOverlay)
       : null;
 
-    // Reseed the room-reference segment and wall quad from this profile's
-    // pre-placed default only when the profile actually changed AND this
-    // profile has never been visited this session -- runCompositeRoomPreview
+    // Reseed the room-reference segment from this profile's pre-placed
+    // default only when the profile actually changed -- runCompositeRoomPreview
     // only ever runs once per modal open (calibration drags/edits call
     // renderCompositeRoomComposite() directly, they never re-enter this
-    // function), but a *closed and reopened* modal, or "Try another room"
-    // cycling back to a profile visited earlier, should restore the nodes
-    // exactly where they were last left, not discard the adjustment and
-    // revert to the ROOM_PROFILES hand-estimated default. compositeRoomNodeOverrides
-    // (keyed by profile.id) is that per-room memory, populated below
-    // whenever we leave a profile.
+    // function), but a *closed and reopened* modal with a similar-aspect
+    // mural can land on the same profile again, and shouldn't discard
+    // whatever room-segment adjustment the user already made.
     if (compositeRoomActive?.profile?.id !== profile.id) {
-      const outgoingId = compositeRoomActive?.profile?.id;
-      if (outgoingId) {
-        compositeRoomNodeOverrides[outgoingId] = {
-          room: {
-            points: compositeCalSegments.room.points.map((point) => ({ ...point })),
-            inches: compositeCalSegments.room.inches
-          },
-          wallQuad: { points: compositeCalSegments.wallQuad.points.map((point) => ({ ...point })) }
-        };
-      }
-      const saved = compositeRoomNodeOverrides[profile.id];
-      compositeCalSegments.room = saved
-        ? { points: saved.room.points.map((point) => ({ ...point })), inches: saved.room.inches }
-        : { points: profile.referenceSegment.points.map((point) => ({ ...point })), inches: profile.referenceSegment.inches };
-      compositeCalSegments.wallQuad = saved
-        ? { points: saved.wallQuad.points.map((point) => ({ ...point })) }
-        : { points: profile.points.map((point) => ({ ...point })) };
+      compositeCalSegments.room = {
+        points: profile.referenceSegment.points.map((point) => ({ ...point })),
+        inches: profile.referenceSegment.inches
+      };
+      compositeCalSegments.wallQuad = { points: profile.points.map((point) => ({ ...point })) };
     }
     // The mural-reference segment, unlike the room one, is meaningless
     // once the underlying mural image changes -- a position dragged onto
@@ -16975,10 +16922,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const compositeClose = document.getElementById("compositeRoomClose");
   const compositeShare = document.getElementById("compositeRoomShare");
-  const compositeCycle = document.getElementById("compositeRoomCycleBtn");
   compositeClose?.addEventListener("click", closeCompositeRoomPreview);
   compositeShare?.addEventListener("click", shareCompositeRoomPreview);
-  compositeCycle?.addEventListener("click", cycleCompositeRoomProfile);
 
   const compositeCalNodesToggle = document.getElementById("compositeCalNodesToggle");
   compositeCalNodesToggle?.addEventListener("click", () => {
