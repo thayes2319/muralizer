@@ -3797,6 +3797,8 @@ button, select {
   z-index: 6;
   align-items: center;
   gap: 5px;
+  height: 26px;
+  box-sizing: border-box;
   border: 1px solid rgba(255,255,255,0.55);
   background: rgba(12,26,36,0.55);
   backdrop-filter: blur(4px);
@@ -3807,7 +3809,7 @@ button, select {
   font-weight: 700;
   letter-spacing: 0.4px;
   border-radius: 999px;
-  padding: 5px 12px;
+  padding: 0 12px;
   cursor: pointer;
 }
 
@@ -5126,6 +5128,147 @@ button, select {
   margin-right: 4px;
 }
 
+
+/* ============================================================
+   FAVORITES SHORTCUT -- lives next to Share above the mural image (see
+   .concept-favorite-group below), not as an inline strip of its own
+   entries: a flat row of unlabeled chips doesn't stay usable once there
+   are more than a handful of saved recipes (confirmed problem with an
+   earlier version of this). Browsing/managing the full list happens in
+   one scrollable, category-grouped place instead -- the same #scenesModal
+   the "..." menu's "Favorites" item opens (see scene-category-* further
+   down).
+============================================================ */
+/* Quick-favorite star + "browse Favorites" list icon, next to Share above
+   the mural image, joined into one pill so they read as a single related
+   control rather than two separate floating buttons. Classic outline-to-
+   filled star (universally understood as "save/favorite this"), in the
+   app's own palette rather than stock yellow -- gold fill on
+   #quickFavoriteBtn.just-saved, briefly, as one-tap save confirmation. Not
+   a toggle against a specific saved item's state -- see the JS comment on
+   quickSaveFavorite(). */
+.concept-favorite-group {
+  display: none;
+  position: absolute;
+  top: 10px;
+  right: 96px;
+  z-index: 6;
+  height: 26px;
+  box-sizing: border-box;
+  align-items: center;
+  border: 1px solid rgba(255,255,255,0.55);
+  background: rgba(12,26,36,0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border-radius: 999px;
+  overflow: hidden;
+}
+#imageWrapper.has-image .concept-favorite-group {
+  display: inline-flex;
+}
+.concept-favorite-btn,
+.concept-favorite-list-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: none;
+  background: transparent;
+  color: #ffffff;
+  padding: 0;
+  cursor: pointer;
+  transition: color 0.2s ease, background 0.2s ease;
+}
+.concept-favorite-list-btn {
+  border-left: 1px solid rgba(255,255,255,0.3);
+}
+.concept-favorite-btn:hover,
+.concept-favorite-list-btn:hover {
+  color: #e8b923;
+}
+.concept-favorite-btn.just-saved {
+  background: #e8b923;
+  color: #173d53;
+}
+.concept-favorite-btn svg {
+  fill: currentColor;
+  fill-opacity: 0;
+  transition: fill-opacity 0.2s ease;
+}
+.concept-favorite-btn.just-saved svg {
+  fill-opacity: 1;
+}
+
+/* Favorites modal list -- grouped by Category so it stays navigable
+   with many saved recipes. Each row: thumbnail, name (click to apply),
+   rename, delete. */
+.saved-scenes-empty {
+  font-family: Candara, sans-serif;
+  font-size: 13px;
+  color: #5b7b8c;
+  padding: 10px 4px;
+}
+
+.scene-category-group + .scene-category-group {
+  margin-top: 14px;
+}
+
+.scene-category-heading {
+  font-family: Candara, sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #218fc9;
+  margin: 0 0 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(33, 143, 201, 0.25);
+}
+
+.saved-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.saved-row-thumb {
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  border: 1px solid rgba(21, 82, 114, 0.35);
+  background-color: #eef4f7;
+  cursor: pointer;
+  padding: 0;
+}
+
+.saved-row .load-btn {
+  flex: 1 1 auto;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.saved-row .rename-btn {
+  flex: 0 0 auto;
+  border: none;
+  background: transparent;
+  color: #218fc9;
+  cursor: pointer;
+  font-size: 13px;
+  padding: 2px 6px;
+}
+.saved-row .rename-btn:hover {
+  color: #173d53;
+}
+
+.saved-row.selected {
+  background: rgba(33, 143, 201, 0.1);
+  border-radius: 6px;
+}
 
 /* ============================================================
    IMAGE + WATERMARK + OUTPUT GRID
@@ -7752,6 +7895,12 @@ select[multiple].collapsible-multi.expanded option:first-child {
     padding: 4px 8px;
   }
 
+  .concept-room-btn-row .concept-favorite-group {
+    position: static;
+    top: auto;
+    right: auto;
+  }
+
 }
 
 
@@ -8084,7 +8233,7 @@ select[multiple].collapsible-multi.expanded option:first-child {
     Terms & Privacy
   </div>
 
-  <div class="menu-item" onclick="toggleScenesPanelFromMenu()">Saved Scenes</div>
+  <div class="menu-item" onclick="toggleScenesPanelFromMenu()">Favorites</div>
 
   <div class="menu-item" onclick="openConceptPresentation()">Present Concept</div>
 
@@ -9153,6 +9302,14 @@ If you’re exploring a new direction, try adjusting just 1-2 elements at a time
             <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
             Share
           </button>
+          <div class="concept-favorite-group">
+            <button id="quickFavoriteBtn" class="concept-favorite-btn" type="button" title="Save current selections to Favorites" onclick="quickSaveFavorite()">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2.5 15.09 9.11 22.18 9.9 16.9 14.85 18.36 21.9 12 18.35 5.64 21.9 7.1 14.85 1.82 9.9 8.91 9.11"/></svg>
+            </button>
+            <button id="openFavoritesBtn" class="concept-favorite-list-btn" type="button" title="Browse Favorites" onclick="toggleScenesPanelFromMenu()">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="14" y2="18"/></svg>
+            </button>
+          </div>
         </div>
         <div id="muralPaletteStrip" class="palette-strip" style="display:none;" aria-label="Dominant mural colors for paint transfer"></div>
         <img id="muralImage">
@@ -9415,14 +9572,14 @@ If you’re exploring a new direction, try adjusting just 1-2 elements at a time
        <!-- SAVED SCENES MODAL (opened from the ⋯ menu) -->
        <div id="scenesModal" class="scenes-modal" aria-hidden="true">
          <div class="scenes-modal-card" role="dialog" aria-modal="true" aria-labelledby="scenesModalTitle">
-           <button id="scenesModalClose" class="cpc-session-close" type="button" aria-label="Close saved scenes">×</button>
+           <button id="scenesModalClose" class="cpc-session-close" type="button" aria-label="Close favorites">×</button>
            <div class="scenes-modal-head">
-             <h3 id="scenesModalTitle">Saved Scenes</h3>
+             <h3 id="scenesModalTitle">Favorites</h3>
            </div>
            <div class="scenes-modal-body">
 
              <div class="scene-actions">
-               <button id="saveSceneBtn">Save Current Scene</button>
+               <button id="saveSceneBtn">Save Current Selections</button>
              </div>
 
              <div id="saveCurrentScenePanel" class="save-panel collapsed">
@@ -9997,12 +10154,18 @@ document.addEventListener("DOMContentLoaded", () => {
 // ============================================================
 // EDIT MODE: SAFE IMAGE GENERATION WRAPPER
 // ============================================================
-function generateImageWithPrompt(promptText) {
+// async + awaited so the restore below can never run before generateImage()
+// has actually read the box -- generateImage() awaits ensureReferenceAssessment()
+// before reading the prompt when a reference image is set, which used to
+// yield control back here first (an un-awaited call), letting `box.value =
+// old` fire and silently overwrite promptText (e.g. the user's chosen
+// edited description) before generateImage() ever saw it.
+async function generateImageWithPrompt(promptText) {
   const box = document.getElementById("imagePrompt");
   const old = box.value;
 
   box.value = promptText;
-  generateImage();
+  await generateImage();
   box.value = old;
 }
 
@@ -10122,56 +10285,97 @@ function loadScene(scene) {
   }
 }
 
+// Groups recipes by their taxonomy Category so the list stays navigable as
+// it grows -- a flat list of dozens of entries is exactly what made the
+// short-lived "Favorite This" chip strip unworkable at scale. Reference-
+// only recipes (Pure Inspiration, where category is stripped/never set)
+// fall into one shared bucket rather than each showing up "uncategorized."
+function groupSavedRecipesByCategory(recipes) {
+  const groups = new Map();
+  recipes.forEach((recipe) => {
+    const label = recipe.scene?.category || UNCATEGORIZED_RECIPE_LABEL;
+    if (!groups.has(label)) groups.set(label, []);
+    groups.get(label).push(recipe);
+  });
+  return groups;
+}
+
 function populateSavedScenes() {
   const container = document.getElementById("savedScenesList");
   if (!container) return;
 
-  const saved = JSON.parse(localStorage.getItem("muralScenes") || "[]");
+  migrateLegacySavedScenesIfNeeded();
+  const recipes = readSavedRecipes();
   container.innerHTML = "";
 
-  saved.forEach(item => {
-    const row = document.createElement("div");
-    row.className = "saved-row";
+  if (!recipes.length) {
+    container.innerHTML = '<p class="saved-scenes-empty">No favorites yet -- set up a look and tap "Save Current Selections" above, or the star next to Share.</p>';
+    return;
+  }
 
-    const loadBtn = document.createElement("button");
-    loadBtn.className = "load-btn";
-    loadBtn.textContent = item.name;
+  const groups = groupSavedRecipesByCategory(recipes);
+  groups.forEach((groupRecipes, categoryLabel) => {
+    const groupEl = document.createElement("div");
+    groupEl.className = "scene-category-group";
 
-    const deleteBtn = document.createElement("button");
-    deleteBtn.className = "delete-btn";
-    deleteBtn.textContent = "X";
+    const heading = document.createElement("h4");
+    heading.className = "scene-category-heading";
+    heading.textContent = categoryLabel;
+    groupEl.appendChild(heading);
 
-    loadBtn.addEventListener("click", () => {
-      loadScene(item.data);
-      selectedSceneName = item.name;
+    groupRecipes.forEach((recipe) => {
+      const row = document.createElement("div");
+      row.className = "saved-row";
+      row.dataset.recipeId = recipe.id;
 
-      document.querySelectorAll(".saved-row").forEach(r =>
-        r.classList.remove("selected")
-      );
-      row.classList.add("selected");
+      const thumb = document.createElement("button");
+      thumb.type = "button";
+      thumb.className = "saved-row-thumb";
+      thumb.setAttribute("style", buildRecipeThumbStyle(recipe.scene));
+      thumb.setAttribute("aria-label", `Load ${recipe.name}`);
+
+      const nameBtn = document.createElement("button");
+      nameBtn.type = "button";
+      nameBtn.className = "load-btn";
+      nameBtn.textContent = recipe.name;
+
+      const applyRecipe = () => {
+        applySavedRecipe(recipe.id);
+        document.querySelectorAll(".saved-row").forEach((r) => r.classList.remove("selected"));
+        row.classList.add("selected");
+      };
+      thumb.addEventListener("click", applyRecipe);
+      nameBtn.addEventListener("click", applyRecipe);
+
+      const renameBtn = document.createElement("button");
+      renameBtn.type = "button";
+      renameBtn.className = "rename-btn";
+      renameBtn.textContent = "✎";
+      renameBtn.setAttribute("aria-label", `Rename ${recipe.name}`);
+      renameBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const next = window.prompt("Rename this saved scene:", recipe.name);
+        if (next !== null) renameSavedRecipe(recipe.id, next);
+      });
+
+      const deleteBtn = document.createElement("button");
+      deleteBtn.type = "button";
+      deleteBtn.className = "delete-btn";
+      deleteBtn.textContent = "X";
+      deleteBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        deleteSavedRecipe(recipe.id);
+      });
+
+      row.appendChild(thumb);
+      row.appendChild(nameBtn);
+      row.appendChild(renameBtn);
+      row.appendChild(deleteBtn);
+      groupEl.appendChild(row);
     });
 
-    deleteBtn.addEventListener("click", e => {
-      e.stopPropagation();
-      deleteScene(item.name);
-    });
-
-    row.appendChild(loadBtn);
-    row.appendChild(deleteBtn);
-    container.appendChild(row);
+    container.appendChild(groupEl);
   });
-}
-
-function deleteScene(name) {
-  if (!name) return;
-
-  const saved = JSON.parse(localStorage.getItem("muralScenes") || "[]");
-  const filtered = saved.filter(item => item.name !== name);
-
-  localStorage.setItem("muralScenes", JSON.stringify(filtered));
-
-  selectedSceneName = null;
-  populateSavedScenes();
 }
 
 // Saved Scenes now lives in a themed modal, invoked from the ⋯ main menu.
@@ -13166,6 +13370,287 @@ function captureCurrentSceneData() {
   return data;
 }
 
+// Pure Inspiration ignores every taxonomy selection below Creative
+// Direction entirely (see PURE_INSPIRATION_HIDDEN_GROUPS) -- when snapshotting
+// a Pure Inspiration generation's scene, strip those fields rather than
+// saving/showing chips for selections that had zero effect on the image.
+// Deliberately NOT baked into captureCurrentSceneData() itself: that
+// function is also used by the unrelated "Save Scene" preset feature
+// (17985/17991 below), where the live taxonomy state is exactly what
+// should be saved regardless of the current Creative Direction mode.
+function stripPureInspirationSceneFields(scene) {
+  const stripped = { ...scene };
+  [
+    "category", "subScene", "elements", "botanicalForeground",
+    "styleWallpaper", "applicationStyle", "colorMode",
+    "primaryHue", "primaryHueName", "primaryHueHex",
+    "secondaryHue", "secondaryHueName", "secondaryHueHex",
+    "backgroundColor", "backgroundName", "backgroundHueName",
+    "fog", "fogMode", "substrate", "panelType", "feel"
+  ].forEach((key) => { stripped[key] = null; });
+  return stripped;
+}
+
+// ============================================================
+// SAVED SCENES -- one unified list of named, reusable CREATIVE-DIRECTION
+// RECIPES (taxonomy selections and/or an inspiration image), grouped by
+// Category for browsing at scale. This replaces two things that used to be
+// separate and confusingly overlapping: the old taxonomy-only "Saved
+// Scenes" preset list, and a short-lived "Favorite This" chip strip. Both
+// were "bookmark my current setup to reapply later" -- the same job -- so
+// there's one list and one storage key now (SAVED_RECIPES_KEY), with a
+// one-time migration of both legacy stores below.
+//
+// Distinct from the per-concept scene record (cpcConceptSceneByKey,
+// captureCurrentSceneData above): that's a historical, read-only record of
+// what produced ONE already-generated image (shown in Load All). A saved
+// recipe is forward-looking -- "I like this combination, let me start a
+// new generation from it later" -- closer to a tab in a wallcovering
+// sample book than a log entry.
+// ============================================================
+const SAVED_RECIPES_KEY = "muralizerSavedRecipes";
+const SAVED_RECIPES_MIGRATED_KEY = "muralizerSavedRecipesMigrated";
+const SAVED_RECIPES_MAX = 300;
+const UNCATEGORIZED_RECIPE_LABEL = "Inspiration-based (no category)";
+
+function readSavedRecipes() {
+  try {
+    const raw = localStorage.getItem(SAVED_RECIPES_KEY);
+    const list = raw ? JSON.parse(raw) : [];
+    return Array.isArray(list) ? list : [];
+  } catch (err) {
+    console.warn("Could not read saved recipes:", err);
+    return [];
+  }
+}
+
+function writeSavedRecipes(list) {
+  try {
+    localStorage.setItem(SAVED_RECIPES_KEY, JSON.stringify(list.slice(0, SAVED_RECIPES_MAX)));
+  } catch (err) {
+    console.warn("Could not save recipes:", err);
+  }
+}
+
+// One-time import of both legacy stores into the unified list, so nothing
+// saved before this merge is lost. Runs once (gated by a migrated flag)
+// before the first render.
+function migrateLegacySavedScenesIfNeeded() {
+  if (localStorage.getItem(SAVED_RECIPES_MIGRATED_KEY)) return;
+  const migrated = [];
+  try {
+    const legacyScenes = JSON.parse(localStorage.getItem("muralScenes") || "[]");
+    legacyScenes.forEach((item) => {
+      migrated.push({
+        id: `recipe_legacy_${Math.random().toString(36).slice(2)}`,
+        name: item.name || "Saved scene",
+        createdAt: new Date().toISOString(),
+        scene: item.data || {}
+      });
+    });
+  } catch (err) {
+    console.warn("Legacy Saved Scenes migration skipped:", err);
+  }
+  try {
+    const legacyFavorites = JSON.parse(localStorage.getItem("muralizerFavoriteScenes") || "[]");
+    legacyFavorites.forEach((fav) => {
+      const scene = { ...(fav.scene || {}) };
+      if (fav.reference) scene.reference = fav.reference;
+      migrated.push({
+        id: fav.id || `recipe_legacy_${Math.random().toString(36).slice(2)}`,
+        name: fav.name || "Favorite",
+        createdAt: fav.createdAt || new Date().toISOString(),
+        scene
+      });
+    });
+  } catch (err) {
+    console.warn("Legacy Favorite Scenes migration skipped:", err);
+  }
+  if (migrated.length) {
+    writeSavedRecipes([...migrated, ...readSavedRecipes()]);
+  }
+  localStorage.setItem(SAVED_RECIPES_MIGRATED_KEY, "1");
+}
+
+// The one recipe-capture function used everywhere a recipe gets saved --
+// the Saved Scenes panel AND (via generateImage()) every concept's own
+// scene record, so a concept's stored recipe and a manually-saved one are
+// the exact same shape and can share every apply/restore code path below.
+// Only the serializable, restorable slice of referenceReimagineState is
+// attached -- .image (a live Image object) and transient assessment/timer
+// fields are deliberately left out.
+function captureFullRecipeScene() {
+  const scene = captureCurrentSceneData();
+  if (referenceReimagineState.dataUrl) {
+    scene.reference = {
+      dataUrl: referenceReimagineState.dataUrl,
+      mimeType: referenceReimagineState.mimeType,
+      name: referenceReimagineState.name,
+      crop: { ...referenceReimagineState.crop },
+      useFullImage: referenceReimagineState.useFullImage,
+      blendWithMuralizer: referenceReimagineState.blendWithMuralizer
+    };
+  }
+  return scene;
+}
+
+// Restores a saved reference image into the UI/state without re-running the
+// (paid, async) vision assessment -- description is the same distilled
+// "what this image is about" text that assessment would produce again from
+// the identical photo, so reusing it directly makes applying a recipe
+// instant and free. Mirrors handleReferenceReimagineFile's DOM/state setup,
+// starting from an already-normalized dataUrl instead of a fresh File.
+function applyReferenceRecipe(ref, description) {
+  const modeInput = document.querySelector(
+    `input[name="creativeDirectionMode"][value="inspiration"]`
+  );
+  if (modeInput) modeInput.checked = true;
+  updateCreativeDirectionMode("inspiration");
+
+  referenceReimagineState.dataUrl = ref.dataUrl;
+  referenceReimagineState.mimeType = ref.mimeType || "image/jpeg";
+  referenceReimagineState.name = ref.name || "saved-reference.jpg";
+  referenceReimagineState.crop = ref.crop
+    ? { ...ref.crop }
+    : { left: 0, top: 0, width: 1, height: 1 };
+  referenceReimagineState.useFullImage = ref.useFullImage !== false;
+  referenceReimagineState.cropVersion = 0;
+  referenceReimagineState.assessedDescription = description || "";
+  referenceReimagineState.assessedCropVersion = 0;
+  referenceReimagineState.muralizerDescription = description || "";
+  referenceReimagineState.sourceContextToExclude = "";
+
+  const sourceImage = new Image();
+  sourceImage.onload = () => {
+    referenceReimagineState.image = sourceImage;
+    const frame = document.getElementById("referenceCropFrame");
+    const sourceAspect = Math.min(21 / 9, Math.max(9 / 16, sourceImage.naturalWidth / sourceImage.naturalHeight));
+    frame?.style.setProperty("--reference-crop-aspect", String(sourceAspect));
+    document.getElementById("referenceCropEditor")?.classList.add("is-visible");
+    renderReferenceCrop();
+  };
+  sourceImage.src = ref.dataUrl;
+
+  const preview = document.getElementById("referenceReimaginePreview");
+  const thumb = document.getElementById("referenceReimagineThumb");
+  const nameEl = document.getElementById("referenceReimagineName");
+  if (thumb) thumb.src = ref.dataUrl;
+  if (nameEl) nameEl.textContent = referenceReimagineState.name;
+  preview?.classList.add("is-visible");
+
+  const directionInput = document.querySelector(
+    `input[name="referenceDirection"][value="${ref.blendWithMuralizer ? "blend" : "inspiration"}"]`
+  );
+  if (directionInput) directionInput.checked = true;
+  updateReferenceDirectionMode(ref.blendWithMuralizer ? "blend" : "inspiration");
+
+  applyReferenceMuralDescription();
+}
+
+// Shared apply logic -- reapplies a scene object (taxonomy + optional
+// nested .reference) into the live UI. Used by both "load a saved recipe"
+// and "restore this concept's recipe when you switch to it."
+function applyRecipeToUI(scene) {
+  if (!scene) return;
+  if (scene.reference) {
+    applyReferenceRecipe(scene.reference, scene.description);
+  } else {
+    // No reference in this recipe -- make sure we're not left showing a
+    // stale reference photo from whatever was active before.
+    const modeInput = document.querySelector(`input[name="creativeDirectionMode"][value="muralizer"]`);
+    if (modeInput) modeInput.checked = true;
+    updateCreativeDirectionMode("muralizer");
+  }
+  // Taxonomy selections are meaningful for "Via Selections" and "Inspired
+  // Blend" alike (only Pure Inspiration ignores them) -- always reapply.
+  loadScene(scene);
+}
+
+function applySavedRecipe(id) {
+  const recipe = readSavedRecipes().find((r) => r.id === id);
+  if (!recipe) return;
+  applyRecipeToUI(recipe.scene);
+  selectedSceneName = recipe.name;
+}
+
+// One-tap save from the star button next to Share -- same composite
+// default name as the "Save Current Selections" panel, just without
+// stopping to ask first (rename later from the Favorites list if the
+// auto-generated name isn't descriptive enough). The star fills gold
+// briefly as confirmation, then reverts -- it's a one-shot save action,
+// not a toggle tied to a specific already-saved recipe's state.
+function quickSaveFavorite() {
+  const scene = captureFullRecipeScene();
+  const name = (typeof generateSceneName === "function") ? generateSceneName(scene) : `favorite-${Date.now()}`;
+  const recipes = readSavedRecipes();
+  recipes.unshift({
+    id: `recipe_${Date.now()}`,
+    name,
+    createdAt: new Date().toISOString(),
+    scene
+  });
+  writeSavedRecipes(recipes);
+  if (document.getElementById("scenesModal")?.classList.contains("open")) {
+    populateSavedScenes();
+  }
+
+  const btn = document.getElementById("quickFavoriteBtn");
+  if (btn) {
+    btn.classList.add("just-saved");
+    btn.setAttribute("title", `Saved as "${name}"`);
+    clearTimeout(btn._favoriteResetTimer);
+    btn._favoriteResetTimer = setTimeout(() => {
+      btn.classList.remove("just-saved");
+      btn.setAttribute("title", "Save current selections to Favorites");
+    }, 2200);
+  }
+}
+
+function deleteSavedRecipe(id) {
+  writeSavedRecipes(readSavedRecipes().filter((r) => r.id !== id));
+  populateSavedScenes();
+}
+
+function renameSavedRecipe(id, newName) {
+  const trimmed = String(newName || "").trim();
+  if (!trimmed) return;
+  const recipes = readSavedRecipes();
+  const recipe = recipes.find((r) => r.id === id);
+  if (!recipe) return;
+  recipe.name = trimmed;
+  writeSavedRecipes(recipes);
+  populateSavedScenes();
+}
+
+// The color swatches' unset/default state can report CSS-wide keywords like
+// "initial" back through .style.backgroundColor (captureCurrentSceneData
+// reads it verbatim) -- those aren't valid gradient color stops and would
+// silently invalidate the whole `background` declaration, so filter them
+// out rather than trusting any non-empty string.
+const CSS_WIDE_KEYWORDS = new Set(["initial", "inherit", "unset", "revert", "revert-layer", ""]);
+function sanitizeRecipeHue(value, fallback) {
+  const trimmed = String(value || "").trim().toLowerCase();
+  return CSS_WIDE_KEYWORDS.has(trimmed) ? fallback : value;
+}
+
+function buildRecipeThumbStyle(scene) {
+  if (scene?.reference?.dataUrl) return `background-image:url('${scene.reference.dataUrl}');background-size:cover;background-position:center;`;
+  const primary = sanitizeRecipeHue(scene?.primaryHue, "#218fc9");
+  const secondary = sanitizeRecipeHue(scene?.secondaryHue, "#173d53");
+  return `background:linear-gradient(135deg, ${primary}, ${secondary});`;
+}
+
+// Local escape helper -- the app's other escapeHtml() (~20357) is nested
+// inside a different closure and isn't reachable from here.
+function escapeRecipeText(value) {
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function readConceptSceneMap() {
   try {
     const raw = localStorage.getItem(cpcConceptSceneCacheKey);
@@ -14397,15 +14882,27 @@ async function hydrateBackendConceptImages() {
         const imageUrl = resolveBackendImageUrl(record && record.imageUrl);
         if (!context || !conceptName || !imageUrl) return;
 
+        // Confirmed bug: this used to write EVERY backend record -- including
+        // mere generations that were never explicitly saved -- into the
+        // "saved"-variant key that hasSavedConceptImage()/getNextConceptName()
+        // check, just at a lower rank. Since a concept slot with no genuinely-
+        // saved record has no rank-2 competitor, its one-off unsaved
+        // generation record would win by default and permanently mark that
+        // slot as "already saved" once hydrated -- even though it looks blank
+        // in the UI (which only shows an image if a LOCAL draft/saved entry
+        // exists). That silently made "Save Concept" skip right over a
+        // visually blank slot and land on a later, unrelated one. Only a
+        // genuinely-saved record may ever populate this key now.
+        const isSavedRecord = !!(record && record.savedConcept) || String(record && record.id || "").toLowerCase().startsWith("cpc_saved_");
+        if (!isSavedRecord) return;
+
         const savedKey = buildConceptImageKey(context, conceptName, "saved");
         const createdAt = Number(new Date(record && record.createdAt)) || 0;
-        const isSavedRecord = !!(record && record.savedConcept) || String(record && record.id || "").toLowerCase().startsWith("cpc_saved_");
-        const rank = isSavedRecord ? 2 : 1;
         const prev = cpcBackendImageMeta[savedKey];
 
-        if (!prev || rank > prev.rank || (rank === prev.rank && createdAt > prev.createdAt)) {
+        if (!prev || createdAt > prev.createdAt) {
           cpcBackendImageStore[savedKey] = imageUrl;
-          cpcBackendImageMeta[savedKey] = { rank, createdAt, id: String(record && record.id || "") };
+          cpcBackendImageMeta[savedKey] = { createdAt, id: String(record && record.id || "") };
         }
       });
     } catch (err) {
@@ -14510,9 +15007,22 @@ function applyConceptImageForContext(context, conceptName) {
     muralImage.removeAttribute("src");
     muralImage.classList.remove("loaded");
   }
+
+  // Confirmed bug (this is the single chokepoint every concept-switch entry
+  // point -- the comparator, Load All, the concept dropdown, the open-chip
+  // slider -- funnels through): switching concepts used to only swap the
+  // displayed image, leaving whatever taxonomy/reference selections were
+  // last live in the UI untouched and disconnected from the concept you
+  // just switched to. Hitting Generate from there would silently overwrite
+  // that concept's draft with something built from an unrelated recipe.
+  // The concept's own selections are core to what it IS, not incidental --
+  // always restore them the same way loading a saved recipe does.
+  const scene = getConceptSceneForKey(buildConceptImageKey(context, conceptName, "saved"))
+    || getConceptSceneForKey(buildConceptImageKey(context, conceptName, "draft"));
+  if (scene) applyRecipeToUI(scene);
 }
 
-function persistGeneratedConceptImage(imgBase64) {
+function persistGeneratedConceptImage(imgBase64, snapshot) {
   if (!imgBase64) return;
 
   const imageDataUrl = `data:image/png;base64,${imgBase64}`;
@@ -14534,20 +15044,28 @@ function persistGeneratedConceptImage(imgBase64) {
   };
   const activeConceptName = getActiveConceptName(activeContext);
 
+  // Prefer the snapshot generateImage() took right before firing the
+  // request over re-reading live DOM state here -- this function only ever
+  // runs after the (possibly several-seconds-long) generation request
+  // resolves, by which point the user may have already changed selections,
+  // the prompt, or the reference photo. Falling back to live state keeps
+  // this safe for any future caller that doesn't pass a snapshot.
   const record = {
     id: `cpc_img_${Date.now()}`,
     createdAt: new Date().toISOString(),
     context: activeContext,
     concept: activeConceptName,
-    aspectRatio: document.getElementById("aspectRatioSelect")?.value || null,
-    model: document.getElementById("imageModelSelector")?.value || null,
-    prompt: document.getElementById("imagePrompt")?.value || "",
-    generationMode: referenceReimagineState.dataUrl ? "reference-reimagine" : "text-to-image",
-    referenceInfluence: referenceReimagineState.dataUrl
-      ? Number(document.getElementById("referenceInfluence")?.value || 45) / 100
-      : null,
+    aspectRatio: snapshot?.aspectRatio ?? (document.getElementById("aspectRatioSelect")?.value || null),
+    model: snapshot?.model ?? (document.getElementById("imageModelSelector")?.value || null),
+    prompt: snapshot?.prompt ?? (document.getElementById("imagePrompt")?.value || ""),
+    generationMode: snapshot?.generationMode ?? (referenceReimagineState.dataUrl ? "reference-reimagine" : "text-to-image"),
+    referenceInfluence: snapshot?.referenceInfluence !== undefined
+      ? snapshot.referenceInfluence
+      : (referenceReimagineState.dataUrl
+        ? Number(document.getElementById("referenceInfluence")?.value || 45) / 100
+        : null),
     imageKey: `cpc/latest/${Date.now()}`,
-    scene: captureCurrentSceneData()
+    scene: snapshot?.scene ?? captureCurrentSceneData()
   };
 
   try {
@@ -16570,6 +17088,33 @@ async function generateImage() {
     // the box remains user-editable, so whatever's actually displayed here
     // is what actually gets sent, including manual edits.
     const prompt = document.getElementById("imagePrompt").value;
+    const model = document.getElementById("imageModelSelector").value;
+    const referenceInfluence = hasReference
+      ? Number(document.getElementById("referenceInfluence")?.value || 45) / 100
+      : null;
+    const isPureInspiration = hasReference && !referenceReimagineState.blendWithMuralizer;
+    // Snapshot everything that describes "what produced this image" right
+    // before the request fires -- generation can take several seconds, and
+    // this is the only point where these values are guaranteed to match
+    // what's actually in the request body below (confirmed bug: the scene/
+    // prompt/settings saved with a concept used to be re-read from live DOM
+    // state AFTER the response came back, so anything the user changed
+    // while waiting silently overwrote the record for the PREVIOUS image).
+    // captureFullRecipeScene() attaches the full reference image (dataUrl,
+    // crop, blend mode), not just its filename -- unlike the taxonomy
+    // fields, the reference photo DID actually drive this image (even in
+    // Pure Inspiration, where every OTHER selection is inert), and storing
+    // the whole thing (not just the name) is what lets a concept's saved
+    // recipe be fully restored later, the same as a manually saved one.
+    const rawScene = captureFullRecipeScene();
+    const generationSnapshot = {
+      scene: isPureInspiration ? stripPureInspirationSceneFields(rawScene) : rawScene,
+      prompt,
+      aspectRatio,
+      model,
+      referenceInfluence,
+      generationMode: hasReference ? "reference-reimagine" : "text-to-image"
+    };
     const endpointPath = hasReference ? "/api/generate-from-reference" : "/api/generate";
     const generateEndpoint = window.SceniqueBackend?.toUrl
       ? window.SceniqueBackend.toUrl(endpointPath)
@@ -16601,11 +17146,9 @@ async function generateImage() {
         negative_prompt: negativePrompt,
         aspect_ratio: aspectRatio,
         seed: currentSeed,
-        model: document.getElementById("imageModelSelector").value,
+        model,
         reference_image: hasReference ? buildReferenceCropDataUrl() : undefined,
-        reference_influence: hasReference
-          ? Number(document.getElementById("referenceInfluence")?.value || 45) / 100
-          : undefined,
+        reference_influence: hasReference ? referenceInfluence : undefined,
         reference_mode: hasReference
           ? (referenceReimagineState.blendWithMuralizer ? "blend" : "inspiration")
           : undefined
@@ -16702,7 +17245,7 @@ muralImage.style.visibility = "hidden";
 void muralImage.offsetHeight;   // reflow trigger
 muralImage.style.visibility = "visible";
 
-persistGeneratedConceptImage(imgBase64);
+persistGeneratedConceptImage(imgBase64, generationSnapshot);
 muralImage.src = `data:image/png;base64,${imgBase64}`;
 
 
@@ -17951,8 +18494,7 @@ document.addEventListener("DOMContentLoaded", () => {
       `${clean(data.colorMode)}-` +
       `${clean(data.panelType)}`;
 
-    const saved = JSON.parse(localStorage.getItem("muralScenes") || "[]");
-    const num = String(saved.length + 1).padStart(3, "0");
+    const num = String(readSavedRecipes().length + 1).padStart(3, "0");
 
     return `${base}-${num}`;
   }
@@ -17981,22 +18523,28 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Save Scene is available outside pro mode now (panel invoked from the ⋯ menu).
+  // Captures the full recipe (taxonomy + reference image, if one is active)
+  // so a reference-based generation can be saved and restored just like a
+  // taxonomy-only one -- see captureFullRecipeScene().
   if (saveSceneBtn) {
     saveSceneBtn.addEventListener("click", () => {
-      showSavePanel(generateSceneName(captureCurrentSceneData()));
+      showSavePanel(generateSceneName(captureFullRecipeScene()));
     });
   }
 
   if (confirmSaveBtn) {
     confirmSaveBtn.addEventListener("click", () => {
-      const data = captureCurrentSceneData();
+      const scene = captureFullRecipeScene();
+      const name = saveNameInput.value.trim() || generateSceneName(scene);
 
-      const name = saveNameInput.value.trim() || generateSceneName(data);
-
-      const saved = JSON.parse(localStorage.getItem("muralScenes") || "[]");
-      saved.unshift({ name, data });
-
-      localStorage.setItem("muralScenes", JSON.stringify(saved));
+      const recipes = readSavedRecipes();
+      recipes.unshift({
+        id: `recipe_${Date.now()}`,
+        name,
+        createdAt: new Date().toISOString(),
+        scene
+      });
+      writeSavedRecipes(recipes);
 
       populateSavedScenes();
       hideSavePanel();
@@ -19588,6 +20136,13 @@ document.addEventListener("DOMContentLoaded", () => {
   let compareSelections = [];
   let compareSuppressedIds = new Set();
   let compareAutoFillPaused = false;
+  // Which window of 3 concepts the comparator is showing -- independent
+  // from activeConceptIndex on purpose. Browsing the tray with prev/next
+  // must never change which concept is active/displayed in the main image;
+  // only an explicit click on a card (or another genuine activation, all of
+  // which flow through setActiveContext) should do that. Kept in sync with
+  // the active concept there, not derived fresh on every render.
+  let compareWindowStart = 0;
   let activeContextIndex = Math.max(0, Math.min(restoredActiveIndex, contexts.length - 1));
   let activeModalSessionId = "";
   let activeModalClientName = "";
@@ -20331,6 +20886,7 @@ document.addEventListener("DOMContentLoaded", () => {
     push("Substrate", scene.substrate);
     push("Application", scene.applicationStyle);
     push("Style", scene.styleWallpaper);
+    push("Reference file", scene.reference?.name);
     if (scene.description) {
       const d = String(scene.description);
       push("Notes", d.length > 110 ? `${d.slice(0, 110)}\u2026` : d);
@@ -20489,6 +21045,38 @@ document.addEventListener("DOMContentLoaded", () => {
           return;
         }
 
+        // Confirmed bug: this used to only mutate the local concepts array,
+        // never the backend -- deleting a concept here left its backend
+        // record (keyed by the flat client|project::conceptName::variant
+        // string, with no per-instance identifier) orphaned forever. A
+        // LATER concept renamed to reuse that same name (e.g. tidying
+        // numbering after a delete) would then silently inherit the
+        // deleted concept's "saved" status once hydration pulled that
+        // orphaned record back in -- exactly what made Save Concept skip
+        // past a visually-blank slot to a much later, unrelated one.
+        const deletedConceptNames = selectedConceptIndexes
+          .map((idx) => (concepts[idx] && concepts[idx].name) || `c${idx + 1}`)
+          .map((name) => String(name || "").trim())
+          .filter(Boolean);
+        if (deletedConceptNames.length) {
+          const cacheKeysToRemove = [];
+          deletedConceptNames.forEach((name) => {
+            ["saved", "draft"].forEach((variant) => {
+              const key = buildConceptImageKey(targetCtx, name, variant);
+              delete cpcRuntimeImageStore[key];
+              delete cpcBackendImageStore[key];
+              delete cpcBackendImageMeta[key];
+              cacheKeysToRemove.push(key);
+            });
+          });
+          removeConceptSessionCacheEntries(cacheKeysToRemove, "Unable to prune session cache for deleted concepts:");
+          deleteRenderDiskConceptImages({
+            client: targetCtx.client,
+            project: targetCtx.project,
+            concepts: deletedConceptNames
+          }).catch((err) => console.warn("Backend delete for removed concepts failed:", err));
+        }
+
         targetCtx.concepts = remainingConcepts.map((concept, idx) => ({ name: (concept && concept.name) || `c${idx + 1}` }));
         const currentActive = Number.isInteger(targetCtx.activeConceptIndex) ? targetCtx.activeConceptIndex : 0;
         targetCtx.activeConceptIndex = Math.max(0, Math.min(currentActive, targetCtx.concepts.length - 1));
@@ -20558,7 +21146,55 @@ document.addEventListener("DOMContentLoaded", () => {
           return;
         }
 
+        // Confirmed bug: this used to only mutate the local concept name,
+        // never the backend -- renaming left the OLD name's backend record
+        // (and local image-store keys) sitting under the old flat key
+        // forever, AND left the new name with no image data even though it
+        // may have had one under its old identity. Move everything (image
+        // stores, session cache, scene metadata) from the old key to the
+        // new one, and sync the rename to the backend -- same as the
+        // read-only Render Disk branch above already does.
+        ["saved", "draft"].forEach((variant) => {
+          const oldKey = buildConceptImageKey(targetCtx, currentName, variant);
+          const newKey = buildConceptImageKey(targetCtx, nextName, variant);
+          if (cpcRuntimeImageStore[oldKey] !== undefined) {
+            cpcRuntimeImageStore[newKey] = cpcRuntimeImageStore[oldKey];
+            delete cpcRuntimeImageStore[oldKey];
+          }
+          if (cpcBackendImageStore[oldKey] !== undefined) {
+            cpcBackendImageStore[newKey] = cpcBackendImageStore[oldKey];
+            delete cpcBackendImageStore[oldKey];
+          }
+          if (cpcBackendImageMeta[oldKey] !== undefined) {
+            cpcBackendImageMeta[newKey] = cpcBackendImageMeta[oldKey];
+            delete cpcBackendImageMeta[oldKey];
+          }
+          const sessionMap = readConceptSessionCacheMap();
+          if (sessionMap[oldKey] !== undefined) {
+            mergeConceptSessionCacheEntries({ [newKey]: sessionMap[oldKey] });
+            removeConceptSessionCacheEntries([oldKey], "Unable to prune session cache for renamed concept:");
+          }
+          const oldScene = getConceptSceneForKey(oldKey);
+          if (oldScene) {
+            mergeConceptSceneEntries({ [newKey]: oldScene });
+          }
+        });
+        renameRenderDiskConceptImages({
+          filters: {
+            client: targetCtx.client,
+            project: targetCtx.project,
+            concepts: [currentName]
+          },
+          updates: {
+            concept: nextName
+          }
+        }).catch((err) => console.warn("Backend rename for renamed concept failed:", err));
+
         targetCtx.concepts[conceptIndex] = { name: nextName };
+        if (snapshot.id === "__current_open__") {
+          const safeIndex = Math.max(0, Math.min(projectItem.index, contexts.length - 1));
+          setActiveContext(safeIndex);
+        }
         persistSnapshotChanges(`Renamed version to ${nextName}.`);
         renderSessionModalDetail(snapshot, targetCtx.client || activeModalClientName, projectItem.index);
       });
@@ -21181,8 +21817,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const concepts = Array.isArray(activeCtx.concepts) && activeCtx.concepts.length ? activeCtx.concepts : [{ name: "c1" }];
-    const activeConceptIndex = Number.isInteger(activeCtx.activeConceptIndex) ? activeCtx.activeConceptIndex : 0;
-    const windowStart = Math.floor(Math.max(0, activeConceptIndex) / 3) * 3;
+    const maxWindowStart = Math.floor(Math.max(0, concepts.length - 1) / 3) * 3;
+    const windowStart = Math.max(0, Math.min(compareWindowStart, maxWindowStart));
     const windowEnd = Math.min(concepts.length, windowStart + 3);
 
     for (let idx = windowStart; idx < windowEnd && renderSelections.length < 3; idx += 1) {
@@ -21207,31 +21843,51 @@ document.addEventListener("DOMContentLoaded", () => {
     return renderSelections;
   }
 
-  function updateCompareNavigator() {
+  // Confirmed bug: "C{start}-C{end}" implied a contiguous range, but which
+  // concepts actually show is controlled by pinning (see the Pin button on
+  // each open-project chip) and can be any combination -- C1, C4, C5, not
+  // necessarily consecutive. Label whatever's ACTUALLY on screen instead.
+  function updateCompareNavigator(renderSelections) {
     const activeCtx = contexts[getActiveProjectIndex()];
     const concepts = Array.isArray(activeCtx && activeCtx.concepts) && activeCtx.concepts.length
       ? activeCtx.concepts
       : [];
-    const activeIndex = Number.isInteger(activeCtx && activeCtx.activeConceptIndex)
-      ? activeCtx.activeConceptIndex
-      : 0;
-    const windowStart = Math.floor(Math.max(0, activeIndex) / 3) * 3;
+    const maxWindowStart = Math.floor(Math.max(0, concepts.length - 1) / 3) * 3;
+    const windowStart = Math.max(0, Math.min(compareWindowStart, maxWindowStart));
     const windowEnd = Math.min(concepts.length, windowStart + 3);
 
     if (compareRangeEl) {
-      compareRangeEl.textContent = concepts.length
-        ? `C${windowStart + 1}-C${windowEnd}`
-        : "No concepts";
+      if (renderSelections && renderSelections.length) {
+        const badges = renderSelections.map((item) => {
+          const ctxIndex = contexts.findIndex((ctx) => buildCpcContextKey(ctx) === item.contextKey);
+          const ctx = ctxIndex >= 0 ? contexts[ctxIndex] : null;
+          const conceptsForCtx = Array.isArray(ctx && ctx.concepts) && ctx.concepts.length ? ctx.concepts : [{ name: "c1" }];
+          const conceptIndex = conceptsForCtx.findIndex((concept, idx) => {
+            const name = (concept && concept.name) || `c${idx + 1}`;
+            return String(name).toLowerCase() === String(item.conceptName || "c1").toLowerCase();
+          });
+          return toConceptBadge(item.conceptName, conceptIndex >= 0 ? conceptIndex : 0);
+        });
+        compareRangeEl.textContent = badges.join(", ");
+      } else {
+        compareRangeEl.textContent = concepts.length ? "Concepts" : "No concepts";
+      }
     }
-    if (comparePrevBtn) comparePrevBtn.disabled = windowStart === 0;
-    if (compareNextBtn) compareNextBtn.disabled = windowEnd >= concepts.length;
+
+    // Scrolling the window is inert once pinned concepts already fill all 3
+    // slots (buildCompareRenderSelections() always places pins first, the
+    // window-based auto-fill only ever reaches leftover slots) -- disable
+    // both arrows rather than let them silently appear to do nothing.
+    const isFullyPinned = compareSelections.length >= 3;
+    if (comparePrevBtn) comparePrevBtn.disabled = isFullyPinned || windowStart === 0;
+    if (compareNextBtn) compareNextBtn.disabled = isFullyPinned || windowEnd >= concepts.length;
   }
 
   function renderCompareTray() {
     if (!compareTrayEl) return;
     pruneCompareSelections();
-    updateCompareNavigator();
     const renderSelections = buildCompareRenderSelections();
+    updateCompareNavigator(renderSelections);
 
     if (resumeCompareTrayBtn) {
       resumeCompareTrayBtn.disabled = !compareAutoFillPaused;
@@ -21689,6 +22345,24 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     });
 
+    // Confirmed bug: range inputs fire `input` continuously while being
+    // dragged (dozens of times a second, not just on release). This used
+    // to run the FULL commit -- persist to localStorage, swap the main
+    // image, restore that concept's taxonomy/reference recipe, and rebuild
+    // every open chip's DOM -- on every single tick. That's expensive
+    // enough to visibly lag behind the actual drag, so the on-screen
+    // badge/active-concept state can still show the PREVIOUS concept for a
+    // moment after you've already released on a new one. Clicking
+    // Pin/Unpin in that window acts on the true current state (correct)
+    // while the screen still shows the old one -- reading as "wrong
+    // concept got unpinned" even though the underlying state was never
+    // actually wrong, just the render lagged behind it.
+    //
+    // Fix: only update the cheap, immediate visual (badge text) on every
+    // `input` tick. Defer the expensive full commit to `change`, which
+    // fires exactly once when the drag actually settles (mouse-up/
+    // touch-end/keyboard release) -- same split every native OS slider
+    // (volume, video scrubbers) uses for this exact reason.
     Array.from(openSet.querySelectorAll("[data-cpc-slider-index]")).forEach((slider) => {
       slider.addEventListener("input", () => {
         const index = Number(slider.dataset.cpcSliderIndex);
@@ -21701,14 +22375,25 @@ document.addEventListener("DOMContentLoaded", () => {
         const selectedIdx = Number(slider.value);
         if (!Number.isInteger(selectedIdx) || selectedIdx < 0 || selectedIdx >= concepts.length) return;
 
-        ctx.activeConceptIndex = selectedIdx;
-
         const chip = slider.closest(".cpc-open-item");
         const badge = chip && chip.querySelector(".cpc-open-concept.active");
         if (badge) {
           badge.textContent = toConceptBadge(concepts[selectedIdx] && concepts[selectedIdx].name, selectedIdx);
         }
+      });
 
+      slider.addEventListener("change", () => {
+        const index = Number(slider.dataset.cpcSliderIndex);
+        if (!Number.isInteger(index) || index < 0 || index >= contexts.length) return;
+
+        const ctx = contexts[index];
+        if (!ctx) return;
+
+        const concepts = Array.isArray(ctx.concepts) && ctx.concepts.length ? ctx.concepts : [{ name: "c1" }];
+        const selectedIdx = Number(slider.value);
+        if (!Number.isInteger(selectedIdx) || selectedIdx < 0 || selectedIdx >= concepts.length) return;
+
+        ctx.activeConceptIndex = selectedIdx;
         setActiveContext(index);
       });
     });
@@ -21870,6 +22555,9 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!ctx) return;
 
     activeContextIndex = safeIndex;
+    // Keep the comparator's window synced to whichever concept just became
+    // active through an explicit selection -- see compareWindowStart above.
+    compareWindowStart = Math.floor(Math.max(0, Number.isInteger(ctx.activeConceptIndex) ? ctx.activeConceptIndex : 0) / 3) * 3;
 
     if (clientEl) clientEl.textContent = ctx.client;
     if (projectEl) projectEl.textContent = ctx.project;
@@ -22068,22 +22756,27 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Pure viewport navigation -- pages which 3 concepts the comparator shows
+  // WITHOUT touching activeConceptIndex or the main image display. Only an
+  // explicit click on a card (data-compare-activate-index) or another
+  // genuine activation should change what's active; browsing the tray must
+  // not (see compareWindowStart above -- this was silently doing exactly
+  // that before, and got much more disruptive once concept-switching also
+  // started restoring the full taxonomy/reference recipe on activation).
   const moveCompareWindow = (direction) => {
-    const activeIndex = getActiveProjectIndex();
-    const activeCtx = contexts[activeIndex];
+    const activeCtx = contexts[getActiveProjectIndex()];
     const concepts = Array.isArray(activeCtx && activeCtx.concepts) && activeCtx.concepts.length
       ? activeCtx.concepts
       : [];
     if (!activeCtx || !concepts.length) return;
 
-    const currentIndex = Number.isInteger(activeCtx.activeConceptIndex) ? activeCtx.activeConceptIndex : 0;
-    const currentWindow = Math.floor(Math.max(0, currentIndex) / 3);
-    const targetIndex = Math.max(0, Math.min(concepts.length - 1, (currentWindow + direction) * 3));
-    if (targetIndex === currentIndex) return;
+    const maxWindowStart = Math.floor(Math.max(0, concepts.length - 1) / 3) * 3;
+    const targetWindowStart = Math.max(0, Math.min(maxWindowStart, compareWindowStart + direction * 3));
+    if (targetWindowStart === compareWindowStart) return;
 
-    activeCtx.activeConceptIndex = targetIndex;
+    compareWindowStart = targetWindowStart;
     compareAutoFillPaused = false;
-    setActiveContext(activeIndex);
+    renderCompareTray();
   };
 
   comparePrevBtn?.addEventListener("click", () => moveCompareWindow(-1));
