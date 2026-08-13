@@ -15799,86 +15799,91 @@ async function shareGenericRoomPreview() {
 // same convention as roomPreviewPoints/resetRoomPreviewPoints above).
 // referenceSegment: a pre-seeded calibration segment for the scale-matching
 // tool -- placed on the side-wall corner (the floor-to-ceiling vertical edge
-// where the back wall meets the receding side wall), the only landmark
-// visible and unambiguous in all 5 of these minimalist "white cube" stock
-// photos (no furniture/doors/switches in any of them). Positioned right
-// beside the wall quad's own nearest vertical edge (~0.06-0.08 outside it,
-// matching that edge's own top/bottom y so it silhouettes the wall's
-// height) rather than off at an independent guess elsewhere in the frame --
-// close enough to read as "calibrating against this wall" at a glance,
-// while staying just outside the wall corner handles' own hit radius so
-// the two don't fight for the same click/tap. inches:108 (9ft) is an
-// eyeballed default assuming a commercial/gallery ceiling height, same
-// "hand-estimated, verify visually" category as points above -- not a
-// measurement.
-// foregroundOverlay (optional): a same-resolution PNG, transparent except
-// for real photo pixels of an object that sits IN FRONT of the wall plane
-// (a hung coat, bags on hooks, etc.) that the wall quad's own corners can't
-// route around without losing too much usable wall. Drawn last, after the
-// mural triangles AND the shadow map, so the object reads as physically in
-// front of the mural rather than painted on it. The mural quad for these
-// profiles is intentionally sized to still cover the full area behind the
-// object -- the overlay just redraws the real object back on top afterward.
+// where the back wall meets the receding side wall), the clearest landmark
+// in each of these 5 stock photos. Positioned right beside the wall quad's
+// own nearest vertical edge (~0.03-0.08 outside it, matching that edge's
+// own top/bottom y so it silhouettes the wall's height) rather than off at
+// an independent guess elsewhere in the frame -- close enough to read as
+// "calibrating against this wall" at a glance, while staying just outside
+// the wall corner handles' own hit radius so the two don't fight for the
+// same click/tap. inches:96 (8ft) is an eyeballed residential-ceiling
+// default, same "hand-estimated, verify visually" category as points
+// above -- not a measurement.
+//
+// All 5 are deliberately simple, furniture-free residential rooms (real
+// AI-generated photos, reskinned from an earlier "minimalist white cube"
+// look to read as an actual home) -- a single wall quad, hand-picked to
+// land on a genuinely blank stretch of wall, is all any of them need. A
+// prior version of this set expanded to 12 furnished residential profiles
+// using a foregroundOverlay mechanism (redrawing furniture back on top of
+// the mural after compositing) to route around furniture the quad
+// couldn't avoid -- that was rolled back (2026-08-13) because the quads/
+// masks were hand-estimated from screenshots rather than real custom
+// cropping, and the results weren't reliable enough to ship. See the
+// commented-out RETIRED_RESIDENTIAL_ROOM_PROFILES block below and
+// foregroundOverlay's own support code (still present, just unused by
+// anything active right now) for where to pick that back up once a real
+// cropping tool exists.
 const ROOM_PROFILES = [
   {
     id: "panoramic",
     src: "stock-rooms/stock-room-panoramic-21x9.png",
-    photoAspect: 1536 / 640,
+    photoAspect: 2304 / 960,
     points: [
-      { x: 0.32, y: 0.27 },
-      { x: 0.68, y: 0.27 },
-      { x: 0.68, y: 0.565 },
-      { x: 0.32, y: 0.565 }
+      { x: 0.27, y: 0.08 },
+      { x: 0.52, y: 0.08 },
+      { x: 0.52, y: 0.80 },
+      { x: 0.27, y: 0.80 }
     ],
-    referenceSegment: { points: [{ x: 0.24, y: 0.27 }, { x: 0.24, y: 0.565 }], inches: 108 }
+    referenceSegment: { points: [{ x: 0.56, y: 0.10 }, { x: 0.56, y: 0.75 }], inches: 96 }
   },
   {
     id: "landscape",
     src: "stock-rooms/stock-room-1.png",
-    photoAspect: 1216 / 832,
+    photoAspect: 1824 / 1248,
     points: [
-      { x: 0.234, y: 0.226 },
-      { x: 0.773, y: 0.234 },
-      { x: 0.773, y: 0.655 },
-      { x: 0.234, y: 0.655 }
+      { x: 0.02, y: 0.02 },
+      { x: 0.47, y: 0.04 },
+      { x: 0.47, y: 0.85 },
+      { x: 0.02, y: 0.85 }
     ],
-    referenceSegment: { points: [{ x: 0.155, y: 0.226 }, { x: 0.155, y: 0.655 }], inches: 108 }
+    referenceSegment: { points: [{ x: 0.50, y: 0.05 }, { x: 0.50, y: 0.85 }], inches: 96 }
   },
   {
     id: "square",
     src: "stock-rooms/stock-room-square-5x4.png",
-    photoAspect: 1088 / 896,
+    photoAspect: 1632 / 1344,
     points: [
-      { x: 0.22, y: 0.22 },
-      { x: 0.76, y: 0.19 },
-      { x: 0.76, y: 0.66 },
-      { x: 0.22, y: 0.655 }
+      { x: 0.02, y: 0.02 },
+      { x: 0.38, y: 0.05 },
+      { x: 0.38, y: 0.85 },
+      { x: 0.02, y: 0.85 }
     ],
-    referenceSegment: { points: [{ x: 0.14, y: 0.22 }, { x: 0.14, y: 0.655 }], inches: 108 }
+    referenceSegment: { points: [{ x: 0.41, y: 0.05 }, { x: 0.41, y: 0.85 }], inches: 96 }
   },
   {
     id: "portrait",
     src: "stock-rooms/stock-room-portrait-4x5.png",
-    photoAspect: 896 / 1088,
+    photoAspect: 1344 / 1632,
     points: [
-      { x: 0.10, y: 0.09 },
-      { x: 0.915, y: 0.09 },
-      { x: 0.915, y: 0.69 },
-      { x: 0.10, y: 0.69 }
+      { x: 0.27, y: 0.03 },
+      { x: 0.84, y: 0.03 },
+      { x: 0.84, y: 0.75 },
+      { x: 0.27, y: 0.75 }
     ],
-    referenceSegment: { points: [{ x: 0.04, y: 0.09 }, { x: 0.04, y: 0.69 }], inches: 108 }
+    referenceSegment: { points: [{ x: 0.87, y: 0.05 }, { x: 0.87, y: 0.75 }], inches: 96 }
   },
   {
     id: "tall",
     src: "stock-rooms/stock-room-tall-9x16.png",
-    photoAspect: 768 / 1344,
+    photoAspect: 1152 / 2016,
     points: [
-      { x: 0.28, y: 0.07 },
-      { x: 0.73, y: 0.10 },
-      { x: 0.73, y: 0.685 },
-      { x: 0.28, y: 0.655 }
+      { x: 0.30, y: 0.02 },
+      { x: 0.71, y: 0.02 },
+      { x: 0.71, y: 0.72 },
+      { x: 0.30, y: 0.72 }
     ],
-    referenceSegment: { points: [{ x: 0.81, y: 0.10 }, { x: 0.81, y: 0.685 }], inches: 108 }
+    referenceSegment: { points: [{ x: 0.27, y: 0.04 }, { x: 0.27, y: 0.70 }], inches: 96 }
   }
 ];
 
