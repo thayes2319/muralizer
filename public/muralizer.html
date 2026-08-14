@@ -9549,7 +9549,7 @@ If you’re exploring a new direction, try adjusting just 1-2 elements at a time
           <p id="genericRoomStatus" class="generic-room-status" aria-live="polite"></p>
           <label class="generic-room-seed-label" for="genericRoomFidelitySlider">Mural fidelity</label>
           <div class="generic-room-seed-row">
-            <input id="genericRoomFidelitySlider" type="range" min="30" max="65" value="45" step="1">
+            <input id="genericRoomFidelitySlider" type="range" min="30" max="90" value="45" step="1">
             <span id="genericRoomFidelityValue" class="generic-room-seed-value">45%</span>
           </div>
           <p id="genericRoomFidelityHint" class="generic-room-status">Balanced: faithful to the mural without over-influencing the room.</p>
@@ -15375,7 +15375,21 @@ function updateReferenceDirectionMode(mode) {
     label.classList.toggle("is-selected", label.querySelector("input")?.checked);
   });
   updateReferenceReimagineCopy();
-  applyReferenceMuralDescription();
+  // Entering Blend mode with a reference already loaded: muralizerDescription
+  // can be stale -- it's snapshotted from the prompt box at upload time
+  // (see the upload handler), and if that upload happened while Pure
+  // Inspiration was showing a DIFFERENT, earlier photo's assessed
+  // description, the snapshot captured that instead of live selections.
+  // updateOutput() rebuilds muralizerDescription from the current Category/
+  // Sub-Scene/Elements selections whenever blendWithMuralizer + dataUrl are
+  // both true (see its own tail end) -- both now hold, so route through it
+  // instead of just re-applying whatever muralizerDescription already
+  // (possibly wrongly) holds.
+  if (referenceReimagineState.blendWithMuralizer && referenceReimagineState.dataUrl) {
+    updateOutput();
+  } else {
+    applyReferenceMuralDescription();
+  }
   // The influence slider's hint text depends on blendWithMuralizer (see
   // updateReferenceInfluence) -- refresh it so switching modes doesn't
   // leave stale wording from the mode you just left.
@@ -15781,14 +15795,19 @@ function updateGenericRoomSeedLabel() {
   label.textContent = tiers[Number(slider.value)] || "Mild";
 }
 
-// Same 30-65 clamp as the backend's handleWallMockupProxy -- that's the
-// tested-safe band (0.8 bled the mural's style onto furniture/floors; 0.5
-// confirmed good; 0.45 is the default). Mirrors the "Source influence"
-// slider's pattern (referenceInfluence) for a consistent feel.
+// Same 30-90 clamp as the backend's handleWallMockupProxy. 30-65 used to be
+// the whole range and was the tested-safe band (0.5 confirmed good; 0.45 is
+// the default); raised to 90 by request (2026-08-14). Real-device testing
+// at 0.8 previously bled the mural's style onto furniture/floors/textiles
+// too (fidelity has no spatial/regional control -- see the backend
+// comment), so 65-90 is UNTESTED territory carrying that same known risk,
+// not a re-verified safe range -- the hint text below says so. Mirrors the
+// "Source influence" slider's pattern (referenceInfluence) for a
+// consistent feel.
 function getGenericRoomFidelity() {
   const slider = document.getElementById("genericRoomFidelitySlider");
   if (!slider) return 0.45;
-  return Math.max(30, Math.min(65, Number(slider.value) || 45)) / 100;
+  return Math.max(30, Math.min(90, Number(slider.value) || 45)) / 100;
 }
 
 function updateGenericRoomFidelityLabel() {
@@ -15796,14 +15815,16 @@ function updateGenericRoomFidelityLabel() {
   const label = document.getElementById("genericRoomFidelityValue");
   const hint = document.getElementById("genericRoomFidelityHint");
   if (!slider || !label) return;
-  const value = Math.max(30, Math.min(65, Number(slider.value) || 45));
+  const value = Math.max(30, Math.min(90, Number(slider.value) || 45));
   label.textContent = `${value}%`;
   if (hint) {
     hint.textContent = value < 40
       ? "Lighter: more creative freedom, less strict adherence to the mural."
-      : value > 52
-        ? "Stronger: closer adherence to the mural's exact colors and motifs."
-        : "Balanced: faithful to the mural without over-influencing the room.";
+      : value > 65
+        ? "Very strong: past the tested-safe range -- watch for the mural's style bleeding onto furniture, floors, or textiles beyond just the wall."
+        : value > 52
+          ? "Stronger: closer adherence to the mural's exact colors and motifs."
+          : "Balanced: faithful to the mural without over-influencing the room.";
   }
 }
 
