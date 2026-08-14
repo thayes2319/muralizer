@@ -9495,6 +9495,9 @@ If you’re exploring a new direction, try adjusting just 1-2 elements at a time
               <label class="composite-cal-stretch-option"><input type="radio" name="compositeCalStretchMode" value="stopShort"> True Scale</label>
               <label class="composite-cal-stretch-option"><input type="radio" name="compositeCalStretchMode" value="tile"> Tile to fill</label>
             </fieldset>
+            <label class="composite-zoom-slider-label">Shift cropped mural left/right on wall
+              <input id="compositeCalShiftXSlider" type="range" min="-100" max="100" step="1" value="0">
+            </label>
             <p class="room-preview-note">Scale is a rough guide, not a measurement -- verify before ordering.</p>
           </details>
           <p class="generic-room-disclaimer">Stock room photos with hand-estimated wall corners -- if they look off for your photo, drag them in "Wall placement corners" above.</p>
@@ -16137,6 +16140,13 @@ let compositeCalSegments = {
   wallQuad: { points: [{ x: 0.32, y: 0.27 }, { x: 0.68, y: 0.27 }, { x: 0.68, y: 0.565 }, { x: 0.32, y: 0.565 }] }
 };
 let compositeCalStretchMode = "stretch"; // "stretch" | "stopShort" | "tile" -- resets on every modal open, radio group in the HTML
+// -1..1, 0 = centered (the original behavior). Only has a visible effect on
+// an axis that's actually being cropped (oversized after the stretch-mode
+// k is applied, or in the uncalibrated cover-crop fallback) -- lets the
+// user re-center the crop on a subject that a purely centered crop would
+// otherwise cut off (e.g. an off-center focal point in a wide mural forced
+// onto a narrow wall). Resets to 0 on every modal open, same as stretch mode.
+let compositeCalShiftX = 0;
 let compositeCalEffectiveStretchFactor = 1; // k from the most recent render -- see renderCompositeRoomComposite
 let compositeCalActiveSegment = "";      // "" | "room" | "mural"
 let compositeCalActivePoint = -1;        // 0 | 1 -- endpoints are dragged directly (absolute position), not
@@ -16226,16 +16236,23 @@ function computeWallAspect(points) {
   return span.width / span.height;
 }
 
-// Centered "cover" crop: trims whichever axis is oversized so the cropped
-// rectangle exactly matches targetAspect, keeping the crop centered. This
-// is what lets the mural fill its wall edge-to-edge without the distortion
-// that comes from stretching its full (mismatched-aspect) bounding box
-// across a quad it was never shaped for.
-function computeCoverCropRect(sourceWidth, sourceHeight, targetAspect) {
+// "Cover" crop: trims whichever axis is oversized so the cropped rectangle
+// exactly matches targetAspect. This is what lets the mural fill its wall
+// edge-to-edge without the distortion that comes from stretching its full
+// (mismatched-aspect) bounding box across a quad it was never shaped for.
+// shiftX (-1..1, default 0/centered) slides the crop window left/right
+// within its available slack when the WIDTH is the oversized axis -- lets
+// an off-center subject be re-centered instead of cut off by a purely
+// centered crop. No equivalent for the height axis: this fallback path is
+// only reachable pre-calibration, where there's no declared mural-inches
+// intent to shift toward, and the width case is the one that actually came
+// up (a wide mural forced onto a narrow wall).
+function computeCoverCropRect(sourceWidth, sourceHeight, targetAspect, shiftX = 0) {
   const sourceAspect = sourceWidth / sourceHeight;
   if (sourceAspect > targetAspect) {
     const width = sourceHeight * targetAspect;
-    return { x: (sourceWidth - width) / 2, y: 0, width, height: sourceHeight };
+    const maxOffset = (sourceWidth - width) / 2;
+    return { x: maxOffset + shiftX * maxOffset, y: 0, width, height: sourceHeight };
   }
   const height = sourceWidth / targetAspect;
   return { x: 0, y: (sourceHeight - height) / 2, width: sourceWidth, height };
@@ -16277,7 +16294,10 @@ function computeCompositeStretchFactor(stretchMode, wallPx, demandPx) {
 // margin of real wall around it -- the "Stop Short" outcome, whether reached
 // because the toggle is set that way or because a uniform "stretch" k driven
 // by the OTHER axis still wasn't enough to fill this one.
-function computeCalibratedPlacement(muralPx, wallPx, demandPx, k, points) {
+// shiftX (-1..1, default 0/centered) only matters when the x axis ends up
+// cropped (the y-margin/oversized-x case above) -- see computeCoverCropRect
+// for why there's no shiftY.
+function computeCalibratedPlacement(muralPx, wallPx, demandPx, k, points, shiftX = 0) {
   const effective = { x: demandPx.x * k, y: demandPx.y * k };
   const sourceCrop = {};
   const marginFrac = {};
@@ -16290,8 +16310,9 @@ function computeCalibratedPlacement(muralPx, wallPx, demandPx, k, points) {
       marginFrac[axis] = (1 - effective[axis] / wallPx[axis]) / 2;
     }
   });
+  const xSlack = (muralPx.x - sourceCrop.x) / 2;
   const crop = {
-    x: (muralPx.x - sourceCrop.x) / 2,
+    x: xSlack + shiftX * xSlack,
     y: (muralPx.y - sourceCrop.y) / 2,
     width: sourceCrop.x,
     height: sourceCrop.y
@@ -16652,6 +16673,9 @@ async function openCompositeRoomPreview() {
   // visible state always matches what's on screen -- never carries a stale
   // "Stop Short" choice over from a previous mural/session.
   compositeCalStretchMode = "stretch";
+  compositeCalShiftX = 0;
+  const shiftSlider = document.getElementById("compositeCalShiftXSlider");
+  if (shiftSlider) shiftSlider.value = "0";
   // Same reasoning for zoom -- don't carry a zoomed-in view over from a
   // previous open.
   compositeZoomStates = { room: { scale: 1, x: 0, y: 0 }, mural: { scale: 1, x: 0, y: 0 } };
@@ -16798,7 +16822,7 @@ function renderCompositeRoomComposite() {
   if (!muralPixelsPerInch || !roomPixelsPerInch) {
     // Uncalibrated fallback -- exactly today's original behavior.
     const wallAspect = wallPx.x / wallPx.y;
-    const crop = computeCoverCropRect(mural.naturalWidth, mural.naturalHeight, wallAspect);
+    const crop = computeCoverCropRect(mural.naturalWidth, mural.naturalHeight, wallAspect, compositeCalShiftX);
     placements = [{ source: cropToQuad(crop), destQuad: points }];
   } else {
     // demandPx = how many WALL-PHOTO pixels the mural's full extent should
@@ -16817,7 +16841,7 @@ function renderCompositeRoomComposite() {
     } else {
       const k = computeCompositeStretchFactor(compositeCalStretchMode, wallPx, demandPx);
       compositeCalEffectiveStretchFactor = k;
-      const placement = computeCalibratedPlacement(muralPx, wallPx, demandPx, k, points);
+      const placement = computeCalibratedPlacement(muralPx, wallPx, demandPx, k, points, compositeCalShiftX);
       placements = [{ source: cropToQuad(placement.crop), destQuad: placement.destQuad }];
     }
   }
@@ -17009,6 +17033,12 @@ document.addEventListener("DOMContentLoaded", () => {
   compositeCalStretchGroup?.addEventListener("change", (event) => {
     if (event.target.name !== "compositeCalStretchMode") return;
     compositeCalStretchMode = event.target.value;
+    renderCompositeRoomComposite();
+  });
+
+  const compositeCalShiftXSlider = document.getElementById("compositeCalShiftXSlider");
+  compositeCalShiftXSlider?.addEventListener("input", () => {
+    compositeCalShiftX = Number(compositeCalShiftXSlider.value) / 100;
     renderCompositeRoomComposite();
   });
 });
