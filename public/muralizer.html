@@ -4337,12 +4337,14 @@ button, select {
 .composite-room-width-label {
   position: absolute;
   left: 50%;
-  bottom: 6%;
+  bottom: 5%;
   transform: translate(-50%, 0);
+  background: rgba(23,61,83,0.78);
   color: #ffffff;
-  text-shadow: 0 0 3px rgba(0,0,0,0.9), 0 0 1px rgba(0,0,0,0.9);
+  padding: 3px 11px;
+  border-radius: 999px;
   font-family: Candara, sans-serif;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
   white-space: nowrap;
   pointer-events: none;
@@ -15973,10 +15975,14 @@ async function shareGenericRoomPreview() {
 // top of the mural after compositing) to route around furniture the quad
 // couldn't avoid -- rolled back (2026-08-13) because the quads/masks were
 // hand-estimated from screenshots rather than real custom cropping, and the
-// results weren't reliable enough to ship. See the commented-out
-// RETIRED_RESIDENTIAL_ROOM_PROFILES block below and foregroundOverlay's own
-// support code (still present, just unused by anything active right now)
-// for where to pick that back up once a real cropping tool exists.
+// results weren't reliable enough to ship. Its definitions and source
+// images (12 rooms x base+foreground) were kept around for a while as a
+// starting point in case that was worth redoing with a real cropping tool,
+// then removed (2026-08-14) since neither had actually been touched since
+// the rollback. foregroundOverlay's own support code is still present (see
+// runCompositeRoomPreview/renderCompositeRoomComposite), just unused by
+// anything active right now -- check git history before this commit if
+// reviving the 12-profile approach specifically.
 const ROOM_PROFILES = [
   {
     id: "panoramic",
@@ -16109,208 +16115,6 @@ const ROOM_PROFILES = [
     referenceSegment: { points: [{ x: 0.81, y: 0.10 }, { x: 0.81, y: 0.685 }], inches: 108 }
   }
 ];
-
-// ============================================================
-// ROLLED BACK (2026-08-13): the 12 residential profiles below were hand-
-// estimated (quad corners, reference segments, foregroundOverlay masks) by
-// eyeballing screenshots rather than precise custom cropping, and the
-// results weren't reliable enough to ship. Source images and their
-// foregroundOverlay PNGs are still sitting in public/stock-rooms/ (kept on
-// purpose, not deleted) -- once there's a real custom-cropping tool, these
-// definitions are the starting point for redoing this properly rather than
-// re-deriving the coordinates from scratch. Not currently referenced by
-// ROOM_PROFILES or anything else -- inert until re-enabled.
-// ============================================================
-/*
-const RETIRED_RESIDENTIAL_ROOM_PROFILES = [
-  {
-    id: "bedroom-1",
-    src: "stock-rooms/bedroom-1.png",
-    photoAspect: 1824 / 1248,
-    points: [
-      { x: 0.02, y: 0.02 },
-      { x: 0.885, y: 0.02 },
-      { x: 0.885, y: 0.97 },
-      { x: 0.02, y: 0.97 }
-    ],
-    referenceSegment: { points: [{ x: 0.10, y: 0.05 }, { x: 0.10, y: 0.50 }], inches: 48 },
-    // Bed (headboard+bedding+frame down to the floor), both nightstand+lamp
-    // assemblies, and the picture frame are all redrawn on top after the
-    // mural -- see the foregroundOverlay comment above ROOM_PROFILES.
-    foregroundOverlay: "stock-rooms/bedroom-1-foreground.png"
-  },
-  {
-    id: "bedroom-2",
-    src: "stock-rooms/bedroom-2.png",
-    photoAspect: 1824 / 1248,
-    points: [
-      { x: 0.335, y: 0.02 },
-      { x: 0.98, y: 0.02 },
-      { x: 0.98, y: 0.97 },
-      { x: 0.335, y: 0.97 }
-    ],
-    referenceSegment: { points: [{ x: 0.60, y: 0.06 }, { x: 0.60, y: 0.45 }], inches: 40 },
-    foregroundOverlay: "stock-rooms/bedroom-2-foreground.png"
-  },
-  {
-    id: "dining-room-1",
-    src: "stock-rooms/dining-room-1.png",
-    photoAspect: 1824 / 1248,
-    points: [
-      { x: 0.14, y: 0.088 },
-      { x: 0.96, y: 0.088 },
-      { x: 0.96, y: 0.70 },
-      { x: 0.14, y: 0.70 }
-    ],
-    referenceSegment: { points: [{ x: 0.20, y: 0.10 }, { x: 0.20, y: 0.65 }], inches: 90 },
-    // Table + chairs stay excluded (their thin legs reveal wall/floor
-    // through the gaps -- not a good overlay candidate), so the quad
-    // bottom still stops above them. Only the 2 pendant lights over the
-    // table are masked back on top.
-    foregroundOverlay: "stock-rooms/dining-room-1-foreground.png"
-  },
-  {
-    id: "dining-room-2",
-    src: "stock-rooms/dining-room-2.png",
-    photoAspect: 1824 / 1248,
-    points: [
-      { x: 0.02, y: 0.09 },
-      { x: 0.95, y: 0.09 },
-      { x: 0.95, y: 0.47 },
-      { x: 0.02, y: 0.47 }
-    ],
-    referenceSegment: { points: [{ x: 0.06, y: 0.12 }, { x: 0.06, y: 0.45 }], inches: 60 },
-    // Sideboard + dining table/chairs stay excluded (legs reveal wall/
-    // floor); the pendant lamp, the window, and the small picture frame
-    // are all traceable (fully surrounded by wall) and masked on top.
-    foregroundOverlay: "stock-rooms/dining-room-2-foreground.png"
-  },
-  {
-    id: "powder-room-1",
-    src: "stock-rooms/powder-room-1.png",
-    photoAspect: 1344 / 1632,
-    points: [
-      { x: 0.20, y: 0.03 },
-      { x: 0.83, y: 0.03 },
-      { x: 0.83, y: 0.95 },
-      { x: 0.20, y: 0.95 }
-    ],
-    referenceSegment: { points: [{ x: 0.48, y: 0.10 }, { x: 0.48, y: 0.55 }], inches: 60 },
-    // The two flanking doors stay excluded (structural openings, not
-    // paintable wall); the wall sconce, toilet, pedestal sink, towel bar,
-    // and both toilet-paper holders are all masked back on top.
-    foregroundOverlay: "stock-rooms/powder-room-1-foreground.png"
-  },
-  {
-    id: "powder-room-2",
-    src: "stock-rooms/powder-room-2.png",
-    photoAspect: 1344 / 1632,
-    points: [
-      { x: 0.32, y: 0.04 },
-      { x: 0.89, y: 0.04 },
-      { x: 0.89, y: 0.97 },
-      { x: 0.32, y: 0.97 }
-    ],
-    referenceSegment: { points: [{ x: 0.50, y: 0.10 }, { x: 0.50, y: 0.50 }], inches: 48 },
-    foregroundOverlay: "stock-rooms/powder-room-2-foreground.png"
-  },
-  {
-    id: "foyer",
-    src: "stock-rooms/foyer.png",
-    photoAspect: 1344 / 1632,
-    points: [
-      { x: 0.26, y: 0.02 },
-      { x: 0.755, y: 0.02 },
-      { x: 0.755, y: 0.62 },
-      { x: 0.26, y: 0.62 }
-    ],
-    referenceSegment: { points: [{ x: 0.65, y: 0.15 }, { x: 0.65, y: 0.55 }], inches: 60 },
-    // The entry bench stays excluded -- explicitly the reference case for
-    // "reveals the wall through its own open-leg structure," so the quad
-    // bottom stops above it. The ceiling flush-mount fixture is masked.
-    foregroundOverlay: "stock-rooms/foyer-foreground.png"
-  },
-  {
-    id: "reading-nook-1",
-    src: "stock-rooms/reading-nook-1.png",
-    photoAspect: 1824 / 1248,
-    points: [
-      { x: 0.375, y: 0.02 },
-      { x: 0.965, y: 0.02 },
-      { x: 0.965, y: 0.975 },
-      { x: 0.375, y: 0.975 }
-    ],
-    referenceSegment: { points: [{ x: 0.85, y: 0.10 }, { x: 0.85, y: 0.85 }], inches: 90 },
-    // The fireplace/mantle/mirror ensemble stays excluded -- too visually
-    // intricate to trace reliably -- so the quad's left edge stops at the
-    // window instead. The window and the armchair (down to the floor) are
-    // both masked back on top.
-    foregroundOverlay: "stock-rooms/reading-nook-1-foreground.png"
-  },
-  {
-    id: "reading-nook-2",
-    src: "stock-rooms/reading-nook-2.png",
-    photoAspect: 1824 / 1248,
-    points: [
-      { x: 0.27, y: 0.02 },
-      { x: 0.65, y: 0.02 },
-      { x: 0.65, y: 0.975 },
-      { x: 0.27, y: 0.975 }
-    ],
-    referenceSegment: { points: [{ x: 0.40, y: 0.04 }, { x: 0.40, y: 0.17 }], inches: 24 },
-    // The side table stays excluded (thin tripod legs reveal wall/floor),
-    // so the quad's right edge stops before it. The picture frame and the
-    // armchair (down to the floor) are both masked back on top.
-    foregroundOverlay: "stock-rooms/reading-nook-2-foreground.png"
-  },
-  {
-    id: "home-office-1",
-    src: "stock-rooms/home-office-1.png",
-    photoAspect: 1344 / 1632,
-    points: [
-      { x: 0.18, y: 0.03 },
-      { x: 0.88, y: 0.03 },
-      { x: 0.88, y: 0.58 },
-      { x: 0.18, y: 0.58 }
-    ],
-    referenceSegment: { points: [{ x: 0.30, y: 0.06 }, { x: 0.30, y: 0.45 }], inches: 60 },
-    // The sawhorse-leg desk and chair stay excluded (open leg structure
-    // reveals wall/floor), so the quad bottom stops above the desk. Only
-    // the picture frame is masked on top.
-    foregroundOverlay: "stock-rooms/home-office-1-foreground.png"
-  },
-  {
-    id: "home-office-2",
-    src: "stock-rooms/home-office-2.png",
-    photoAspect: 1344 / 1632,
-    points: [
-      { x: 0.04, y: 0.03 },
-      { x: 0.72, y: 0.03 },
-      { x: 0.72, y: 0.58 },
-      { x: 0.04, y: 0.58 }
-    ],
-    referenceSegment: { points: [{ x: 0.15, y: 0.06 }, { x: 0.15, y: 0.50 }], inches: 70 },
-    foregroundOverlay: "stock-rooms/home-office-2-foreground.png"
-  },
-  {
-    id: "mudroom",
-    src: "stock-rooms/mudroom.png",
-    photoAspect: 1344 / 1632,
-    points: [
-      { x: 0.24, y: 0.28 },
-      { x: 0.76, y: 0.28 },
-      { x: 0.76, y: 0.76 },
-      { x: 0.24, y: 0.76 }
-    ],
-    referenceSegment: { points: [{ x: 0.90, y: 0.07 }, { x: 0.90, y: 0.88 }], inches: 80 },
-    // The open shoe cubbies below the bench stay excluded (they reveal
-    // wall/backing through their own structure), so the quad bottom stops
-    // at the bench top. The coat, both hooks-hung bags, and both bags
-    // resting on the bench are all masked back on top.
-    foregroundOverlay: "stock-rooms/mudroom-foreground.png"
-  }
-];
-*/
 
 // ============================================================
 // SCALE CALIBRATION -- ties both the room photo and the mural to real-world
