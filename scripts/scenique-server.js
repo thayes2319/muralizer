@@ -941,6 +941,45 @@ async function handleWallMockupProxy(req, res) {
   });
 }
 
+// Deterministic safety net for the Mural Description handleReferenceAssessment
+// returns. The assessment instructions above explicitly ban this exact
+// vocabulary, and real-device testing has now shown the model uses it
+// anyway on a meaningful fraction of runs regardless -- confirmed twice on
+// the same test subject (a reflective/metallic/glossy car): first with zero
+// painterly language at all, then again, after strengthening and
+// reordering the instructions, with genuinely distributed painterly
+// language throughout EXCEPT for two exact banned terms ("polished",
+// "metallic sheen") still slipping through verbatim. Better wording reduces
+// how often this happens but doesn't reach zero -- an LLM instruction is
+// still just a request, not a guarantee. This catches what gets through in
+// code instead of hoping the next wording tweak is the one that finally
+// works. Word-boundary, case-insensitive; replacements stay grammatical
+// without reintroducing photographic-finish language of their own.
+const PAINTERLY_TERM_REPLACEMENTS = [
+  [/\bphotorealistic\b/gi, 'painterly'],
+  [/\bphotorealism\b/gi, 'painterly style'],
+  [/\bphotographic\b/gi, 'painted'],
+  [/\bmetallic sheen\b/gi, 'painted metallic tones'],
+  [/\bglossy\b/gi, 'richly pigmented'],
+  [/\breflective\b/gi, 'richly toned'],
+  [/\bpolished\b/gi, 'smoothly painted'],
+  [/\bchrome\b/gi, 'painted silver-toned'],
+  [/\bsleek\b/gi, 'elegant'],
+  [/\bmirror-like\b/gi, 'richly toned']
+];
+
+function sanitizePainterlyDescription(text) {
+  let sanitized = text;
+  for (const [pattern, replacement] of PAINTERLY_TERM_REPLACEMENTS) {
+    if (pattern.test(sanitized)) {
+      console.warn(`[painterly-sanitize] replaced ${pattern} in an assessed description`);
+    }
+    pattern.lastIndex = 0; // .test() with a /g pattern advances lastIndex -- reset before .replace() reuses it
+    sanitized = sanitized.replace(pattern, replacement);
+  }
+  return sanitized;
+}
+
 async function handleReferenceAssessment(req, res) {
   const body = await readBody(req);
   const reference = parseImageDataUrl(body.reference_image);
@@ -1052,7 +1091,7 @@ async function handleReferenceAssessment(req, res) {
   sendJson(res, 200, {
     ok: true,
     assessment: result.assessment,
-    mural_description: result.mural_description.trim()
+    mural_description: sanitizePainterlyDescription(result.mural_description.trim())
   });
 }
 
