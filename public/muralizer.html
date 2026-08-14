@@ -17420,15 +17420,31 @@ async function generateImage() {
       ? window.SceniqueBackend.toUrl(endpointPath)
       : endpointPath;
 
+    // "no reflections or specular highlights" / "no glossy or shiny surfaces"
+    // used to sit here unconditionally -- a blanket ban that fights any
+    // subject that's genuinely metallic/glossy (a car), not just the
+    // photographic CAPTURE artifacts (glare, lens flare, HDR) this list is
+    // actually trying to rule out. A negative prompt is a binary "never" --
+    // it can't express "subtle painted highlights yes, photographic gloss
+    // no," which is exactly the nuance the positive prompt's "gleams and
+    // reflections treated as such but subtly, not with realism" language
+    // carries. Likely reads as a live contributor to the recurring
+    // weathered/rusty/patina-covered car results: a model told "metallic
+    // surface" (positive) + "absolutely no glossy or shiny surfaces"
+    // (negative) can satisfy both by rendering the metal as dull, matte,
+    // and aged rather than as clean painted metal with soft highlights.
+    // Removed 2026-08-14; everything else in this list (camera/lens
+    // artifacts, wall-implying shadows, photorealism itself) is an actual
+    // unconditional "never," so stays.
     const baseNegativePrompt =
       "no furniture, no floors, no parts of homes or offices, no text, no writing, no letters, no words, no captions, no typography, " +
       "no logos, no watermarks, no signatures, no UI elements, no interface, " +
       "no thumbnails, no borders, no frames, no collage, no screenshots, " +
       "no photographic lens effects, no photographic artifacts, no glare or lens flare, " +
-      "no reflections or specular highlights, no shadows cast onto the background, no shadows implying the background is a physical wall, " +
+      "no shadows cast onto the background, no shadows implying the background is a physical wall, " +
       "no depth-of-field, no bokeh, no HDR, no camera grain, " +
       "no realism, no photorealism, not a photograph, " +
-      "no glossy or shiny surfaces, no image splitting";
+      "no image splitting";
     // Image-specific context the vision assessment flagged in THIS reference
     // photo (e.g. incidental background furniture/architecture a peacock or
     // other subject happened to be photographed against) -- the generic
