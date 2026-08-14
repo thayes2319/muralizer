@@ -13,6 +13,7 @@ const conceptDir = path.join(dataDir, 'concept-images');
 const requestDir = path.join(dataDir, 'measurement-requests');
 const conceptIndexPath = path.join(dataDir, 'concept-images.json');
 const requestIndexPath = path.join(dataDir, 'measurement-requests.json');
+const conceptShareIndexPath = path.join(dataDir, 'concept-shares.json');
 const port = Number(process.env.PORT || 8787);
 const host = String(process.env.HOST || '0.0.0.0').trim() || '0.0.0.0';
 const serviceRevision = String(process.env.RENDER_GIT_COMMIT || process.env.SOURCE_VERSION || 'local').trim() || 'local';
@@ -297,6 +298,55 @@ async function handleConceptImage(req, res) {
 
   await appendJsonItem(conceptIndexPath, record);
   sendJson(res, 201, record);
+}
+
+// Backend half of the cross-device "Share with client" link
+// (openConceptPresentationFromData / window.SceniqueBackend.createConceptShare
+// + loadConceptShare in scenique-backend.js) -- that frontend contract
+// already existed and was already being called; this was the missing
+// server side. img is resolved and stored HERE (from the concept-images
+// index, by conceptId) rather than at load time, so loadConceptShare can
+// return everything openConceptPresentationFromData needs -- {img, title,
+// sub, scene} -- in one request instead of a second round-trip.
+async function handleCreateConceptShare(req, res) {
+  const body = await readBody(req);
+  const conceptId = String(body.conceptId || '').trim();
+  if (!conceptId) {
+    sendJson(res, 400, { ok: false, error: 'conceptId is required.' });
+    return;
+  }
+
+  const concepts = await readJson(conceptIndexPath, []);
+  const concept = Array.isArray(concepts) ? concepts.find((item) => item && item.id === conceptId) : null;
+  if (!concept || !concept.imageUrl) {
+    sendJson(res, 404, { ok: false, error: 'That concept could not be found.' });
+    return;
+  }
+
+  const token = crypto.randomBytes(9).toString('base64url'); // 12 chars, matches the frontend's [A-Za-z0-9_-]{6,32} check
+  const record = {
+    token,
+    conceptId,
+    ownerId: normalizeOwnerId(body.ownerId),
+    title: body.title !== undefined ? body.title : null,
+    sub: body.sub !== undefined ? body.sub : null,
+    scene: body.scene !== undefined ? body.scene : null,
+    img: concept.imageUrl,
+    createdAt: new Date().toISOString()
+  };
+
+  await appendJsonItem(conceptShareIndexPath, record);
+  sendJson(res, 201, record);
+}
+
+async function handleGetConceptShare(req, res, token) {
+  const shares = await readJson(conceptShareIndexPath, []);
+  const record = Array.isArray(shares) ? shares.find((item) => item && item.token === token) : null;
+  if (!record) {
+    sendJson(res, 404, { ok: false, error: 'This share link is invalid or has expired.' });
+    return;
+  }
+  sendJson(res, 200, record);
 }
 
 async function handleMeasurementRequest(req, res) {
@@ -1014,6 +1064,17 @@ async function handleApi(req, res, url) {
   if (req.method === 'GET' && url.pathname === '/api/measurement-requests') {
     const items = await readJson(requestIndexPath, []);
     sendJson(res, 200, items);
+    return true;
+  }
+
+  if (req.method === 'GET' && url.pathname.startsWith('/api/concept-shares/')) {
+    const token = decodeURIComponent(url.pathname.slice('/api/concept-shares/'.length));
+    await handleGetConceptShare(req, res, token);
+    return true;
+  }
+
+  if (req.method === 'POST' && url.pathname === '/api/concept-shares') {
+    await handleCreateConceptShare(req, res);
     return true;
   }
 
