@@ -762,10 +762,22 @@ async function handleReferenceGenerateProxy(req, res) {
   form.append('image', new Blob([reference.buffer], { type: reference.mimeType }), `inspiration.${imageExtension}`);
   const muralOnly = 'Create a flat, front-facing original mural artwork only. The full canvas must be the mural design itself, with no interior scene or installed-mural mockup.';
   // Applies to both modes -- reinforces the same never-photorealistic goal
-  // regardless of which endpoint below actually enforces it.
-  const paintedStyle = 'Render this as a hand-painted or hand-illustrated mural artwork with visible painterly brushwork, artistic texture, and hand-rendered color blending -- never as a photograph or photorealistic image, no matter how photographic the reference image itself looks. Abstract and simplify all natural elements such as foliage, water, and light into visible brushstrokes, not photographic detail. Ignore any glare, reflections, or lighting artifacts from the reference photo being captured under real light; those are not part of the artwork.';
+  // regardless of which endpoint below actually enforces it. Leads with a
+  // short, unconditional directive rather than opening with it: prompt
+  // order matters, and this used to run AFTER `prompt` (the assessed
+  // description, which for a photographic/reflective/mechanical subject
+  // reads with its own photographic register) -- putting the style
+  // directive last made it read as a modifier competing with an
+  // already-established photographic frame instead of the frame itself.
+  // "surrounding cohesivity and agreement" is deliberately explicit:
+  // real-device testing showed a subject can pick up isolated painterly
+  // phrasing (from the assessed description) while everything around it
+  // -- and the subject's own reflective/metallic surfaces -- stayed
+  // photographic, i.e. the instruction was being satisfied locally/
+  // token-wise without actually governing the whole piece.
+  const paintedStyle = 'Repaint this scene in painterly form, with surrounding cohesivity and agreement -- every element, the subject included, rendered with the same consistent hand-painted brushwork, artistic texture, and hand-rendered color blending throughout, never as a photograph or photorealistic image, no matter how photographic the reference image itself looks. Abstract and simplify all natural elements such as foliage, water, and light into visible brushstrokes, not photographic detail. Ignore any glare, reflections, or lighting artifacts from the reference photo being captured under real light; those are not part of the artwork.';
   const exclusions = 'Never depict furniture, chairs, tables, sofas, beds, lamps, windows, doors, rooms, walls, floors, ceilings, architecture, people, text, logos, frames, or borders.';
-  form.append('prompt', `${prompt}\n\n${muralOnly} ${paintedStyle} ${exclusions}`);
+  form.append('prompt', `${paintedStyle}\n\n${prompt}\n\n${muralOnly} ${exclusions}`);
   form.append('output_format', 'png');
 
   // Pure Inspiration: prompt text is just a description of the reference
@@ -973,11 +985,22 @@ async function handleReferenceAssessment(req, res) {
     }
   };
   const instructions = [
+    // Leads everything, deliberately -- prompt order matters, and this used
+    // to run 5th, after "report visual evidence"/"classify genre" language
+    // that a strongly photographic/reflective/mechanical subject (a car)
+    // could already read as license to describe literally, before ever
+    // reaching the painterly requirement. Stated first, nothing downstream
+    // gets to establish a competing photographic frame first. "cohesive...
+    // throughout" is deliberate too: real-device testing showed a subject
+    // picking up an isolated painterly phrase while its own reflective/
+    // metallic surfaces, and everything around it, stayed photographic --
+    // i.e. satisfied token-wise without actually governing the whole piece.
+    'Every Mural Description you write must read as a single, cohesive painterly artwork throughout -- the primary subject and its surroundings alike, in the same consistent hand-painted, hand-illustrated visual language from the first sentence to the last. This governs everything below: report evidence, classify genre, and note capture artifacts as instructed, but always translate what you observe into painterly terms as you go -- never into photographic, reflective, glossy, polished, chrome, or metallic-finish language, no matter how photographic, reflective, or mechanically precise the subject in the reference photo actually is.',
     'Assess the supplied inspiration image and write a concise, production-ready Mural Description.',
     'Report visual evidence only. Do not identify artists, brands, locations, rooms, furniture, walls, frames, or installed-mural context as design content.',
     'The reference is often a snapshot of an already-installed wall covering, so it frequently carries capture artifacts that are not part of the design: glare, reflections, lens flare, specular highlights, or lighting hotspots from the surface being photographed under real light. Note any such artifacts you observe in source_context_to_exclude (for example "glare across the upper-right area" or "reflective sheen along the lower edge") so they can be explicitly excluded -- these are never design content and must never be described as part of the Mural Description itself. Distinguish these capture artifacts from a deliberate painted color gradient or ombre fade, which IS design content and belongs in the Mural Description, not in source_context_to_exclude: a design gradient transitions smoothly across a broad area and follows the artwork\'s own color logic and composition, while a capture artifact is a localized, sharp-edged, often overexposed or blown-out highlight that is inconsistent with the surrounding painted palette and looks camera- or light-source-dependent rather than intentionally placed. When genuinely uncertain which one you are seeing, prefer treating it as design content rather than excluding it.',
     'The description must create an original composition; never ask to copy the source composition.',
-    'Classify the image\'s genre and visual treatment from visual evidence, using the selected Muralizer category and sub-scene as scope guidance when supplied. Regardless of subject matter -- including glossy, reflective, chrome, or metallic subjects -- the Mural Description must always describe a hand-painted, painterly artwork, never a photograph. Never describe photorealism, photographic lighting, camera effects, lens artifacts, depth of field, or material-finish realism (glossy, reflective, polished, chrome, metallic sheen); render every surface as painted highlights and hand-rendered texture instead. Include at least one explicit painterly-texture phrase (e.g. "visible brushstrokes," "painterly texture," "hand-blended pigment") describing the subject itself, not just its background.',
+    'Classify the image\'s genre and visual treatment from visual evidence, using the selected Muralizer category and sub-scene as scope guidance when supplied. Never describe photorealism, photographic lighting, camera effects, lens artifacts, depth of field, or material-finish realism (glossy, reflective, polished, chrome, metallic sheen); render every surface as painted highlights and hand-rendered texture instead. Include at least one explicit painterly-texture phrase (e.g. "visible brushstrokes," "painterly texture," "hand-blended pigment") describing the subject itself, not just its background.',
     'When the image visibly shows a planted, undulating lower botanical base from which taller growth emerges, write the Mural Description as four distinct paragraphs in this order: (1) an opening paragraph describing the evidenced visual treatment, background, and arrangement; (2) this berm paragraph: "The lower edge is importantly defined by an undulating berm of earth, providing a natural planted base from which the taller flowering branches emerge." Adapt only plant-type words when the evidence requires it; treat the berm as painted earth and planted forms, never as a literal floor or room surface; (3) a paragraph describing the evidenced blossoms, branches, leaves, birds, or other motifs and their balanced mural composition; (4) a closing paragraph requiring canopy and botanical forms, when present, to terminate naturally well before the top edge and preserve open breathing room above. Otherwise do not invent a berm, canopy, botanicals, or open-sky requirement; use a shorter evidence-led paragraph structure.',
     'Return an assessment with concise evidence and a 2-4 paragraph Mural Description. The description must remain editable by the user.',
     currentDescription ? `The user\'s current description is: ${currentDescription}` : 'There is no current user description.'
