@@ -15705,11 +15705,20 @@ function initializeReferenceCropGestures() {
 }
 
 initializeReferenceCropGestures();
-// Syncs the .is-selected pill highlight to the radio's default `checked`
-// state on load -- without this, Pure Inspiration is functionally active
-// from the start but doesn't visually look selected until the user
-// interacts with the toggle once.
-updateReferenceDirectionMode("inspiration");
+// Syncs referenceReimagineState.blendWithMuralizer (and the .is-selected
+// pill highlight) to whichever radio is ACTUALLY checked on load -- reads
+// the DOM rather than assuming "inspiration" (the HTML's own `checked`
+// attribute default), because browsers commonly restore form field state
+// (which radio was checked) across a reload without firing a `change`
+// event. Hardcoding "inspiration" here meant that restored state produced
+// a real desync: the pill visually shows Blend selected while
+// blendWithMuralizer silently stays false, so nothing that only runs
+// inside updateReferenceDirectionMode's own onchange handler (e.g. the
+// muralizerDescription refresh above) ever fires until the user clicks a
+// radio again themselves.
+updateReferenceDirectionMode(
+  document.querySelector('input[name="referenceDirection"]:checked')?.value || "inspiration"
+);
 
 // ============================================================
 // SEE IT IN A ROOM (generic) -- AI-generated impression, no photo upload.
