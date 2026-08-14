@@ -4476,6 +4476,20 @@ button, select {
 
 .composite-cal-panel .room-preview-note { margin-top: 8px; }
 
+.composite-wall-quad-coords {
+  margin: 8px 0 0;
+  padding: 8px 10px;
+  background: #173d53;
+  color: #d7ecf7;
+  border-radius: 6px;
+  font-family: "Courier New", monospace;
+  font-size: 11px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+  user-select: all; /* one click/tap selects the whole block, ready to copy */
+}
+
 /* Deliberately louder than .room-preview-note -- this is telling the user
    their actual on-wall result differs from what they typed, which is
    important enough to not read as a footnote. Amber, matching the
@@ -9606,6 +9620,11 @@ If you’re exploring a new direction, try adjusting just 1-2 elements at a time
           <label class="composite-zoom-slider-label">Vertical stretch
             <input id="compositeCalStretchYSlider" type="range" min="0" max="100" step="1" value="0" disabled>
           </label>
+          <details class="composite-cal-panel">
+            <summary>Wall placement corners (dev tool)</summary>
+            <p class="room-preview-note">Drag the blue dashed corners on the photo above to fix the wall placement for this stock room, then copy the coordinates below into this profile's <code>points</code> in ROOM_PROFILES.</p>
+            <pre id="compositeWallQuadCoords" class="composite-wall-quad-coords"></pre>
+          </details>
           <p id="compositeRoomStatus" class="generic-room-status" aria-live="polite"></p>
           <details class="composite-cal-panel" open>
             <summary>Calibrate real-world size</summary>
@@ -9630,7 +9649,7 @@ If you’re exploring a new direction, try adjusting just 1-2 elements at a time
             </div>
             <p class="room-preview-note">Scale is a rough guide, not a measurement -- verify before ordering.</p>
           </details>
-          <p class="generic-room-disclaimer">Stock room photos with hand-estimated wall corners -- if they look off for your photo, drag the blue dashed corners on the photo above to fix them.</p>
+          <p class="generic-room-disclaimer">Stock room photos with hand-estimated wall corners -- if they look off for your photo, drag them in "Wall placement corners" above.</p>
         </div>
       </div>
 
@@ -16692,6 +16711,21 @@ function renderCompositeCalSegments() {
     roomLayer.innerHTML = renderCalSegmentMarkup("room", compositeCalSegments.room) +
       renderWallQuadMarkup(compositeCalSegments.wallQuad) +
       (roomPixelsPerInch ? renderRoomWidthMarkup(formatFeetInches(photo.naturalWidth / roomPixelsPerInch)) : "");
+  }
+
+  // Fix-once-forever loop: drag a corner live above, this readout updates
+  // with it, then paste this exact text over that profile's `points` array
+  // in ROOM_PROFILES (source) and commit -- from then on every session
+  // loads the corrected corners baked in, nothing session-local to lose or
+  // redo. There's no other persistence path for this (static file, no
+  // backend to save to), so this readout is the only way a drag becomes
+  // permanent rather than resetting the next time this profile loads.
+  const coordsEl = document.getElementById("compositeWallQuadCoords");
+  if (coordsEl) {
+    const formatted = compositeCalSegments.wallQuad.points
+      .map((point) => `{ x: ${Math.round(point.x * 1000) / 1000}, y: ${Math.round(point.y * 1000) / 1000} }`)
+      .join(",\n      ");
+    coordsEl.textContent = `points: [\n      ${formatted}\n    ]`;
   }
 
   const muralLayer = document.getElementById("compositeMuralCalLayer");
