@@ -4418,8 +4418,9 @@ button, select {
 }
 
 .composite-cal-stretch-group {
-  display: grid;
-  gap: 4px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
   margin-top: 10px;
 }
 
@@ -4432,6 +4433,7 @@ button, select {
 
 .composite-cal-stretch-option {
   position: relative; /* containing block for the visually-hidden input below */
+  flex: 1 1 auto;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -4442,9 +4444,10 @@ button, select {
   font-family: Candara, sans-serif;
   font-size: 12px;
   font-weight: 700;
-  padding: 8px 14px;
+  padding: 8px 10px;
   cursor: pointer;
   text-align: center;
+  white-space: nowrap;
 }
 
 /* The pill's own background/color swap (below) already shows which one is
@@ -4472,20 +4475,6 @@ button, select {
 }
 
 .composite-cal-panel .room-preview-note { margin-top: 8px; }
-
-.composite-wall-quad-coords {
-  margin: 8px 0 0;
-  padding: 8px 10px;
-  background: #173d53;
-  color: #d7ecf7;
-  border-radius: 6px;
-  font-family: "Courier New", monospace;
-  font-size: 11px;
-  line-height: 1.5;
-  white-space: pre-wrap;
-  word-break: break-word;
-  user-select: all; /* one click/tap selects the whole block, ready to copy */
-}
 
 /* Deliberately louder than .room-preview-note -- this is telling the user
    their actual on-wall result differs from what they typed, which is
@@ -9606,10 +9595,10 @@ If you’re exploring a new direction, try adjusting just 1-2 elements at a time
           </label>
           <fieldset id="compositeCalStretchGroup" class="composite-cal-stretch-group">
             <legend>If it doesn't fill the wall:</legend>
-            <label class="composite-cal-stretch-option"><input type="radio" name="compositeCalStretchMode" value="stretch" checked> Stretch to fill (symmetric)</label>
-            <label class="composite-cal-stretch-option"><input type="radio" name="compositeCalStretchMode" value="stretchIndependent"> Stretch to fill (independent axes)</label>
+            <label class="composite-cal-stretch-option"><input type="radio" name="compositeCalStretchMode" value="stretch" checked> Stretch (symmetric)</label>
+            <label class="composite-cal-stretch-option"><input type="radio" name="compositeCalStretchMode" value="stretchIndependent"> Stretch (independent)</label>
             <label class="composite-cal-stretch-option"><input type="radio" name="compositeCalStretchMode" value="stopShort"> True Scale</label>
-            <label class="composite-cal-stretch-option"><input type="radio" name="compositeCalStretchMode" value="tile"> Tile to fill</label>
+            <label class="composite-cal-stretch-option"><input type="radio" name="compositeCalStretchMode" value="tile"> Tile</label>
           </fieldset>
           <label class="composite-zoom-slider-label">Horizontal stretch
             <input id="compositeCalStretchXSlider" type="range" min="0" max="100" step="1" value="0" disabled>
@@ -9617,11 +9606,6 @@ If you’re exploring a new direction, try adjusting just 1-2 elements at a time
           <label class="composite-zoom-slider-label">Vertical stretch
             <input id="compositeCalStretchYSlider" type="range" min="0" max="100" step="1" value="0" disabled>
           </label>
-          <details class="composite-cal-panel">
-            <summary>Wall placement corners (dev tool)</summary>
-            <p class="room-preview-note">Drag the blue dashed corners on the photo above to fix the wall placement for this stock room, then copy the coordinates below into this profile's <code>points</code> in ROOM_PROFILES.</p>
-            <pre id="compositeWallQuadCoords" class="composite-wall-quad-coords"></pre>
-          </details>
           <p id="compositeRoomStatus" class="generic-room-status" aria-live="polite"></p>
           <details class="composite-cal-panel" open>
             <summary>Calibrate real-world size</summary>
@@ -9646,7 +9630,7 @@ If you’re exploring a new direction, try adjusting just 1-2 elements at a time
             </div>
             <p class="room-preview-note">Scale is a rough guide, not a measurement -- verify before ordering.</p>
           </details>
-          <p class="generic-room-disclaimer">Stock room photos with hand-estimated wall corners -- if they look off for your photo, drag them in "Wall placement corners" above.</p>
+          <p class="generic-room-disclaimer">Stock room photos with hand-estimated wall corners -- if they look off for your photo, drag the blue dashed corners on the photo above to fix them.</p>
         </div>
       </div>
 
@@ -16710,14 +16694,6 @@ function renderCompositeCalSegments() {
       (roomPixelsPerInch ? renderRoomWidthMarkup(formatFeetInches(photo.naturalWidth / roomPixelsPerInch)) : "");
   }
 
-  const coordsEl = document.getElementById("compositeWallQuadCoords");
-  if (coordsEl) {
-    const formatted = compositeCalSegments.wallQuad.points
-      .map((point) => `{ x: ${Math.round(point.x * 1000) / 1000}, y: ${Math.round(point.y * 1000) / 1000} }`)
-      .join(",\n      ");
-    coordsEl.textContent = `points: [\n      ${formatted}\n    ]`;
-  }
-
   const muralLayer = document.getElementById("compositeMuralCalLayer");
   if (muralLayer) muralLayer.innerHTML = renderCalSegmentMarkup("mural", compositeCalSegments.mural, 2.2, 0.7);
 
@@ -17232,7 +17208,11 @@ function renderCompositeRoomComposite() {
   }
 
   stage.classList.add("has-image");
-  if (status) status.textContent = "Composite test -- edge-to-edge fit, adaptive room.";
+  // Cleared rather than left with success text -- "Compositing..." above
+  // already told the user something happened, and this element still
+  // needs to stay around for the states that DO need a message (mid-load,
+  // or an error from the catch block below).
+  if (status) status.textContent = "";
 
   renderCompositeCalSegments();
 }
