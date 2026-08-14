@@ -9454,7 +9454,17 @@ If you’re exploring a new direction, try adjusting just 1-2 elements at a time
             </label>
             <button id="compositeRoomZoomReset" class="composite-zoom-reset" type="button">Reset zoom</button>
             <button id="compositeCalNodesToggle" class="composite-zoom-reset" type="button" aria-pressed="false">Nodes off</button>
+            <button id="compositeRoomTryAnother" class="composite-zoom-reset" type="button">Try another room</button>
           </div>
+          <fieldset id="compositeCalStretchGroup" class="composite-cal-stretch-group">
+            <legend>If it doesn't fill the wall:</legend>
+            <label class="composite-cal-stretch-option"><input type="radio" name="compositeCalStretchMode" value="stretch" checked> Stretch to fill</label>
+            <label class="composite-cal-stretch-option"><input type="radio" name="compositeCalStretchMode" value="stopShort"> True Scale</label>
+            <label class="composite-cal-stretch-option"><input type="radio" name="compositeCalStretchMode" value="tile"> Tile to fill</label>
+          </fieldset>
+          <label class="composite-zoom-slider-label">Shift cropped mural left/right on wall
+            <input id="compositeCalShiftXSlider" type="range" min="-100" max="100" step="1" value="0">
+          </label>
           <details class="composite-cal-panel">
             <summary>Wall placement corners (dev tool)</summary>
             <p class="room-preview-note">Drag the blue dashed corners on the photo above to fix the wall placement for this stock room, then copy the coordinates below into this profile's <code>points</code> in ROOM_PROFILES.</p>
@@ -9489,15 +9499,6 @@ If you’re exploring a new direction, try adjusting just 1-2 elements at a time
               <button id="compositeCalMuralInchesReset" class="composite-zoom-reset" type="button">Reset</button>
             </div>
             <p id="compositeCalEffectiveSize" class="composite-cal-effective-note" hidden></p>
-            <fieldset id="compositeCalStretchGroup" class="composite-cal-stretch-group">
-              <legend>If it doesn't fill the wall:</legend>
-              <label class="composite-cal-stretch-option"><input type="radio" name="compositeCalStretchMode" value="stretch" checked> Stretch to fill</label>
-              <label class="composite-cal-stretch-option"><input type="radio" name="compositeCalStretchMode" value="stopShort"> True Scale</label>
-              <label class="composite-cal-stretch-option"><input type="radio" name="compositeCalStretchMode" value="tile"> Tile to fill</label>
-            </fieldset>
-            <label class="composite-zoom-slider-label">Shift cropped mural left/right on wall
-              <input id="compositeCalShiftXSlider" type="range" min="-100" max="100" step="1" value="0">
-            </label>
             <p class="room-preview-note">Scale is a rough guide, not a measurement -- verify before ordering.</p>
           </details>
           <p class="generic-room-disclaimer">Stock room photos with hand-estimated wall corners -- if they look off for your photo, drag them in "Wall placement corners" above.</p>
@@ -15793,43 +15794,45 @@ async function shareGenericRoomPreview() {
 // concept; the scale-calibration system (room/mural reference segments,
 // Stretch/Stop Short/Tile placement, zoom) is what it actually is now.
 // ============================================================
-// 5 stock rooms spanning the aspect-ratio spectrum so a mural of any shape
-// lands on a wall built for a similar shape, rather than always being
-// force-fit onto the one 3:2 room. Each profile carries the source photo's
-// own aspect ratio (photoAspect, used to pick the nearest profile for a
-// given mural) and hand-estimated corners of that photo's flat back wall
-// (normalized 0-1, order: top-left, top-right, bottom-right, bottom-left --
-// same convention as roomPreviewPoints/resetRoomPreviewPoints above).
-// referenceSegment: a pre-seeded calibration segment for the scale-matching
-// tool -- placed on the side-wall corner (the floor-to-ceiling vertical edge
-// where the back wall meets the receding side wall), the clearest landmark
-// in each of these 5 stock photos. Positioned right beside the wall quad's
-// own nearest vertical edge (~0.03-0.08 outside it, matching that edge's
-// own top/bottom y so it silhouettes the wall's height) rather than off at
-// an independent guess elsewhere in the frame -- close enough to read as
-// "calibrating against this wall" at a glance, while staying just outside
-// the wall corner handles' own hit radius so the two don't fight for the
-// same click/tap. inches:96 (8ft) is an eyeballed residential-ceiling
-// default, same "hand-estimated, verify visually" category as points
-// above -- not a measurement.
+// 5 aspect-ratio slots so a mural of any shape lands on a wall built for a
+// similar shape, rather than always being force-fit onto the one 3:2 room.
+// Each slot now has 2 room-photo variants: a residential reshoot (listed
+// first) and the original "white cube" render it replaced (2026-08-13),
+// restored here as a selectable alternative rather than deleted outright.
+// `family` groups a slot's variants for the picker/switcher; `id` stays
+// unique per variant since it's still the key the profile-changed reseed
+// check (openCompositeRoomPreview) compares against. photoAspect is
+// identical between a slot's two variants (the reshoot preserved the
+// original crop), so pickRoomProfile's nearest-match search always ties
+// within a slot -- its strict `<` comparison keeps whichever variant it
+// saw first, which is why the residential one must stay first in each
+// pair to remain the default. "Try another room" (see
+// switchCompositeRoomVariant) cycles to the slot's other variant.
 //
-// All 5 are deliberately simple, furniture-free residential rooms (real
-// AI-generated photos, reskinned from an earlier "minimalist white cube"
-// look to read as an actual home) -- a single wall quad, hand-picked to
-// land on a genuinely blank stretch of wall, is all any of them need. A
-// prior version of this set expanded to 12 furnished residential profiles
-// using a foregroundOverlay mechanism (redrawing furniture back on top of
-// the mural after compositing) to route around furniture the quad
-// couldn't avoid -- that was rolled back (2026-08-13) because the quads/
-// masks were hand-estimated from screenshots rather than real custom
-// cropping, and the results weren't reliable enough to ship. See the
-// commented-out RETIRED_RESIDENTIAL_ROOM_PROFILES block below and
-// foregroundOverlay's own support code (still present, just unused by
-// anything active right now) for where to pick that back up once a real
-// cropping tool exists.
+// points: hand-estimated corners of that photo's flat back wall (normalized
+// 0-1, order: top-left, top-right, bottom-right, bottom-left -- same
+// convention as roomPreviewPoints/resetRoomPreviewPoints above).
+// referenceSegment: a pre-seeded calibration segment for the scale-matching
+// tool, placed beside the wall quad's nearest vertical edge so it silhouettes
+// the wall's height -- close enough to read as "calibrating against this
+// wall" at a glance, while staying outside the wall corner handles' own hit
+// radius so the two don't fight for the same click/tap. inches is an
+// eyeballed default, not a measurement (96 = residential 8ft ceiling, 108 =
+// the white-cube set's commercial/gallery 9ft ceiling assumption).
+//
+// A prior version of this set expanded the residential side to 12 furnished
+// profiles using a foregroundOverlay mechanism (redrawing furniture back on
+// top of the mural after compositing) to route around furniture the quad
+// couldn't avoid -- rolled back (2026-08-13) because the quads/masks were
+// hand-estimated from screenshots rather than real custom cropping, and the
+// results weren't reliable enough to ship. See the commented-out
+// RETIRED_RESIDENTIAL_ROOM_PROFILES block below and foregroundOverlay's own
+// support code (still present, just unused by anything active right now)
+// for where to pick that back up once a real cropping tool exists.
 const ROOM_PROFILES = [
   {
     id: "panoramic",
+    family: "panoramic",
     src: "stock-rooms/stock-room-panoramic-21x9.png",
     photoAspect: 2304 / 960,
     points: [
@@ -15841,7 +15844,21 @@ const ROOM_PROFILES = [
     referenceSegment: { points: [{ x: 0.56, y: 0.10 }, { x: 0.56, y: 0.75 }], inches: 96 }
   },
   {
+    id: "panoramic-whitecube",
+    family: "panoramic",
+    src: "stock-rooms/stock-room-panoramic-21x9-whitecube.png",
+    photoAspect: 1536 / 640,
+    points: [
+      { x: 0.32, y: 0.27 },
+      { x: 0.68, y: 0.27 },
+      { x: 0.68, y: 0.565 },
+      { x: 0.32, y: 0.565 }
+    ],
+    referenceSegment: { points: [{ x: 0.24, y: 0.27 }, { x: 0.24, y: 0.565 }], inches: 108 }
+  },
+  {
     id: "landscape",
+    family: "landscape",
     src: "stock-rooms/stock-room-1.png",
     photoAspect: 1824 / 1248,
     points: [
@@ -15853,7 +15870,21 @@ const ROOM_PROFILES = [
     referenceSegment: { points: [{ x: 0.50, y: 0.05 }, { x: 0.50, y: 0.85 }], inches: 96 }
   },
   {
+    id: "landscape-whitecube",
+    family: "landscape",
+    src: "stock-rooms/stock-room-1-whitecube.png",
+    photoAspect: 1216 / 832,
+    points: [
+      { x: 0.234, y: 0.226 },
+      { x: 0.773, y: 0.234 },
+      { x: 0.773, y: 0.655 },
+      { x: 0.234, y: 0.655 }
+    ],
+    referenceSegment: { points: [{ x: 0.155, y: 0.226 }, { x: 0.155, y: 0.655 }], inches: 108 }
+  },
+  {
     id: "square",
+    family: "square",
     src: "stock-rooms/stock-room-square-5x4.png",
     photoAspect: 1632 / 1344,
     points: [
@@ -15865,7 +15896,21 @@ const ROOM_PROFILES = [
     referenceSegment: { points: [{ x: 0.41, y: 0.05 }, { x: 0.41, y: 0.85 }], inches: 96 }
   },
   {
+    id: "square-whitecube",
+    family: "square",
+    src: "stock-rooms/stock-room-square-5x4-whitecube.png",
+    photoAspect: 1088 / 896,
+    points: [
+      { x: 0.22, y: 0.22 },
+      { x: 0.76, y: 0.19 },
+      { x: 0.76, y: 0.66 },
+      { x: 0.22, y: 0.655 }
+    ],
+    referenceSegment: { points: [{ x: 0.14, y: 0.22 }, { x: 0.14, y: 0.655 }], inches: 108 }
+  },
+  {
     id: "portrait",
+    family: "portrait",
     src: "stock-rooms/stock-room-portrait-4x5.png",
     photoAspect: 1344 / 1632,
     points: [
@@ -15877,7 +15922,21 @@ const ROOM_PROFILES = [
     referenceSegment: { points: [{ x: 0.87, y: 0.05 }, { x: 0.87, y: 0.75 }], inches: 96 }
   },
   {
+    id: "portrait-whitecube",
+    family: "portrait",
+    src: "stock-rooms/stock-room-portrait-4x5-whitecube.png",
+    photoAspect: 896 / 1088,
+    points: [
+      { x: 0.10, y: 0.09 },
+      { x: 0.915, y: 0.09 },
+      { x: 0.915, y: 0.69 },
+      { x: 0.10, y: 0.69 }
+    ],
+    referenceSegment: { points: [{ x: 0.04, y: 0.09 }, { x: 0.04, y: 0.69 }], inches: 108 }
+  },
+  {
     id: "tall",
+    family: "tall",
     src: "stock-rooms/stock-room-tall-9x16.png",
     photoAspect: 1152 / 2016,
     points: [
@@ -15887,6 +15946,19 @@ const ROOM_PROFILES = [
       { x: 0.30, y: 0.72 }
     ],
     referenceSegment: { points: [{ x: 0.27, y: 0.04 }, { x: 0.27, y: 0.70 }], inches: 96 }
+  },
+  {
+    id: "tall-whitecube",
+    family: "tall",
+    src: "stock-rooms/stock-room-tall-9x16-whitecube.png",
+    photoAspect: 768 / 1344,
+    points: [
+      { x: 0.28, y: 0.07 },
+      { x: 0.73, y: 0.10 },
+      { x: 0.73, y: 0.685 },
+      { x: 0.28, y: 0.655 }
+    ],
+    referenceSegment: { points: [{ x: 0.81, y: 0.10 }, { x: 0.81, y: 0.685 }], inches: 108 }
   }
 ];
 
@@ -16704,7 +16776,7 @@ function closeCompositeRoomPreview() {
   requestAnimationFrame(() => modal.setAttribute("aria-hidden", "true"));
 }
 
-async function runCompositeRoomPreview(rawSource) {
+async function runCompositeRoomPreview(rawSource, explicitProfile) {
   const stage = document.getElementById("compositeRoomStage");
   const canvas = document.getElementById("compositeRoomCanvas");
   const status = document.getElementById("compositeRoomStatus");
@@ -16714,7 +16786,7 @@ async function runCompositeRoomPreview(rawSource) {
   try {
     const muralSource = await ensureMuralDataUrl(rawSource);
     const mural = await loadRoomPreviewImage(muralSource);
-    const profile = pickRoomProfile(mural.naturalWidth / mural.naturalHeight);
+    const profile = explicitProfile || pickRoomProfile(mural.naturalWidth / mural.naturalHeight);
     const photo = await loadRoomPreviewImage(profile.src);
     const foregroundOverlay = profile.foregroundOverlay
       ? await loadRoomPreviewImage(profile.foregroundOverlay)
@@ -16722,11 +16794,13 @@ async function runCompositeRoomPreview(rawSource) {
 
     // Reseed the room-reference segment from this profile's pre-placed
     // default only when the profile actually changed -- runCompositeRoomPreview
-    // only ever runs once per modal open (calibration drags/edits call
+    // runs once per modal open (calibration drags/edits call
     // renderCompositeRoomComposite() directly, they never re-enter this
-    // function), but a *closed and reopened* modal with a similar-aspect
-    // mural can land on the same profile again, and shouldn't discard
-    // whatever room-segment adjustment the user already made.
+    // function) and again, with an explicitProfile, whenever
+    // switchCompositeRoomVariant cycles to the slot's other room photo.
+    // Either way, landing back on the SAME profile (a closed-and-reopened
+    // modal with a similar-aspect mural, e.g.) shouldn't discard whatever
+    // room-segment adjustment the user already made.
     if (compositeRoomActive?.profile?.id !== profile.id) {
       compositeCalSegments.room = {
         points: profile.referenceSegment.points.map((point) => ({ ...point })),
@@ -16753,6 +16827,19 @@ async function runCompositeRoomPreview(rawSource) {
     console.error("Composite room preview error:", error);
     if (status) status.textContent = error.message || "This composite could not be built.";
   }
+}
+
+// "Try another room": cycles the active slot (compositeRoomActive.profile.family)
+// to its other ROOM_PROFILES variant. No-ops if the slot only has one variant
+// (not currently possible -- every slot has exactly 2 -- but guards against a
+// future slot added without a pair) or if nothing's loaded yet.
+async function switchCompositeRoomVariant() {
+  const current = compositeRoomActive?.profile;
+  if (!current) return;
+  const siblings = ROOM_PROFILES.filter((p) => p.family === current.family);
+  if (siblings.length < 2) return;
+  const next = siblings[(siblings.indexOf(current) + 1) % siblings.length];
+  await runCompositeRoomPreview(compositeRoomActive.muralSource, next);
 }
 
 // Synchronous re-render from compositeRoomActive + compositeCalSegments/
@@ -16958,6 +17045,10 @@ document.addEventListener("DOMContentLoaded", () => {
   compositeCalNodesToggle?.addEventListener("click", () => {
     compositeCalNodesVisible = !compositeCalNodesVisible;
     applyCompositeCalNodesVisibility();
+  });
+
+  document.getElementById("compositeRoomTryAnother")?.addEventListener("click", () => {
+    switchCompositeRoomVariant();
   });
 
   wireCompositeCalStage(document.getElementById("compositeRoomStage"), ["room", "wallQuad"]);
