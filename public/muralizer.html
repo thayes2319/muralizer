@@ -8554,7 +8554,7 @@ select[multiple].collapsible-multi.expanded option:first-child {
           </div>
           <label class="reference-influence-label" for="referenceInfluence">Source influence</label>
           <div class="reference-influence-row">
-            <input id="referenceInfluence" type="range" min="30" max="65" value="45" step="1" oninput="updateReferenceInfluence(this.value)">
+            <input id="referenceInfluence" type="range" min="30" max="100" value="45" step="1" oninput="updateReferenceInfluence(this.value)">
             <span id="referenceInfluenceValue" class="reference-influence-value">45%</span>
           </div>
           <p id="referenceInfluenceHint" class="reference-influence-hint">Balanced guidance: moderate adherence to the reference's composition/layout.</p>
@@ -15284,7 +15284,13 @@ const referenceReimagineState = {
 };
 
 function updateReferenceInfluence(value) {
-  const normalized = Math.max(30, Math.min(65, Number(value) || 45));
+  // Ceiling raised 65 -> 100 by request (2026-08-14), matching the backend
+  // clamp in handleReferenceGenerateProxy -- see that comment for why.
+  // Bucket thresholds rescaled proportionally to the wider 30-100 span (old
+  // 40/52 breakpoints over 30-65) so the three hint labels stay evenly
+  // distributed instead of "Strong" silently swallowing the whole new
+  // 53-100 range.
+  const normalized = Math.max(30, Math.min(100, Number(value) || 45));
   const label = document.getElementById("referenceInfluenceValue");
   const hint = document.getElementById("referenceInfluenceHint");
   if (label) label.textContent = `${normalized}%`;
@@ -15295,9 +15301,9 @@ function updateReferenceInfluence(value) {
     // it to fidelity (visual-character/style adherence). Keep the copy
     // honest about which one is actually in effect.
     const aspect = referenceReimagineState.blendWithMuralizer ? "visual character" : "composition/layout";
-    hint.textContent = normalized < 40
+    hint.textContent = normalized < 50
       ? `Fresh interpretation: lighter adherence to the reference's ${aspect}.`
-      : normalized > 52
+      : normalized > 75
         ? `Strong source influence: closer adherence to the reference's ${aspect}.`
         : `Balanced guidance: moderate adherence to the reference's ${aspect}.`;
   }

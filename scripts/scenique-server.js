@@ -746,11 +746,22 @@ async function handleReferenceGenerateProxy(req, res) {
   }
 
   const influence = Number(body.reference_influence);
-  // Same slider/value the UI exposes as "Source influence" (0.3-0.65) --
-  // reused for whichever Stability parameter applies to this mode (see
-  // below).
+  // Same slider/value the UI exposes as "Source influence" -- reused for
+  // whichever Stability parameter applies to this mode (see below). Ceiling
+  // raised 0.65 -> 1.0 by request (2026-08-14): capping control_strength
+  // well below max meant Pure Inspiration could never be told to adhere
+  // strongly to the reference's actual structure/composition, no matter how
+  // high the user pushed the slider -- a second, independent cause of the
+  // same content-drift symptom the assessment-instruction fix above
+  // addressed (that fix stopped the prompt text from fighting fidelity;
+  // this stops the structural-adherence ceiling from capping it too). 0.3-
+  // 0.65 was the original tested-safe band; 0.65-1.0 is untested territory
+  // for Inspired Blend's fidelity parameter specifically (the wall-mockup
+  // fidelity control saw style bleed at 0.8 in its own context -- see
+  // handleWallMockupProxy), but carries no equivalent known risk for
+  // control_strength, whose whole purpose is stronger structural adherence.
   const influenceValue = Number.isFinite(influence)
-    ? Math.max(0.3, Math.min(0.65, influence))
+    ? Math.max(0.3, Math.min(1, influence))
     : 0.45;
 
   // Pure Inspiration vs Inspired Blend need genuinely different Stability
