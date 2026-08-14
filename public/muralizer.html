@@ -16340,6 +16340,11 @@ const RETIRED_RESIDENTIAL_ROOM_PROFILES = [
 // computeCompositeStretchFactor and renderCompositeRoomComposite.
 // ============================================================
 let compositeRoomActive = null; // { mural, photo, profile } -- cache so calibration edits re-render without re-fetching/re-decoding
+// Per-profile.id memory of wherever the room/wallQuad nodes were last left
+// (hand-adjusted or still default) -- see the reseed logic in
+// runCompositeRoomPreview. Lives for the page session (not persisted to
+// storage); reset only by a full reload or a fresh openCompositeRoomPreview.
+let compositeRoomNodeOverrides = {};
 let compositeCalSegments = {
   room: { points: [{ x: 0.17, y: 0.20 }, { x: 0.17, y: 0.60 }], inches: 108 }, // reseeded from profile.referenceSegment on profile change
   // inches defaults to 12 (not null) so the "Stretched to fill" note is
@@ -17094,21 +17099,37 @@ async function runCompositeRoomPreview(rawSource, explicitProfile) {
       ? await loadRoomPreviewImage(profile.foregroundOverlay)
       : null;
 
-    // Reseed the room-reference segment from this profile's pre-placed
-    // default only when the profile actually changed -- runCompositeRoomPreview
+    // Reseed the room-reference segment and wall quad from this profile's
+    // pre-placed default only when the profile actually changed AND this
+    // profile has never been visited this session -- runCompositeRoomPreview
     // runs once per modal open (calibration drags/edits call
     // renderCompositeRoomComposite() directly, they never re-enter this
     // function) and again, with an explicitProfile, whenever
     // switchCompositeRoomVariant cycles to the slot's other room photo.
-    // Either way, landing back on the SAME profile (a closed-and-reopened
-    // modal with a similar-aspect mural, e.g.) shouldn't discard whatever
-    // room-segment adjustment the user already made.
+    // Any of those landing back on a profile visited earlier this session
+    // (closed-and-reopened modal, or cycling back to a room you already
+    // adjusted) should restore the nodes exactly where you left them, not
+    // discard the adjustment and revert to the ROOM_PROFILES hand-estimated
+    // default. compositeRoomNodeOverrides (keyed by profile.id) is that
+    // per-room memory, populated below whenever we leave a profile.
     if (compositeRoomActive?.profile?.id !== profile.id) {
-      compositeCalSegments.room = {
-        points: profile.referenceSegment.points.map((point) => ({ ...point })),
-        inches: profile.referenceSegment.inches
-      };
-      compositeCalSegments.wallQuad = { points: profile.points.map((point) => ({ ...point })) };
+      const outgoingId = compositeRoomActive?.profile?.id;
+      if (outgoingId) {
+        compositeRoomNodeOverrides[outgoingId] = {
+          room: {
+            points: compositeCalSegments.room.points.map((point) => ({ ...point })),
+            inches: compositeCalSegments.room.inches
+          },
+          wallQuad: { points: compositeCalSegments.wallQuad.points.map((point) => ({ ...point })) }
+        };
+      }
+      const saved = compositeRoomNodeOverrides[profile.id];
+      compositeCalSegments.room = saved
+        ? { points: saved.room.points.map((point) => ({ ...point })), inches: saved.room.inches }
+        : { points: profile.referenceSegment.points.map((point) => ({ ...point })), inches: profile.referenceSegment.inches };
+      compositeCalSegments.wallQuad = saved
+        ? { points: saved.wallQuad.points.map((point) => ({ ...point })) }
+        : { points: profile.points.map((point) => ({ ...point })) };
     }
     // The mural-reference segment, unlike the room one, is meaningless
     // once the underlying mural image changes -- a position dragged onto
