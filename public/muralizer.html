@@ -14037,16 +14037,27 @@ function buildPresentSceneChips(scene) {
     if (value === null || value === undefined || value === "") return;
     rows.push(`<span class="cpc-scene-kv"><b>${presentEsc(label)}</b>${presentEsc(String(value))}</span>`);
   };
-  push("Scene", scene.category);
-  push("Sub", scene.subScene);
-  push("Feel", scene.feel);
-  push("Color mode", scene.colorMode);
-  push("Primary", scene.primaryHueName || scene.primaryHueHex || scene.primaryHue);
-  push("Secondary", scene.secondaryHueName || scene.secondaryHueHex || scene.secondaryHue);
-  push("Background", scene.backgroundHueName || scene.backgroundName || scene.backgroundColor);
-  push("Fog", scene.fog);
-  push("Substrate", scene.substrate);
-  push("Application", scene.applicationStyle);
+  // Pure Inspiration ignores every Creative Direction selection entirely
+  // (see PURE_INSPIRATION_HIDDEN_GROUPS / buildReferenceGenerationDescription)
+  // -- captureFullRecipeScene still snapshots whatever those selectors
+  // happened to show regardless, since it's the one shared capture function
+  // every save path uses, but presenting that unused snapshot here as if it
+  // described this concept is misleading. scene.reference is only attached
+  // when a reference photo was used at all; blendWithMuralizer === false on
+  // it means specifically Pure Inspiration (Blend genuinely does use these).
+  const isPureInspirationConcept = scene.reference && scene.reference.blendWithMuralizer === false;
+  if (!isPureInspirationConcept) {
+    push("Scene", scene.category);
+    push("Sub", scene.subScene);
+    push("Feel", scene.feel);
+    push("Color mode", scene.colorMode);
+    push("Primary", scene.primaryHueName || scene.primaryHueHex || scene.primaryHue);
+    push("Secondary", scene.secondaryHueName || scene.secondaryHueHex || scene.secondaryHue);
+    push("Background", scene.backgroundHueName || scene.backgroundName || scene.backgroundColor);
+    push("Fog", scene.fog);
+    push("Substrate", scene.substrate);
+    push("Application", scene.applicationStyle);
+  }
   return rows.join("");
 }
 
@@ -21120,6 +21131,11 @@ document.addEventListener("DOMContentLoaded", () => {
       if (value === null || value === undefined || value === "") return;
       rows.push(`<span class="cpc-scene-kv"><b>${escapeHtml(label)}</b>${escapeHtml(String(value))}</span>`);
     };
+    // Same reasoning as buildPresentSceneChips above: Pure Inspiration never
+    // uses these Creative Direction selections, so showing them here would
+    // misrepresent how this concept was actually generated.
+    const isPureInspirationConcept = scene.reference && scene.reference.blendWithMuralizer === false;
+    if (!isPureInspirationConcept) {
     push("Scene", scene.category);
     push("Sub", scene.subScene);
     push("Feel", scene.feel);
@@ -21131,6 +21147,7 @@ document.addEventListener("DOMContentLoaded", () => {
     push("Substrate", scene.substrate);
     push("Application", scene.applicationStyle);
     push("Style", scene.styleWallpaper);
+    }
     push("Reference file", scene.reference?.name);
     if (scene.description) {
       const d = String(scene.description);
