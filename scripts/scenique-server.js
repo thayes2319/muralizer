@@ -1045,8 +1045,23 @@ async function handleReferenceAssessment(req, res) {
     // picking up an isolated painterly phrase while its own reflective/
     // metallic surfaces, and everything around it, stayed photographic --
     // i.e. satisfied token-wise without actually governing the whole piece.
-    'Every Mural Description you write must read as a single, cohesive painterly artwork throughout -- the primary subject and its surroundings alike, in the same consistent hand-painted, hand-illustrated visual language from the first sentence to the last. This governs everything below: report evidence, classify genre, and note capture artifacts as instructed, but always translate what you observe into painterly terms as you go -- never into photographic, reflective, glossy, polished, chrome, or metallic-finish language, no matter how photographic, reflective, or mechanically precise the subject in the reference photo actually is.',
-    'Depict the same subject, its identifying colors and features, and the same setting shown in the reference photo -- this is an original painterly interpretation of that exact scene, never a substitute subject or an invented setting. "Original" governs artistic execution only (hand-painted, not photographic); it never licenses different content.',
+    // Revised again (2026-08-14): the previous wording ("must read as... a
+    // painterly artwork... from the first sentence to the last") pushed the
+    // model to open every description with something like "This mural
+    // presents a hand-painted interpretation of..." -- grammatically a
+    // statement of finished fact, describing a painting that already exists.
+    // But this text travels to the image model paired with the actual
+    // reference photo, which is not painterly -- it's whatever the user
+    // uploaded, usually a photograph. Asserting "this is already hand-painted"
+    // about pixels that are demonstrably a photo is a direct content/image
+    // mismatch, not just a stylistic tic, and a plausible contributor to
+    // generation instability on top of everything else this file already
+    // works around. The painterly transformation is `paintedStyle`'s job
+    // (an imperative -- "Repaint this scene..." -- applied to what's
+    // actually there), not something this description needs to also assert
+    // as already true.
+    'Write the Mural Description as a plain, factual account of the subject, its identifying colors/features, and its setting -- start directly with the subject itself (for example "A silver Mercedes SLS AMG is positioned centrally...", not "This mural presents..." or "...a hand-painted interpretation of..."). That phrasing describes an already-finished painting; the reference photo you are assessing is not one, and the painterly transformation is applied separately at generation time. Still translate what you observe into painterly-appropriate terms as you note it -- never into photographic, reflective, glossy, polished, chrome, or metallic-finish language, no matter how photographic, reflective, or mechanically precise the subject in the reference photo actually is.',
+    'Depict the same subject, its identifying colors and features, and the same setting shown in the reference photo -- never a substitute subject or an invented setting. Where "original" is asked for elsewhere, it means original artistic execution (hand-painted, not photographic), never different content.',
     'Assess the supplied inspiration image and write a concise, production-ready Mural Description.',
     'Report visual evidence only. Do not identify artists, locations, rooms, furniture, walls, frames, or installed-mural context as design content. When the subject is a recognizable make/model (a car, a specific object), name it plainly -- that specificity is what keeps the subject identifiable, not a violation of "visual evidence only."',
     'The reference is often a snapshot of an already-installed wall covering, so it frequently carries capture artifacts that are not part of the design: glare, reflections, lens flare, specular highlights, or lighting hotspots from the surface being photographed under real light. Note any such artifacts you observe in source_context_to_exclude (for example "glare across the upper-right area" or "reflective sheen along the lower edge") so they can be explicitly excluded -- these are never design content and must never be described as part of the Mural Description itself. Distinguish these capture artifacts from a deliberate painted color gradient or ombre fade, which IS design content and belongs in the Mural Description, not in source_context_to_exclude: a design gradient transitions smoothly across a broad area and follows the artwork\'s own color logic and composition, while a capture artifact is a localized, sharp-edged, often overexposed or blown-out highlight that is inconsistent with the surrounding painted palette and looks camera- or light-source-dependent rather than intentionally placed. When genuinely uncertain which one you are seeing, prefer treating it as design content rather than excluding it.',
