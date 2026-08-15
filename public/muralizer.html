@@ -17408,14 +17408,11 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 async function generateImage() {
-  // Must happen first, synchronously, before any await -- rollBallToBottom()
-  // is a separate click listener on the same generate button and fires
-  // right after this function yields at its first await, resetting the
-  // slider back to 1. Capturing (and clearing) the pending increment here,
-  // before that can happen, is what makes it survive to the point it's
-  // actually applied below instead of always reading back as reset.
+  // Capture the selected change before rollBallToBottom() resets the visual
+  // slider. The resulting seed must drive this request, not the next one.
   const seedIncrementForThisGeneration = pendingCreativeSeedIncrement;
   pendingCreativeSeedIncrement = 0;
+  const seedForThisGeneration = currentSeed + seedIncrementForThisGeneration;
 
   const scenesPanel = document.querySelector(".mural-scenes");
   if (scenesPanel) {
@@ -17532,7 +17529,7 @@ async function generateImage() {
         prompt,
         negative_prompt: negativePrompt,
         aspect_ratio: aspectRatio,
-        seed: currentSeed,
+        seed: seedForThisGeneration,
         model,
         reference_image: hasReference ? buildReferenceCropDataUrl() : undefined,
         reference_influence: hasReference ? referenceInfluence : undefined,
@@ -17566,7 +17563,7 @@ async function generateImage() {
       throw new Error("Generate response did not include image data.");
     }
 
-    currentSeed += seedIncrementForThisGeneration;
+    currentSeed = seedForThisGeneration;
     const muralImage = document.getElementById("muralImage");
 
     muralImage.onload = () => {
