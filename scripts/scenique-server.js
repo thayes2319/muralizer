@@ -784,19 +784,18 @@ async function handleReferenceGenerateProxy(req, res) {
   // that job is now implicit in "treat gleams as real, but subtle."
   const paintedStyle = 'Render this as a hand-painted, painterly mural -- never a photograph -- with visible brushwork, artistic texture, and hand-rendered color blending. Where the subject is genuinely reflective or metallic, treat its gleams and highlights as real, but subtle, not photographically realistic. Abstract and simplify natural elements like foliage, water, and light into visible brushstrokes.';
   const exclusions = 'Never depict furniture, chairs, tables, sofas, beds, lamps, windows, doors, rooms, walls, floors, ceilings, architecture, people, text, logos, frames, or borders.';
-  // paintedStyle sits right after the content description -- not leading it
-  // (that's the ordering that correlated with content/identity instability,
-  // already reverted once tonight) but not trailing everything else either.
-  // Direct observation (2026-08-14): style outcome stopped responding to ANY
-  // change in the Mural Description's wording at all, consistently landing
-  // photographic regardless -- with paintedStyle positioned dead last, after
-  // muralOnly AND exclusions too, that's consistent with simple dilution
-  // (the last clause in a long combined prompt carries the least weight)
-  // rather than a wording contest between two specific texts. Moving it up
-  // one slot to test that theory without touching content-description
-  // structure at all, since content accuracy has been reliable and nothing
-  // here should risk it.
-  form.append('prompt', `${prompt}\n\n${paintedStyle}\n\n${muralOnly} ${exclusions}`);
+  // Back to leading, 2026-08-14 (retry, informed): this is the same ordering
+  // as d6ed87f, reverted earlier tonight because it correlated with content/
+  // identity instability -- but that correlation was never actually isolated.
+  // d6ed87f landed bundled with 62fa973's unconditional-painterly genre-
+  // branch removal (a much more aggressive, separate change) AND ran on an
+  // uncontrolled seed the whole time. Testing leading position alone now,
+  // against a foundation that didn't exist then: content-only description,
+  // fixed seed, make/model naming, gleams language -- a real isolated test
+  // instead of several confounded variables at once. If content accuracy
+  // regresses again with everything else held constant, that's real signal;
+  // if it holds, the earlier revert was reacting to the wrong variable.
+  form.append('prompt', `${paintedStyle}\n\n${prompt}\n\n${muralOnly} ${exclusions}`);
   form.append('output_format', 'png');
 
   // Pure Inspiration: prompt text is just a description of the reference
