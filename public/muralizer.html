@@ -15788,6 +15788,17 @@ updateReferenceDirectionMode(
 // an accepted tradeoff: correct-but-slow over fast-but-wrong.
 // ============================================================
 let genericRoomSeed = null;
+// Same principle as pendingCreativeSeedIncrement for the main generate flow
+// (see that variable's comment): captured the instant the user moves
+// genericRoomSeedSlider, consumed once at the top of
+// runGenericRoomGeneration(). Different bug than the main flow's race --
+// this slider was never reset after use at all, so a value set once kept
+// silently reapplying its full increment on every subsequent Regenerate
+// click until the user happened to notice and change it back. Fixed the
+// same way for consistency: 0 unless the slider was genuinely touched since
+// the last generation, and the slider itself resets to its minimum after
+// each use so its visible position always matches the actual pending state.
+let pendingGenericRoomSeedIncrement = 0;
 
 // muralImage.src is a data: URL only for a mural generated fresh this page
 // load. A concept restored from history (or freshly loaded from another
@@ -15902,6 +15913,16 @@ function closeGenericRoomPreview() {
 }
 
 async function runGenericRoomGeneration(sourceOverride) {
+  // Captured and cleared first, same reasoning as the main generate flow --
+  // see pendingGenericRoomSeedIncrement's comment.
+  const seedIncrementForThisGeneration = pendingGenericRoomSeedIncrement;
+  pendingGenericRoomSeedIncrement = 0;
+  const seedSliderToReset = document.getElementById("genericRoomSeedSlider");
+  if (seedSliderToReset) {
+    seedSliderToReset.value = seedSliderToReset.min || "1";
+    updateGenericRoomSeedLabel();
+  }
+
   const muralImage = document.getElementById("muralImage");
   const rawSource = sourceOverride || muralImage?.currentSrc || muralImage?.src;
   const stage = document.getElementById("genericRoomStage");
@@ -15944,7 +15965,7 @@ async function runGenericRoomGeneration(sourceOverride) {
     resultImage.src = `data:image/png;base64,${imgBase64}`;
     stage.classList.add("has-image");
     if (status) status.textContent = "AI impression -- for mood only, not a precise placement.";
-    genericRoomSeed += getGenericRoomSeedIncrement();
+    genericRoomSeed += seedIncrementForThisGeneration;
   } catch (error) {
     console.error("Generic room preview error:", error);
     if (status) status.textContent = error.message || "This room impression could not be generated.";
@@ -17229,7 +17250,10 @@ document.addEventListener("DOMContentLoaded", () => {
   close?.addEventListener("click", closeGenericRoomPreview);
   regenerate?.addEventListener("click", () => runGenericRoomGeneration());
   share?.addEventListener("click", shareGenericRoomPreview);
-  seedSlider?.addEventListener("input", updateGenericRoomSeedLabel);
+  seedSlider?.addEventListener("input", () => {
+    updateGenericRoomSeedLabel();
+    pendingGenericRoomSeedIncrement = getGenericRoomSeedIncrement();
+  });
   fidelitySlider?.addEventListener("input", updateGenericRoomFidelityLabel);
   updateGenericRoomSeedLabel();
   updateGenericRoomFidelityLabel();
