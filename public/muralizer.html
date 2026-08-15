@@ -15526,6 +15526,16 @@ function updateCreativeDirectionMode(mode) {
   document.getElementById("creativeDirectionBranch")?.classList.toggle("is-visible", isInspiration);
   if (!isInspiration) {
     clearReferenceReimagine();
+    // Confirmed bug: switching to Via Selections cleared the reference state
+    // and updated visibility, but never rebuilt imagePrompt itself -- it kept
+    // showing whatever was last in the box (typically the Pure Inspiration
+    // assessed description) until a selection actually changed, since only
+    // the category/sub-scene/elements onChange handlers called updateOutput().
+    // Mirrors the same call updateReferenceDirectionMode() already uses when
+    // entering Blend mode, for the same reason: rebuild the description from
+    // whatever the current selections actually are, right now, not whatever
+    // text happened to be sitting in the box already.
+    updateOutput();
   }
   updateReferenceReimagineCopy();
   updateSelectionGroupsVisibility();
