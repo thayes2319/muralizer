@@ -15328,12 +15328,9 @@ function updateReferenceInfluence(value) {
   const hint = document.getElementById("referenceInfluenceHint");
   if (label) label.textContent = `${normalized}%`;
   if (hint) {
-    // Same slider, different Stability parameter depending on mode (see
-    // handleReferenceGenerateProxy) -- Pure Inspiration maps it to
-    // control_strength (composition/layout adherence), Inspired Blend maps
-    // it to fidelity (visual-character/style adherence). Keep the copy
-    // honest about which one is actually in effect.
-    const aspect = referenceReimagineState.blendWithMuralizer ? "visual character" : "composition/layout";
+    // Both reference paths use Style control. In Pure Inspiration this is
+    // the identity-preserving pass; in Blend it remains visual guidance.
+    const aspect = referenceReimagineState.blendWithMuralizer ? "visual character" : "source image";
     hint.textContent = normalized < 50
       ? `Fresh interpretation: lighter adherence to the reference's ${aspect}.`
       : normalized > 75

@@ -808,31 +808,20 @@ async function handleReferenceGenerateProxy(req, res) {
   // if it holds, the earlier revert was reacting to the wrong variable.
   const isStructurePass = body.generation_stage === 'structure';
   form.append('prompt', isStructurePass
-    ? `${prompt}\n\n${muralOnly} ${exclusions}`
+    ? `Use the supplied image as the exact source. Preserve its actual subject, identifying features, and arrangement; do not substitute a person, a different vehicle, or a different setting.\n\n${prompt}\n\n${muralOnly} ${exclusions}`
     : `${paintedStyle}\n\n${prompt}\n\n${muralOnly} ${exclusions}`);
   form.append('output_format', 'png');
 
-  // Pure Inspiration: prompt text is just a description of the reference
-  // photo itself (assessedDescription), so locking the output's
-  // composition/layout to that same photo via /control/structure is a
-  // strict improvement -- sandboxed side-by-side against both a
-  // photographic and an already-painterly reference across the full
-  // influence range, consistently painterly either way, no regression.
-  //
-  // Inspired Blend: prompt text instead comes from the user's own Creative
-  // Direction selections (Category/Feel/Elements/etc.), which describe
-  // whatever content the user picked -- with no guaranteed relationship to
-  // what's structurally in the reference photo. /control/structure forces
-  // the output to conform to the reference's edges/layout regardless, which
-  // fights a prompt describing different content and broke this mode in
-  // real device testing. Kept on the original /control/style endpoint,
-  // which transfers color/texture-level "visual character" rather than
-  // rigid structural conformance, so it can actually blend divergent
-  // content with the reference instead of fighting it.
-  const endpoint = isBlend
-    ? 'https://api.stability.ai/v2beta/stable-image/control/style'
-    : 'https://api.stability.ai/v2beta/stable-image/control/structure';
-  form.append(isBlend ? 'fidelity' : 'control_strength', String(influenceValue));
+  // Style control is used for both reference modes. In Pure Inspiration,
+  // its job is to retain the uploaded image's actual subject for the second
+  // painterly pass; in Blend, it transfers the reference's visual character
+  // to the separately selected Creative Direction.
+  // Structure control reproduces broad shapes but can replace the source's
+  // actual subject entirely (a car became a hiker in production testing).
+  // Style control keeps the supplied image semantically grounded; Pure
+  // Inspiration's separate second pass below then changes its rendering.
+  const endpoint = 'https://api.stability.ai/v2beta/stable-image/control/style';
+  form.append('fidelity', String(influenceValue));
 
   const negativePrompt = String(body.negative_prompt || '').trim();
   if (negativePrompt) form.append('negative_prompt', negativePrompt);
