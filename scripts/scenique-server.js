@@ -790,11 +790,11 @@ async function handleReferenceGenerateProxy(req, res) {
   }
 
   const influence = Number(body.reference_influence);
-  // Same slider/value the UI already exposes as "Source influence" (0.3-0.65)
-  // -- reused as-is here, just aimed at a different Stability parameter now
-  // (see below).
+  // Keep the request contract aligned with the 30-100% Source Influence
+  // slider. Structure control uses this value to preserve the reference
+  // composition; silently clipping the upper UI range makes the control lie.
   const controlStrength = Number.isFinite(influence)
-    ? Math.max(0.3, Math.min(0.65, influence))
+    ? Math.max(0.3, Math.min(1, influence))
     : 0.45;
   const form = new FormData();
   const imageExtension = reference.mimeType === 'image/jpeg' ? 'jpg' : reference.mimeType.split('/')[1];
