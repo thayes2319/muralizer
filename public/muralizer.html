@@ -3269,122 +3269,157 @@ button, select {
 
 
 /* ============================================================
-   CREATIVE CHANGE FORCE — RAMP SLIDER (REPLACES OLD Change Ball UI)
+   CREATIVE DIRECTION CONTROL
 ============================================================ */
 
-.changeBall {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-top: 14px;
+.creative-change {
+  width: min(360px, 100%);
+  margin: 14px auto 0;
+  color: #ffffff;
+  font-family: Candara, sans-serif;
 }
 
-/* Label above ramp */
-.ramp-label {
+.creative-change-title {
+  margin-bottom: 7px;
+  color: #ffffff;
   font-size: 15px;
   font-weight: 800;
-  color: white;
-  margin-bottom: 6px;
-  user-select: none;
-  white-space: nowrap;
+  text-align: center;
 }
 
-/* Main ramp container */
-.ramp-slider {
+.creative-change-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.creative-change-option {
   position: relative;
-  width: 240px;
-  height: 40px;
-  padding: 10px 14px;
-  background: rgba(0,0,0,0.04); /* matches your old highlight */
-  border-radius: 8px;
-  box-shadow: 0 0 6px rgba(0,0,0,0.08); /* same soft lift */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* Curved ski-slope ramp */
-.ramp-curve {
-  position: absolute;
-  top: 18px;
-  left: 0;
-  width: 100%;
-  height: 40px;   /* REQUIRED */
-  pointer-events: none;
-}
-
-
-.ramp-path {
-  stroke: #2196F3;   /* your brand blue */
-  stroke-width: 4;
-}
-
-
-/* Rolling ball */
-#rampBall {
-  margin-top: 17px; /* pulls ball closer to the ramp */
-  position: absolute;
-  width: 18px;
-  height: 18px;
-  background: #4CAF50; /* matches Generate button */
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-  transition:
-    top 1.8s cubic-bezier(0.15, 0.85, 0.35, 1.2),
-    left 1.8s cubic-bezier(0.15, 0.85, 0.35, 1.2);
-  z-index: 5;
-}
-
-/* Invisible slider */
-#changeBall {
-  position: absolute;
-  top: 0;
-  left: -24px;     /* shift hit-zone left */
-  width: calc(100% + 20px); /* expand so right side still works */
-  height: 40px;
-  opacity: 0;
+  display: grid;
+  min-height: 64px;
+  box-sizing: border-box;
+  padding: 9px 10px;
+  border: 1px solid rgba(255,255,255,0.38);
+  border-radius: 6px;
+  background: rgba(7,25,38,0.3);
+  color: #ffffff;
   cursor: pointer;
 }
 
-
-
-/* Tooltip bubble */
-.ramp-slider[data-tip]::after {
-  content: attr(data-tip);
+.creative-change-option input {
   position: absolute;
-  bottom: 40px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #222;
-  color: #fff;
-  padding: 8px 10px;
-  font-size: 13px;
-  border-radius: 6px;
-
-  /* ⭐ FIX: allow wrapping + force two-line width */
-  white-space: normal !important;
-  width: 120px;          /* adjust to taste */
-  max-width: 120px;
-  text-align: center;
-  line-height: 1.25;
-  word-wrap: break-word;
-
+  width: 1px;
+  height: 1px;
   opacity: 0;
-  pointer-events: none;
-  z-index: 20;
-  box-shadow: 0 3px 8px rgba(0,0,0,0.25);
-  transition: opacity 0.25s ease;
 }
 
-
-/* Hover reveal */
-.ramp-slider:hover::after {
-  opacity: 1;
+.creative-change-option strong {
+  font-size: 12px;
+  line-height: 1.2;
 }
 
-/* Optional auto-show */
-.ramp-slider.show-tip::after {
-  opacity: 1;
+.creative-change-option span {
+  margin-top: 3px;
+  color: rgba(255,255,255,0.78);
+  font-size: 10.5px;
+  line-height: 1.25;
+}
+
+.creative-change-option:has(input:checked) {
+  border-color: #72c3e8;
+  background: rgba(33,143,201,0.28);
+  box-shadow: 0 0 0 1px rgba(114,195,232,0.3) inset;
+}
+
+.creative-change-option:has(input:focus-visible) {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+
+.creative-change-disclaimer {
+  margin: 7px auto 0;
+  color: rgba(255,255,255,0.78);
+  font-size: 10.5px;
+  line-height: 1.35;
+  text-align: center;
+}
+
+.creative-change-advanced {
+  margin-top: 9px;
+  border-top: 1px solid rgba(255,255,255,0.24);
+}
+
+.creative-change-advanced summary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 8px 0 2px;
+  color: rgba(255,255,255,0.9);
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  list-style: none;
+}
+
+.creative-change-advanced summary::-webkit-details-marker { display: none; }
+
+.creative-change-advanced summary::before {
+  content: "+";
+  font-size: 15px;
+  font-weight: 400;
+}
+
+.creative-change-advanced[open] summary::before { content: "-"; }
+
+.creative-change-tier {
+  border: 1px solid rgba(114,195,232,0.55);
+  border-radius: 999px;
+  color: #c9ecfb;
+  font-size: 9px;
+  letter-spacing: .2px;
+  padding: 2px 6px;
+}
+
+.creative-change-advanced[data-designer-tier="true"] .creative-change-tier {
+  border-color: rgba(123,220,152,0.72);
+  color: #b7f2c7;
+}
+
+.creative-change-advanced-copy {
+  margin: 7px auto 8px;
+  color: rgba(255,255,255,0.78);
+  font-size: 10.5px;
+  line-height: 1.35;
+  text-align: center;
+}
+
+.creative-variation-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 0 4px;
+}
+
+.creative-variation-row label,
+.creative-variation-readout {
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.creative-variation-row input {
+  width: 100%;
+  margin: 0;
+  accent-color: #72c3e8;
+}
+
+.creative-variation-readout {
+  min-width: 44px;
+  color: #c9ecfb;
+  text-align: right;
 }
 
 
@@ -8658,7 +8693,7 @@ select[multiple].collapsible-multi.expanded option:first-child {
     <label class="tip"
       data-tip="Choose the elements that appear within the mural. You may select one or several depending on the category.
 
-Be choosy: Choosing many is totally fine but can lead to some image and scene drifting. When adding many - use along with the Creative Change Ball below.
+ Be choosy: Choosing many is totally fine but can lead to some image and scene drifting. When adding many, use Creative Direction below to compare from the current starting point or explore a fresh one.
 
 If you’re exploring a new direction, try adjusting just 1-2 elements at a time as this may help the generator stay anchored in your chosen category & sub-scene, while still giving you room to experiment & refine.">
       Scene Elements
@@ -8669,7 +8704,7 @@ If you’re exploring a new direction, try adjusting just 1-2 elements at a time
       <span class="tip-dots tip"
         data-tip="Choose the elements that appear within the mural. You may select one or several depending on the category.
 
-Be choosy: Choosing many is totally fine but can lead to some image and scene drifting. When adding many - use along with the Creative Change Ball below.
+ Be choosy: Choosing many is totally fine but can lead to some image and scene drifting. When adding many, use Creative Direction below to compare from the current starting point or explore a fresh one.
 
 If you’re exploring a new direction, try adjusting just 1-2 elements at a time as this may help the generator stay anchored in your chosen category & sub-scene, while still giving you room to experiment & refine.">
         ···
@@ -9309,34 +9344,30 @@ If you’re exploring a new direction, try adjusting just 1-2 elements at a time
 
 
 
-<!-- ============================
-     CREATIVE CHANGE FORCE (RAMP)
-=============================== -->
-<div class="changeBall muralize-it-block">
-
-  <!-- Label above ramp -->
-  <div class="ramp-label">Creative Change @ next image</div>
-
-  <!-- Ramp container with tooltip -->
-  <div class="ramp-slider"
-       data-tip="Higher = stronger creative change. Lower = subtle refinement. Applies only to the next image.">
-
-    <!-- Ski-jump ramp (steep final 1/3) -->
-    <svg class="ramp-curve" viewBox="0 0 100 40" preserveAspectRatio="none">
-    <path class="ramp-path"
-      d="M0,30 
-         C70,28 95,10 100,0"
-      fill="none"/>
-
-    </svg>
-
-    <!-- Rolling ball -->
-    <div id="rampBall"></div>
-
-    <!-- Invisible slider controlling the ball -->
-    <input type="range" id="changeBall" min="1" max="10" value="1">
-
+<div id="creativeChangeControl" class="creative-change muralize-it-block">
+  <div class="creative-change-title">Creative Direction</div>
+  <div class="creative-change-options" role="radiogroup" aria-label="Creative direction for the next image">
+    <label class="creative-change-option">
+      <input type="radio" name="creativeChangeMode" value="keep" checked>
+      <strong>Keep current direction</strong>
+      <span>Compare your setting changes from the same starting point.</span>
+    </label>
+    <label class="creative-change-option">
+      <input type="radio" name="creativeChangeMode" value="fresh">
+      <strong>Explore a fresh direction</strong>
+      <span>Use a new starting point for the next image.</span>
+    </label>
   </div>
+  <p class="creative-change-disclaimer">Keeping the direction steady makes changes easier to compare. AI results can still vary.</p>
+  <details id="creativeChangeAdvanced" class="creative-change-advanced" data-designer-tier="false">
+    <summary>Fine-tune variation <span id="creativeChangeTier" class="creative-change-tier">Designer preview</span></summary>
+    <p class="creative-change-advanced-copy">Choose a deliberate degree of exploration for this image. The range does not guarantee how visually close the result will be.</p>
+    <div class="creative-variation-row">
+      <label for="changeBall">Closer</label>
+      <input type="range" id="changeBall" min="1" max="10" value="1" aria-label="Variation range">
+      <span id="creativeVariationValue" class="creative-variation-readout">Fine</span>
+    </div>
+  </details>
 </div>
 
 
@@ -10871,6 +10902,7 @@ let currentSeed = Math.floor(Math.random() * 2**32);
 // at all, never the value they'd actually set. Stays 0 (no seed change)
 // unless the slider was genuinely moved since the last generation.
 let pendingCreativeSeedIncrement = 0;
+let pendingCreativeChangeMode = "keep";
 let lastSubScene = "";
 let lastPrimaryHex = null;
 let lastSecondaryHex = null;
@@ -17408,11 +17440,13 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 async function generateImage() {
-  // Capture the selected change before rollBallToBottom() resets the visual
-  // slider. The resulting seed must drive this request, not the next one.
+  const creativeChangeModeForThisGeneration = pendingCreativeChangeMode;
   const seedIncrementForThisGeneration = pendingCreativeSeedIncrement;
+  const seedForThisGeneration = creativeChangeModeForThisGeneration === "fresh"
+    ? createFreshCreativeSeed()
+    : currentSeed + (creativeChangeModeForThisGeneration === "vary" ? seedIncrementForThisGeneration : 0);
   pendingCreativeSeedIncrement = 0;
-  const seedForThisGeneration = currentSeed + seedIncrementForThisGeneration;
+  setCreativeChangeMode("keep");
 
   const scenesPanel = document.querySelector(".mural-scenes");
   if (scenesPanel) {
@@ -18791,12 +18825,50 @@ function getSeedIncrement() {
   }
 }
 
+function createFreshCreativeSeed() {
+  if (window.crypto?.getRandomValues) {
+    return window.crypto.getRandomValues(new Uint32Array(1))[0];
+  }
+  return Math.floor(Math.random() * 2**32);
+}
+
+function getCreativeVariationLabel(value) {
+  if (value <= 2) return "Fine";
+  if (value <= 4) return "Gentle";
+  if (value <= 6) return "Open";
+  if (value <= 8) return "Broad";
+  return "Far";
+}
+
+function updateCreativeVariationReadout() {
+  const slider = document.getElementById("changeBall");
+  const readout = document.getElementById("creativeVariationValue");
+  if (slider && readout) readout.textContent = getCreativeVariationLabel(Number(slider.value));
+}
+
+function setCreativeChangeMode(mode) {
+  pendingCreativeChangeMode = mode;
+  if (mode !== "vary") pendingCreativeSeedIncrement = 0;
+  document.querySelectorAll('input[name="creativeChangeMode"]').forEach(input => {
+    input.checked = input.value === mode;
+  });
+}
+
+function updateCreativeChangeTierState() {
+  const advancedControl = document.getElementById("creativeChangeAdvanced");
+  const tierLabel = document.getElementById("creativeChangeTier");
+  const isDesigner = (paidTier || localStorage.getItem("paidTier")) === "Designer";
+  if (advancedControl) advancedControl.dataset.designerTier = String(isDesigner);
+  if (tierLabel) tierLabel.textContent = isDesigner ? "Designer" : "Designer preview";
+}
+
 // ============================================================
 // MAP SLIDER → BALL POSITION ON PARABOLIC RAMP
 // ============================================================
 function updateRampBall() {
   const slider = document.getElementById("changeBall");
   const ball = document.getElementById("rampBall");
+  if (!slider || !ball) return;
 
   const value = Number(slider.value);
   const t = (value - 1) / 9; // normalize 0 → 1
@@ -18827,8 +18899,13 @@ document.getElementById("changeBall").addEventListener("input", () => {
   // from the live DOM value -- see pendingCreativeSeedIncrement's own
   // comment for why that distinction is the whole fix.
   pendingCreativeSeedIncrement = getSeedIncrement();
+  setCreativeChangeMode("vary");
+  updateCreativeVariationReadout();
 });
-window.addEventListener("load", updateRampBall);
+window.addEventListener("load", () => {
+  updateCreativeVariationReadout();
+  updateCreativeChangeTierState();
+});
 
 
 // ============================================================
@@ -18838,6 +18915,7 @@ function rollBallToBottom() {
   const slider = document.getElementById("changeBall");
   slider.value = 1;
   updateRampBall();
+  updateCreativeVariationReadout();
 }
 
 
@@ -18866,6 +18944,10 @@ function restoreRampAfterReset() {
 // ============================================================
 document.getElementById("generateMuralBtn").addEventListener("click", () => {
   rollBallToBottom();
+});
+
+document.querySelectorAll('input[name="creativeChangeMode"]').forEach(input => {
+  input.addEventListener("change", () => setCreativeChangeMode(input.value));
 });
 
 
@@ -19507,10 +19589,6 @@ function applyCategoryRules(cat) {
 categorySelect?.addEventListener("change", () => {
   const cat = categorySelect.value;
 
-  const slider = document.getElementById("changeBall");
-  slider.value = 10;
-  updateRampBall();
-
   applyCategoryRules(cat);   // ← the ONLY rebuild
 
   if (cat === "Blank Scene") {
@@ -19528,13 +19606,6 @@ categorySelect?.addEventListener("change", () => {
 // ============================================================
 subSceneSelect?.addEventListener("change", () => {
   const sub = subSceneSelect.value;
-
-  // ------------------------------------------------------------
-  // AUTO-PUSH Change Ball (on sub-scene change)
-  // ------------------------------------------------------------
-  const slider = document.getElementById("changeBall");
-  slider.value = 10;          // push to Reimagine
-  updateRampBall();           // move the ball to the far right
 
   if (categorySelect.value === "Blank Scene") {
     buildElementsSelect("Blank Scene");
