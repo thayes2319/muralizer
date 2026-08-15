@@ -10856,6 +10856,18 @@ let secondaryLocked = false;
 let editOverride = false;
 let proUnlocked = false;
 let currentSeed = Math.floor(Math.random() * 2**32);
+// Captured the instant the user actually moves the Creative Change slider
+// (see the "input" listener below), consumed once at the top of
+// generateImage() before rollBallToBottom() -- a separate click listener on
+// the same button -- gets a chance to reset the slider back to 1. Confirmed
+// bug this replaces: getSeedIncrement() used to be called AFTER the generate
+// response came back, by which point rollBallToBottom() had already fired
+// (synchronously, on click, well before the response), so it always read the
+// slider's post-reset value of 1 -- meaning currentSeed silently advanced by
+// +1 on EVERY generation regardless of whether the user touched the slider
+// at all, never the value they'd actually set. Stays 0 (no seed change)
+// unless the slider was genuinely moved since the last generation.
+let pendingCreativeSeedIncrement = 0;
 let lastSubScene = "";
 let lastPrimaryHex = null;
 let lastSecondaryHex = null;
@@ -17350,6 +17362,15 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 async function generateImage() {
+  // Must happen first, synchronously, before any await -- rollBallToBottom()
+  // is a separate click listener on the same generate button and fires
+  // right after this function yields at its first await, resetting the
+  // slider back to 1. Capturing (and clearing) the pending increment here,
+  // before that can happen, is what makes it survive to the point it's
+  // actually applied below instead of always reading back as reset.
+  const seedIncrementForThisGeneration = pendingCreativeSeedIncrement;
+  pendingCreativeSeedIncrement = 0;
+
   const scenesPanel = document.querySelector(".mural-scenes");
   if (scenesPanel) {
     scenesPanel.classList.add("collapsed");
@@ -17491,7 +17512,7 @@ async function generateImage() {
 
     const data = await response.json();
 
-    currentSeed += getSeedIncrement();
+    currentSeed += seedIncrementForThisGeneration;
 
     const imgBase64 = data.image || (data.artifacts && data.artifacts[0].base64);
     if (!imgBase64 || typeof imgBase64 !== "string") {
@@ -18750,7 +18771,13 @@ function updateRampBall() {
 
 
 
-document.getElementById("changeBall").addEventListener("input", updateRampBall);
+document.getElementById("changeBall").addEventListener("input", () => {
+  updateRampBall();
+  // Captured here, at the moment of actual user interaction, not read later
+  // from the live DOM value -- see pendingCreativeSeedIncrement's own
+  // comment for why that distinction is the whole fix.
+  pendingCreativeSeedIncrement = getSeedIncrement();
+});
 window.addEventListener("load", updateRampBall);
 
 
