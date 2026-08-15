@@ -46,6 +46,7 @@ async function compactLegacyIndexImages(filePath) {
     await fs.access(filePath);
     const input = fsNative.createReadStream(filePath, { encoding: 'utf8' });
     output = fsNative.createWriteStream(temporaryPath, { encoding: 'utf8' });
+    const streamError = new Promise((_, reject) => output.once('error', reject));
     const lines = readline.createInterface({ input, crlfDelay: Infinity });
 
     for await (const line of lines) {
@@ -54,25 +55,17 @@ async function compactLegacyIndexImages(filePath) {
         continue;
       }
       if (!output.write(`${line}\n`)) {
-        await new Promise((resolve, reject) => {
-          const onDrain = () => {
-            output.removeListener('error', onError);
-            resolve();
-          };
-          const onError = (error) => {
-            output.removeListener('drain', onDrain);
-            reject(error);
-          };
-          output.once('drain', onDrain);
-          output.once('error', onError);
-        });
+        await Promise.race([
+          new Promise((resolve) => output.once('drain', resolve)),
+          streamError
+        ]);
       }
     }
 
-    await new Promise((resolve, reject) => {
-      output.once('error', reject);
-      output.end(resolve);
-    });
+    await Promise.race([
+      new Promise((resolve) => output.end(resolve)),
+      streamError
+    ]);
     output = null;
 
     if (removedCount) {
