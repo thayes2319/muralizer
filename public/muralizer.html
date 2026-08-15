@@ -15281,11 +15281,23 @@ function persistGeneratedConceptImage(imgBase64, snapshot) {
     window.SceniqueBackend.queueConceptImage({
       ...record,
       imageBase64: imgBase64,
-      imageDataUrl,
+      scene: stripReferenceImageForBackend(record.scene),
       context: activeContext,
       concept: activeConceptName
     });
   }
+}
+
+function stripReferenceImageForBackend(scene) {
+  if (!scene || typeof scene !== "object" || !scene.reference || typeof scene.reference !== "object") {
+    return scene;
+  }
+
+  const { dataUrl, imageDataUrl, imageBase64, ...referenceMetadata } = scene.reference;
+  return {
+    ...scene,
+    reference: referenceMetadata
+  };
 }
 
 const referenceReimagineState = {
@@ -23072,8 +23084,7 @@ document.addEventListener("DOMContentLoaded", () => {
         imageKey: savedKey,
         saveAction: choice,
         savedConcept: true,
-        scene: savedScene || null,
-        imageDataUrl: imageSrc,
+        scene: stripReferenceImageForBackend(savedScene),
         imageBase64
       });
 

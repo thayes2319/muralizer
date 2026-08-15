@@ -1,7 +1,9 @@
 const http = require('node:http');
+const fsNative = require('node:fs');
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const crypto = require('node:crypto');
+const readline = require('node:readline');
 
 const rootDir = path.resolve(__dirname, '..');
 const publicDir = path.join(rootDir, 'public');
@@ -33,6 +35,63 @@ const openAiVisionModel = String(process.env.OPENAI_VISION_MODEL || 'gpt-4.1-min
 async function ensureDirectories() {
   await fs.mkdir(conceptDir, { recursive: true });
   await fs.mkdir(requestDir, { recursive: true });
+}
+
+async function compactLegacyIndexImages(filePath) {
+  const temporaryPath = `${filePath}.${process.pid}.compact`;
+  let output = null;
+  let removedCount = 0;
+
+  try {
+    await fs.access(filePath);
+    const input = fsNative.createReadStream(filePath, { encoding: 'utf8' });
+    output = fsNative.createWriteStream(temporaryPath, { encoding: 'utf8' });
+    const lines = readline.createInterface({ input, crlfDelay: Infinity });
+
+    for await (const line of lines) {
+      if (/^\s*"(?:dataUrl|imageDataUrl|imageBase64)"\s*:\s*"/.test(line)) {
+        removedCount += 1;
+        continue;
+      }
+      if (!output.write(`${line}\n`)) {
+        await new Promise((resolve, reject) => {
+          output.once('drain', resolve);
+          output.once('error', reject);
+        });
+      }
+    }
+
+    await new Promise((resolve, reject) => {
+      output.once('error', reject);
+      output.end(resolve);
+    });
+    output = null;
+
+    if (removedCount) {
+      await fs.rename(temporaryPath, filePath);
+      console.log(`Compacted ${removedCount} embedded image field(s) from ${path.basename(filePath)}.`);
+    } else {
+      await fs.unlink(temporaryPath);
+    }
+  } catch (error) {
+    output?.destroy();
+    await fs.unlink(temporaryPath).catch(() => {});
+    if (error?.code !== 'ENOENT') {
+      console.warn(`Unable to compact ${path.basename(filePath)}:`, error.message);
+    }
+  }
+}
+
+function sanitizeSceneForIndex(scene) {
+  if (!scene || typeof scene !== 'object' || Array.isArray(scene)) return scene;
+  const reference = scene.reference;
+  if (!reference || typeof reference !== 'object' || Array.isArray(reference)) return scene;
+
+  const { dataUrl, imageDataUrl, imageBase64, ...referenceMetadata } = reference;
+  return {
+    ...scene,
+    reference: referenceMetadata
+  };
 }
 
 async function readJson(filePath, fallback) {
@@ -251,7 +310,7 @@ async function readBody(req) {
   let total = 0;
   for await (const chunk of req) {
     total += chunk.length;
-    if (total > 25 * 1024 * 1024) {
+    if (total > 14 * 1024 * 1024) {
       const err = new Error('Request body too large');
       err.statusCode = 413;
       throw err;
@@ -292,6 +351,7 @@ async function handleConceptImage(req, res) {
     imageUrl,
     imagePath: path.relative(dataDir, imagePath),
     imageSizeBytes: imageBuffer ? imageBuffer.length : null,
+    scene: sanitizeSceneForIndex(body.scene),
     imageBase64: undefined,
     imageDataUrl: undefined
   };
@@ -1252,6 +1312,9 @@ async function main() {
   }
 
   await ensureDirectories();
+  await compactLegacyIndexImages(conceptIndexPath);
+  await compactLegacyIndexImages(requestIndexPath);
+  await compactLegacyIndexImages(conceptShareIndexPath);
   const server = http.createServer(requestHandler);
   server.listen(port, host, () => {
     console.log(`Scenique backend listening on http://${host}:${port}`);
