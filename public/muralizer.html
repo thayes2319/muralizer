@@ -15177,7 +15177,7 @@ function hasSavedConceptImage(context, conceptName) {
   }
 }
 
-function applyConceptImageForContext(context, conceptName) {
+function applyConceptImageForContext(context, conceptName, options = {}) {
   const muralImage = document.getElementById("muralImage");
   if (!muralImage) return;
 
@@ -15204,7 +15204,7 @@ function applyConceptImageForContext(context, conceptName) {
   // always restore them the same way loading a saved recipe does.
   const scene = getConceptSceneForKey(buildConceptImageKey(context, conceptName, "saved"))
     || getConceptSceneForKey(buildConceptImageKey(context, conceptName, "draft"));
-  if (scene) applyRecipeToUI(scene);
+  if (scene && options.restoreRecipe !== false) applyRecipeToUI(scene);
 }
 
 function persistGeneratedConceptImage(imgBase64, snapshot) {
@@ -23062,7 +23062,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (conceptEl) conceptEl.textContent = nextActiveConceptName;
     const nextImageSrc = getConceptImageSrc(ctx, nextActiveConceptName);
     if (!didCreateNew || nextImageSrc) {
-      applyConceptImageForContext(ctx, nextActiveConceptName);
+      applyConceptImageForContext(ctx, nextActiveConceptName, { restoreRecipe: false });
     }
     persistCpcState(activeIndex);
     renderOpenProjectChips(activeIndex);
