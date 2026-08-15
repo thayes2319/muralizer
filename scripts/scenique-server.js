@@ -775,14 +775,25 @@ async function handleReferenceGenerateProxy(req, res) {
   // Applies to both modes -- reinforces the same never-photorealistic goal
   // regardless of which endpoint below actually enforces it.
   //
-  // Tightened 2026-08-14 (direct request, drafted collaboratively): shorter,
-  // affirmatives-first version -- keeps a minimal "never a photograph"
-  // backstop folded into the lead sentence rather than dropped entirely
-  // (positive-only painterly language repeatedly lost to photographic output
-  // earlier tonight), adds the gleams/highlights sentence generalized beyond
-  // any one subject, and drops the separate capture-artifacts sentence --
-  // that job is now implicit in "treat gleams as real, but subtle."
-  const paintedStyle = 'Render this as a hand-painted, painterly mural -- never a photograph -- with visible brushwork, artistic texture, and hand-rendered color blending. Where the subject is genuinely reflective or metallic, treat its gleams and highlights as real, but subtle, not photographically realistic. Abstract and simplify natural elements like foliage, water, and light into visible brushstrokes.';
+  // Stripped down further, 2026-08-14 (direct request: "start small"). The
+  // "Abstract and simplify natural elements like foliage, water, and light"
+  // sentence is gone -- naming specific elements not actually present in a
+  // given reference (this one has neither foliage nor water) looks like it
+  // was priming the model to introduce them anyway rather than only
+  // constraining them when present; a recurring moss/overgrown/in-water
+  // pattern showed up across multiple different seeds tonight against a
+  // reference with none of that, which pointed at the prompt, not chance.
+  // Down to the core directive plus the one clause that's actually been
+  // validated by a real success (gleams/reflections) -- restored to its
+  // exact original wording, not a paraphrase of it. Elaborating this same
+  // clause once already ("render them subtly, as a few deliberate painted
+  // highlights, never as photographic gloss or mirror-sharp reflection")
+  // caused a real regression that took a dedicated revert to fix -- lesson
+  // applied here rather than repeated. Everything else that was here (the
+  // elaborate "never a photograph... brushwork... hand-rendered" lead
+  // sentence) is cut, not just reworded -- fewer specific claims, fewer
+  // chances to accidentally prime the wrong content.
+  const paintedStyle = 'Reimagine the described image below in painterly form. Where the subject is genuinely reflective or metallic, treat its gleams and reflections as such but subtly, not with realism.';
   const exclusions = 'Never depict furniture, chairs, tables, sofas, beds, lamps, windows, doors, rooms, walls, floors, ceilings, architecture, people, text, logos, frames, or borders.';
   // Back to leading, 2026-08-14 (retry, informed): this is the same ordering
   // as d6ed87f, reverted earlier tonight because it correlated with content/
