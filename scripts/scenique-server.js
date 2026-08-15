@@ -55,8 +55,16 @@ async function compactLegacyIndexImages(filePath) {
       }
       if (!output.write(`${line}\n`)) {
         await new Promise((resolve, reject) => {
-          output.once('drain', resolve);
-          output.once('error', reject);
+          const onDrain = () => {
+            output.removeListener('error', onError);
+            resolve();
+          };
+          const onError = (error) => {
+            output.removeListener('drain', onDrain);
+            reject(error);
+          };
+          output.once('drain', onDrain);
+          output.once('error', onError);
         });
       }
     }
