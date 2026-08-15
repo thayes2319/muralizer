@@ -1,9 +1,7 @@
 const http = require('node:http');
-const fsNative = require('node:fs');
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const crypto = require('node:crypto');
-const readline = require('node:readline');
 
 const rootDir = path.resolve(__dirname, '..');
 const publicDir = path.join(rootDir, 'public');
@@ -15,7 +13,6 @@ const conceptDir = path.join(dataDir, 'concept-images');
 const requestDir = path.join(dataDir, 'measurement-requests');
 const conceptIndexPath = path.join(dataDir, 'concept-images.json');
 const requestIndexPath = path.join(dataDir, 'measurement-requests.json');
-const conceptShareIndexPath = path.join(dataDir, 'concept-shares.json');
 const port = Number(process.env.PORT || 8787);
 const host = String(process.env.HOST || '0.0.0.0').trim() || '0.0.0.0';
 const serviceRevision = String(process.env.RENDER_GIT_COMMIT || process.env.SOURCE_VERSION || 'local').trim() || 'local';
@@ -37,64 +34,6 @@ async function ensureDirectories() {
   await fs.mkdir(requestDir, { recursive: true });
 }
 
-async function compactLegacyIndexImages(filePath) {
-  const temporaryPath = `${filePath}.${process.pid}.compact`;
-  let output = null;
-  let removedCount = 0;
-
-  try {
-    await fs.access(filePath);
-    const input = fsNative.createReadStream(filePath, { encoding: 'utf8' });
-    output = fsNative.createWriteStream(temporaryPath, { encoding: 'utf8' });
-    const streamError = new Promise((_, reject) => output.once('error', reject));
-    const lines = readline.createInterface({ input, crlfDelay: Infinity });
-
-    for await (const line of lines) {
-      if (/^\s*"(?:dataUrl|imageDataUrl|imageBase64)"\s*:\s*"/.test(line)) {
-        removedCount += 1;
-        continue;
-      }
-      if (!output.write(`${line}\n`)) {
-        await Promise.race([
-          new Promise((resolve) => output.once('drain', resolve)),
-          streamError
-        ]);
-      }
-    }
-
-    await Promise.race([
-      new Promise((resolve) => output.end(resolve)),
-      streamError
-    ]);
-    output = null;
-
-    if (removedCount) {
-      await fs.rename(temporaryPath, filePath);
-      console.log(`Compacted ${removedCount} embedded image field(s) from ${path.basename(filePath)}.`);
-    } else {
-      await fs.unlink(temporaryPath);
-    }
-  } catch (error) {
-    output?.destroy();
-    await fs.unlink(temporaryPath).catch(() => {});
-    if (error?.code !== 'ENOENT') {
-      console.warn(`Unable to compact ${path.basename(filePath)}:`, error.message);
-    }
-  }
-}
-
-function sanitizeSceneForIndex(scene) {
-  if (!scene || typeof scene !== 'object' || Array.isArray(scene)) return scene;
-  const reference = scene.reference;
-  if (!reference || typeof reference !== 'object' || Array.isArray(reference)) return scene;
-
-  const { dataUrl, imageDataUrl, imageBase64, ...referenceMetadata } = reference;
-  return {
-    ...scene,
-    reference: referenceMetadata
-  };
-}
-
 async function readJson(filePath, fallback) {
   try {
     const text = await fs.readFile(filePath, 'utf8');
@@ -112,7 +51,7 @@ async function writeJson(filePath, value) {
 async function appendJsonItem(filePath, item) {
   const current = await readJson(filePath, []);
   current.unshift(item);
-  await writeJson(filePath, capRecordsPerOwner(current));
+  await writeJson(filePath, current.slice(0, 500));
 }
 
 function sendJson(res, statusCode, payload) {
@@ -159,30 +98,6 @@ function sanitizeName(name) {
 function normalizeOwnerId(value) {
   const normalized = String(value || '').trim();
   return normalized || null;
-}
-
-const MAX_RECORDS_PER_OWNER = 500;
-
-// Keeps each owner's most-recent MAX_RECORDS_PER_OWNER records, independent
-// of every other owner -- `items` must already be newest-first (unshift'd).
-// Replaces a flat `slice(0, 500)` shared across ALL owners combined, which
-// meant one owner's heavy activity (including repeated automated test runs
-// against this same production index) could silently evict a completely
-// different owner's real saved concepts with no warning. Confirmed this had
-// already started happening: the concept-image index's oldest surviving
-// record had drifted to just ~3.5 days old under that flat cap.
-function capRecordsPerOwner(items) {
-  const seenCounts = new Map();
-  const kept = [];
-  for (const record of items) {
-    const key = normalizeOwnerId(record && record.ownerId) || '__unowned__';
-    const count = seenCounts.get(key) || 0;
-    if (count < MAX_RECORDS_PER_OWNER) {
-      kept.push(record);
-      seenCounts.set(key, count + 1);
-    }
-  }
-  return kept;
 }
 
 function normalizeMatchValue(value) {
@@ -311,7 +226,7 @@ async function readBody(req) {
   let total = 0;
   for await (const chunk of req) {
     total += chunk.length;
-    if (total > 14 * 1024 * 1024) {
+    if (total > 25 * 1024 * 1024) {
       const err = new Error('Request body too large');
       err.statusCode = 413;
       throw err;
@@ -352,62 +267,12 @@ async function handleConceptImage(req, res) {
     imageUrl,
     imagePath: path.relative(dataDir, imagePath),
     imageSizeBytes: imageBuffer ? imageBuffer.length : null,
-    scene: sanitizeSceneForIndex(body.scene),
     imageBase64: undefined,
     imageDataUrl: undefined
   };
 
   await appendJsonItem(conceptIndexPath, record);
   sendJson(res, 201, record);
-}
-
-// Backend half of the cross-device "Share with client" link
-// (openConceptPresentationFromData / window.SceniqueBackend.createConceptShare
-// + loadConceptShare in scenique-backend.js) -- that frontend contract
-// already existed and was already being called; this was the missing
-// server side. img is resolved and stored HERE (from the concept-images
-// index, by conceptId) rather than at load time, so loadConceptShare can
-// return everything openConceptPresentationFromData needs -- {img, title,
-// sub, scene} -- in one request instead of a second round-trip.
-async function handleCreateConceptShare(req, res) {
-  const body = await readBody(req);
-  const conceptId = String(body.conceptId || '').trim();
-  if (!conceptId) {
-    sendJson(res, 400, { ok: false, error: 'conceptId is required.' });
-    return;
-  }
-
-  const concepts = await readJson(conceptIndexPath, []);
-  const concept = Array.isArray(concepts) ? concepts.find((item) => item && item.id === conceptId) : null;
-  if (!concept || !concept.imageUrl) {
-    sendJson(res, 404, { ok: false, error: 'That concept could not be found.' });
-    return;
-  }
-
-  const token = crypto.randomBytes(9).toString('base64url'); // 12 chars, matches the frontend's [A-Za-z0-9_-]{6,32} check
-  const record = {
-    token,
-    conceptId,
-    ownerId: normalizeOwnerId(body.ownerId),
-    title: body.title !== undefined ? body.title : null,
-    sub: body.sub !== undefined ? body.sub : null,
-    scene: body.scene !== undefined ? body.scene : null,
-    img: concept.imageUrl,
-    createdAt: new Date().toISOString()
-  };
-
-  await appendJsonItem(conceptShareIndexPath, record);
-  sendJson(res, 201, record);
-}
-
-async function handleGetConceptShare(req, res, token) {
-  const shares = await readJson(conceptShareIndexPath, []);
-  const record = Array.isArray(shares) ? shares.find((item) => item && item.token === token) : null;
-  if (!record) {
-    sendJson(res, 404, { ok: false, error: 'This share link is invalid or has expired.' });
-    return;
-  }
-  sendJson(res, 200, record);
 }
 
 async function handleMeasurementRequest(req, res) {
@@ -682,7 +547,7 @@ async function handleSeedDefaultConcepts(req, res) {
     return;
   }
 
-  await writeJson(conceptIndexPath, capRecordsPerOwner(nextItems));
+  await writeJson(conceptIndexPath, nextItems.slice(0, 500));
   sendJson(res, 200, {
     ok: true,
     seeded,
@@ -807,74 +672,32 @@ async function handleReferenceGenerateProxy(req, res) {
   }
 
   const influence = Number(body.reference_influence);
-  // Same slider/value the UI exposes as "Source influence" -- reused for
-  // whichever Stability parameter applies to this mode (see below). Ceiling
-  // raised 0.65 -> 1.0 by request (2026-08-14): capping control_strength
-  // well below max meant Pure Inspiration could never be told to adhere
-  // strongly to the reference's actual structure/composition, no matter how
-  // high the user pushed the slider -- a second, independent cause of the
-  // same content-drift symptom the assessment-instruction fix above
-  // addressed (that fix stopped the prompt text from fighting fidelity;
-  // this stops the structural-adherence ceiling from capping it too). 0.3-
-  // 0.65 was the original tested-safe band; 0.65-1.0 is untested territory
-  // for Inspired Blend's fidelity parameter specifically (the wall-mockup
-  // fidelity control saw style bleed at 0.8 in its own context -- see
-  // handleWallMockupProxy), but carries no equivalent known risk for
-  // control_strength, whose whole purpose is stronger structural adherence.
-  const influenceValue = Number.isFinite(influence)
-    ? Math.max(0.3, Math.min(1, influence))
+  // Same slider/value the UI already exposes as "Source influence" (0.3-0.65)
+  // -- reused as-is here, just aimed at a different Stability parameter now
+  // (see below).
+  const controlStrength = Number.isFinite(influence)
+    ? Math.max(0.3, Math.min(0.65, influence))
     : 0.45;
-
-  // Pure Inspiration vs Inspired Blend need genuinely different Stability
-  // endpoints, not just different prompt text -- see the branch below.
-  const isBlend = body.reference_mode === 'blend';
-
   const form = new FormData();
   const imageExtension = reference.mimeType === 'image/jpeg' ? 'jpg' : reference.mimeType.split('/')[1];
   form.append('image', new Blob([reference.buffer], { type: reference.mimeType }), `inspiration.${imageExtension}`);
   const muralOnly = 'Create a flat, front-facing original mural artwork only. The full canvas must be the mural design itself, with no interior scene or installed-mural mockup.';
-  // Applies to both modes -- reinforces the same never-photorealistic goal
-  // regardless of which endpoint below actually enforces it.
-  //
-  // Stripped down further, 2026-08-14 (direct request: "start small"). The
-  // "Abstract and simplify natural elements like foliage, water, and light"
-  // sentence is gone -- naming specific elements not actually present in a
-  // given reference (this one has neither foliage nor water) looks like it
-  // was priming the model to introduce them anyway rather than only
-  // constraining them when present; a recurring moss/overgrown/in-water
-  // pattern showed up across multiple different seeds tonight against a
-  // reference with none of that, which pointed at the prompt, not chance.
-  // Down to the core directive plus the one clause that's actually been
-  // validated by a real success (gleams/reflections) -- restored to its
-  // exact original wording, not a paraphrase of it. Elaborating this same
-  // clause once already ("render them subtly, as a few deliberate painted
-  // highlights, never as photographic gloss or mirror-sharp reflection")
-  // caused a real regression that took a dedicated revert to fix -- lesson
-  // applied here rather than repeated. Everything else that was here (the
-  // elaborate "never a photograph... brushwork... hand-rendered" lead
-  // sentence) is cut, not just reworded -- fewer specific claims, fewer
-  // chances to accidentally prime the wrong content.
-  const paintedStyle = 'Reimagine the described image below in painterly form. Where the subject is genuinely reflective or metallic, treat its gleams and reflections as such but subtly, not with realism.';
+  // Switched from Stability's /control/style to /control/structure. Style
+  // control explicitly extracts and reapplies the reference image's own
+  // stylistic qualities (color, texture, photographic-ness) -- for a
+  // photographic reference (e.g. a foliage/water inspiration photo, not
+  // just an installed-wallcovering snapshot), that pulled the output toward
+  // photorealism no matter how strongly worded this instruction was, even
+  // at low influence. Structure control only constrains composition/layout
+  // from the reference, leaving style entirely up to this text -- sandboxed
+  // side-by-side against both a photographic and an already-painterly
+  // reference, across the full influence range, with consistently painterly
+  // results either way.
+  const paintedStyle = 'Render this as a hand-painted or hand-illustrated mural artwork with visible painterly brushwork, artistic texture, and hand-rendered color blending -- never as a photograph or photorealistic image, no matter how photographic the reference image itself looks. Abstract and simplify all natural elements such as foliage, water, and light into visible brushstrokes, not photographic detail. Ignore any glare, reflections, or lighting artifacts from the reference photo being captured under real light; those are not part of the artwork.';
   const exclusions = 'Never depict furniture, chairs, tables, sofas, beds, lamps, windows, doors, rooms, walls, floors, ceilings, architecture, people, text, logos, frames, or borders.';
-  // Back to leading, 2026-08-14 (retry, informed): this is the same ordering
-  // as d6ed87f, reverted earlier tonight because it correlated with content/
-  // identity instability -- but that correlation was never actually isolated.
-  // d6ed87f landed bundled with 62fa973's unconditional-painterly genre-
-  // branch removal (a much more aggressive, separate change) AND ran on an
-  // uncontrolled seed the whole time. Testing leading position alone now,
-  // against a foundation that didn't exist then: content-only description,
-  // fixed seed, make/model naming, gleams language -- a real isolated test
-  // instead of several confounded variables at once. If content accuracy
-  // regresses again with everything else held constant, that's real signal;
-  // if it holds, the earlier revert was reacting to the wrong variable.
-  form.append('prompt', `${paintedStyle}\n\n${prompt}\n\n${muralOnly} ${exclusions}`);
+  form.append('prompt', `${prompt}\n\n${muralOnly} ${paintedStyle} ${exclusions}`);
   form.append('output_format', 'png');
-
-  // Style control grounds both reference modes in the supplied image while
-  // the prompt determines the requested mural treatment.
-  const endpoint = 'https://api.stability.ai/v2beta/stable-image/control/style';
-  form.append('fidelity', String(influenceValue));
-
+  form.append('control_strength', String(controlStrength));
   const negativePrompt = String(body.negative_prompt || '').trim();
   if (negativePrompt) form.append('negative_prompt', negativePrompt);
   const aspectRatio = String(body.aspect_ratio || '').trim();
@@ -883,7 +706,7 @@ async function handleReferenceGenerateProxy(req, res) {
     form.append('seed', String(body.seed));
   }
 
-  const response = await fetch(endpoint, {
+  const response = await fetch('https://api.stability.ai/v2beta/stable-image/control/structure', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${upstreamApiKey}`,
@@ -963,14 +786,12 @@ async function handleWallMockupProxy(req, res) {
   // landed here by direct request after 0.5 tested well. The explicit "only
   // on that one wall" prompt/negative-prompt language above is doing the
   // spatial-confinement work; fidelity itself just balances overall
-  // adherence vs. creative freedom. User-adjustable via the frontend's
-  // fidelity slider. Ceiling raised 0.65 -> 0.90 by request (2026-08-14) --
-  // 0.3-0.65 is the tested-safe band above; 0.65-0.90 is NOT re-verified
-  // against the bleed problem 0.8 previously caused and carries the same
-  // known risk, just now reachable if the user wants to push past it.
+  // adherence vs. creative freedom. Now user-adjustable via the frontend's
+  // fidelity slider, clamped to this tested-safe band rather than the full
+  // 0-1 provider range.
   const requestedFidelity = Number(body.fidelity);
   const fidelity = Number.isFinite(requestedFidelity)
-    ? Math.max(0.3, Math.min(0.90, requestedFidelity))
+    ? Math.max(0.3, Math.min(0.65, requestedFidelity))
     : 0.45;
 
   const form = new FormData();
@@ -1057,25 +878,12 @@ async function handleReferenceAssessment(req, res) {
       required: ['assessment', 'mural_description']
     }
   };
-  // Content-only again, 2026-08-14 (retry, informed): this is the same
-  // principle as the content/style split built earlier tonight and then
-  // reverted after 8 bad results -- but that revert happened BEFORE the
-  // seed-increment bug was found and fixed, meaning every one of those 8
-  // tests (and the 1 success before them) ran on an uncontrolled, silently-
-  // advancing seed. The correlation with the architecture change was never
-  // actually verified against noise. Retrying with real evidence this time:
-  // a fresh assessment just demonstrably still wrote "This mural depicts a
-  // hand-painted interpretation..." and "...rendered with smooth painterly
-  // gradients and reflective highlights..." -- describing a finished
-  // painting instead of the photograph actually being assessed, the same
-  // mismatch diagnosed hours ago. paintedStyle (handleReferenceGenerateProxy)
-  // now owns rendering technique entirely; this description's job is content.
   const instructions = [
-    'Depict the same subject, its identifying colors and features, and the same setting shown in the reference photo -- never a substitute subject or an invented setting.',
     'Assess the supplied inspiration image and write a concise, production-ready Mural Description.',
-    'Report visual evidence only. Do not identify artists, locations, rooms, furniture, walls, frames, or installed-mural context as design content. When the subject is a recognizable make/model (a car, a specific object), name it plainly -- that specificity is what keeps the subject identifiable, not a violation of "visual evidence only."',
+    'Report visual evidence only. Do not identify artists, brands, locations, rooms, furniture, walls, frames, or installed-mural context as design content.',
     'The reference is often a snapshot of an already-installed wall covering, so it frequently carries capture artifacts that are not part of the design: glare, reflections, lens flare, specular highlights, or lighting hotspots from the surface being photographed under real light. Note any such artifacts you observe in source_context_to_exclude (for example "glare across the upper-right area" or "reflective sheen along the lower edge") so they can be explicitly excluded -- these are never design content and must never be described as part of the Mural Description itself. Distinguish these capture artifacts from a deliberate painted color gradient or ombre fade, which IS design content and belongs in the Mural Description, not in source_context_to_exclude: a design gradient transitions smoothly across a broad area and follows the artwork\'s own color logic and composition, while a capture artifact is a localized, sharp-edged, often overexposed or blown-out highlight that is inconsistent with the surrounding painted palette and looks camera- or light-source-dependent rather than intentionally placed. When genuinely uncertain which one you are seeing, prefer treating it as design content rather than excluding it.',
-    'Write the Mural Description as a plain, factual account of the subject, its identifying colors and features, its position, and its setting -- content only, exactly as it appears in the reference photo. Use the selected Muralizer category and sub-scene as scope guidance when supplied. Do not describe rendering technique, brushwork, or painterly qualities anywhere in the description -- that is decided once, separately, and applied uniformly at generation time, not re-derived per photo here. For example: "The uploaded image is a [subject], positioned [where], with [features]..." -- not "This mural depicts a hand-painted interpretation of..." or "...rendered with painterly gradients and reflective highlights...", which describe a finished painting rather than the photograph actually being assessed.',
+    'The description must create an original composition; never ask to copy the source composition.',
+    'First classify the image genre and visual treatment from visual evidence. The reference photo may itself be an ordinary camera photograph -- for example a snapshot of an already-installed wall covering -- but the Mural Description you write must always describe a hand-painted or hand-illustrated artwork, never a photograph, regardless of how photographic the reference image itself looks. Use the selected Muralizer category and sub-scene as scope guidance when supplied, but let the image\'s depicted subject and rendering style -- not its status as a photo -- control the genre. For a modern graphic reference, use precise graphic-mural language appropriate to its forms, color blocks, linework, repeat, or geometry; do not force painterly, botanical, or open-sky language. For a painterly, scenic, Chinoiserie, or botanical reference, use the painterly language evidenced by the image\'s depicted style. Never describe or request photorealism, photographic lighting, camera effects, lens artifacts, or realistic depth of field in the Mural Description -- always describe painted, illustrated, or hand-rendered artistic qualities instead.',
     'When the image visibly shows a planted, undulating lower botanical base from which taller growth emerges, write the Mural Description as four distinct paragraphs in this order: (1) an opening paragraph describing the evidenced visual treatment, background, and arrangement; (2) this berm paragraph: "The lower edge is importantly defined by an undulating berm of earth, providing a natural planted base from which the taller flowering branches emerge." Adapt only plant-type words when the evidence requires it; treat the berm as painted earth and planted forms, never as a literal floor or room surface; (3) a paragraph describing the evidenced blossoms, branches, leaves, birds, or other motifs and their balanced mural composition; (4) a closing paragraph requiring canopy and botanical forms, when present, to terminate naturally well before the top edge and preserve open breathing room above. Otherwise do not invent a berm, canopy, botanicals, or open-sky requirement; use a shorter evidence-led paragraph structure.',
     'Return an assessment with concise evidence and a 2-4 paragraph Mural Description. The description must remain editable by the user.',
     currentDescription ? `The user\'s current description is: ${currentDescription}` : 'There is no current user description.'
@@ -1162,17 +970,6 @@ async function handleApi(req, res, url) {
   if (req.method === 'GET' && url.pathname === '/api/measurement-requests') {
     const items = await readJson(requestIndexPath, []);
     sendJson(res, 200, items);
-    return true;
-  }
-
-  if (req.method === 'GET' && url.pathname.startsWith('/api/concept-shares/')) {
-    const token = decodeURIComponent(url.pathname.slice('/api/concept-shares/'.length));
-    await handleGetConceptShare(req, res, token);
-    return true;
-  }
-
-  if (req.method === 'POST' && url.pathname === '/api/concept-shares') {
-    await handleCreateConceptShare(req, res);
     return true;
   }
 
@@ -1313,9 +1110,6 @@ async function main() {
   }
 
   await ensureDirectories();
-  await compactLegacyIndexImages(conceptIndexPath);
-  await compactLegacyIndexImages(requestIndexPath);
-  await compactLegacyIndexImages(conceptShareIndexPath);
   const server = http.createServer(requestHandler);
   server.listen(port, host, () => {
     console.log(`Scenique backend listening on http://${host}:${port}`);
