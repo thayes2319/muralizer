@@ -806,7 +806,10 @@ async function handleReferenceGenerateProxy(req, res) {
   // instead of several confounded variables at once. If content accuracy
   // regresses again with everything else held constant, that's real signal;
   // if it holds, the earlier revert was reacting to the wrong variable.
-  form.append('prompt', `${paintedStyle}\n\n${prompt}\n\n${muralOnly} ${exclusions}`);
+  const isStructurePass = body.generation_stage === 'structure';
+  form.append('prompt', isStructurePass
+    ? `${prompt}\n\n${muralOnly} ${exclusions}`
+    : `${paintedStyle}\n\n${prompt}\n\n${muralOnly} ${exclusions}`);
   form.append('output_format', 'png');
 
   // Pure Inspiration: prompt text is just a description of the reference
@@ -864,6 +867,66 @@ async function handleReferenceGenerateProxy(req, res) {
   sendJson(res, response.status || 500, {
     ok: false,
     error: 'Reference reimagination failed',
+    details: errorPayload
+  });
+}
+
+async function handlePainterlyTransformProxy(req, res) {
+  const body = await readBody(req);
+  const structureImage = parseImageDataUrl(body.structure_image);
+  if (!structureImage || !structureImage.buffer.length) {
+    sendJson(res, 400, { ok: false, error: 'A structure-pass image is required.' });
+    return;
+  }
+  if (structureImage.buffer.length > 10 * 1024 * 1024) {
+    sendJson(res, 413, { ok: false, error: 'Structure-pass image exceeds the 10 MB provider limit.' });
+    return;
+  }
+  if (!upstreamApiKey) {
+    sendJson(res, 503, { ok: false, error: 'Image generation is not configured.' });
+    return;
+  }
+
+  const requestedFidelity = Number(body.fidelity);
+  const fidelity = Number.isFinite(requestedFidelity)
+    ? Math.max(0.4, Math.min(0.9, requestedFidelity))
+    : 0.55;
+  const form = new FormData();
+  const imageExtension = structureImage.mimeType === 'image/jpeg' ? 'jpg' : structureImage.mimeType.split('/')[1];
+  form.append('image', new Blob([structureImage.buffer], { type: structureImage.mimeType }), `structure.${imageExtension}`);
+  form.append('prompt', 'Transform this exact composition into a finished painterly mural. Preserve every subject, object, placement, proportion, silhouette, and meaningful identifying feature from the supplied image. Change only the rendering: deliberate hand-painted brushwork, layered pigment, nuanced edge variation, and restrained painted highlights.');
+  form.append('negative_prompt', 'no new subjects, no missing subjects, no altered composition, no changed proportions, no text, no logos, no borders, no frames, no furniture, no rooms, no walls, no photorealism, not a photograph');
+  form.append('output_format', 'png');
+  form.append('fidelity', String(fidelity));
+  if (body.seed !== undefined && body.seed !== null && body.seed !== '') {
+    form.append('seed', String(body.seed));
+  }
+
+  const response = await fetch('https://api.stability.ai/v2beta/stable-image/control/style', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${upstreamApiKey}`,
+      'Accept': 'image/*',
+      'Stability-Client-ID': 'scenique-muralizer'
+    },
+    body: form
+  });
+
+  if (response.ok) {
+    const buffer = Buffer.from(await response.arrayBuffer());
+    sendJson(res, 200, { ok: true, success: true, image: buffer.toString('base64') });
+    return;
+  }
+
+  let errorPayload = null;
+  try {
+    errorPayload = await response.json();
+  } catch {
+    errorPayload = { raw: await response.text().catch(() => '') };
+  }
+  sendJson(res, response.status || 500, {
+    ok: false,
+    error: 'Painterly transformation failed',
     details: errorPayload
   });
 }
@@ -1164,6 +1227,11 @@ async function handleApi(req, res, url) {
 
   if (req.method === 'POST' && url.pathname === '/api/generate-from-reference') {
     await handleReferenceGenerateProxy(req, res);
+    return true;
+  }
+
+  if (req.method === 'POST' && url.pathname === '/api/transform-painterly') {
+    await handlePainterlyTransformProxy(req, res);
     return true;
   }
 
