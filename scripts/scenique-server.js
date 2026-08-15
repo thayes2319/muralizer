@@ -6,10 +6,13 @@ const crypto = require('node:crypto');
 const rootDir = path.resolve(__dirname, '..');
 const publicDir = path.join(rootDir, 'public');
 const configuredDataDir = String(process.env.SCENIQUE_DATA_DIR || '').trim();
+const fsNative = require('node:fs');
+const readline = require('node:readline');
 const dataDir = configuredDataDir
   ? path.resolve(configuredDataDir)
   : path.join(rootDir, 'data', 'scenique');
 const conceptDir = path.join(dataDir, 'concept-images');
+const conceptShareIndexPath = path.join(dataDir, 'concept-shares.json');
 const requestDir = path.join(dataDir, 'measurement-requests');
 const conceptIndexPath = path.join(dataDir, 'concept-images.json');
 const requestIndexPath = path.join(dataDir, 'measurement-requests.json');
@@ -17,6 +20,64 @@ const port = Number(process.env.PORT || 8787);
 const host = String(process.env.HOST || '0.0.0.0').trim() || '0.0.0.0';
 const serviceRevision = String(process.env.RENDER_GIT_COMMIT || process.env.SOURCE_VERSION || 'local').trim() || 'local';
 const generateUpstream = String(process.env.MURALIZER_GENERATE_URL || '').trim();
+async function compactLegacyIndexImages(filePath) {
+  const temporaryPath = `${filePath}.${process.pid}.compact`;
+  let output = null;
+  let removedCount = 0;
+
+  try {
+    await fs.access(filePath);
+    const input = fsNative.createReadStream(filePath, { encoding: 'utf8' });
+    output = fsNative.createWriteStream(temporaryPath, { encoding: 'utf8' });
+    const streamError = new Promise((_, reject) => output.once('error', reject));
+    const lines = readline.createInterface({ input, crlfDelay: Infinity });
+
+    for await (const line of lines) {
+      if (/^\s*"(?:dataUrl|imageDataUrl|imageBase64)"\s*:\s*"/.test(line)) {
+        removedCount += 1;
+        continue;
+      }
+      if (!output.write(`${line}\n`)) {
+        await Promise.race([
+          new Promise((resolve) => output.once('drain', resolve)),
+          streamError
+        ]);
+      }
+    }
+
+    await Promise.race([
+      new Promise((resolve) => output.end(resolve)),
+      streamError
+    ]);
+    output = null;
+
+    if (removedCount) {
+      await fs.rename(temporaryPath, filePath);
+      console.log(`Compacted ${removedCount} embedded image field(s) from ${path.basename(filePath)}.`);
+    } else {
+      await fs.unlink(temporaryPath);
+    }
+  } catch (error) {
+    output?.destroy();
+    await fs.unlink(temporaryPath).catch(() => {});
+    if (error?.code !== 'ENOENT') {
+      console.warn(`Unable to compact ${path.basename(filePath)}:`, error.message);
+    }
+  }
+}
+
+function sanitizeSceneForIndex(scene) {
+  if (!scene || typeof scene !== 'object' || Array.isArray(scene)) return scene;
+  const reference = scene.reference;
+  if (!reference || typeof reference !== 'object' || Array.isArray(reference)) return scene;
+
+  const { dataUrl, imageDataUrl, imageBase64, ...referenceMetadata } = reference;
+  return {
+    ...scene,
+    reference: referenceMetadata
+  };
+}
+
 const upstreamApiKey = String(
   process.env.MURALIZER_API_KEY
   || process.env.STABILITY_API_KEY
@@ -51,7 +112,7 @@ async function writeJson(filePath, value) {
 async function appendJsonItem(filePath, item) {
   const current = await readJson(filePath, []);
   current.unshift(item);
-  await writeJson(filePath, current.slice(0, 500));
+  await writeJson(filePath, capRecordsPerOwner(current));
 }
 
 function sendJson(res, statusCode, payload) {
@@ -98,6 +159,22 @@ function sanitizeName(name) {
 function normalizeOwnerId(value) {
   const normalized = String(value || '').trim();
   return normalized || null;
+}
+
+const MAX_RECORDS_PER_OWNER = 500;
+
+function capRecordsPerOwner(items) {
+  const seenCounts = new Map();
+  const kept = [];
+  for (const record of items) {
+    const key = normalizeOwnerId(record && record.ownerId) || '__unowned__';
+    const count = seenCounts.get(key) || 0;
+    if (count < MAX_RECORDS_PER_OWNER) {
+      kept.push(record);
+      seenCounts.set(key, count + 1);
+    }
+  }
+  return kept;
 }
 
 function normalizeMatchValue(value) {
@@ -226,7 +303,7 @@ async function readBody(req) {
   let total = 0;
   for await (const chunk of req) {
     total += chunk.length;
-    if (total > 25 * 1024 * 1024) {
+    if (total > 14 * 1024 * 1024) {
       const err = new Error('Request body too large');
       err.statusCode = 413;
       throw err;
@@ -267,12 +344,53 @@ async function handleConceptImage(req, res) {
     imageUrl,
     imagePath: path.relative(dataDir, imagePath),
     imageSizeBytes: imageBuffer ? imageBuffer.length : null,
+    scene: sanitizeSceneForIndex(body.scene),
     imageBase64: undefined,
     imageDataUrl: undefined
   };
 
   await appendJsonItem(conceptIndexPath, record);
   sendJson(res, 201, record);
+}
+
+async function handleCreateConceptShare(req, res) {
+  const body = await readBody(req);
+  const conceptId = String(body.conceptId || '').trim();
+  if (!conceptId) {
+    sendJson(res, 400, { ok: false, error: 'conceptId is required.' });
+    return;
+  }
+
+  const concepts = await readJson(conceptIndexPath, []);
+  const concept = Array.isArray(concepts) ? concepts.find((item) => item && item.id === conceptId) : null;
+  if (!concept || !concept.imageUrl) {
+    sendJson(res, 404, { ok: false, error: 'That concept could not be found.' });
+    return;
+  }
+
+  const record = {
+    token: crypto.randomBytes(9).toString('base64url'),
+    conceptId,
+    ownerId: normalizeOwnerId(body.ownerId),
+    title: body.title !== undefined ? body.title : null,
+    sub: body.sub !== undefined ? body.sub : null,
+    scene: body.scene !== undefined ? sanitizeSceneForIndex(body.scene) : null,
+    img: concept.imageUrl,
+    createdAt: new Date().toISOString()
+  };
+
+  await appendJsonItem(conceptShareIndexPath, record);
+  sendJson(res, 201, record);
+}
+
+async function handleGetConceptShare(req, res, token) {
+  const shares = await readJson(conceptShareIndexPath, []);
+  const record = Array.isArray(shares) ? shares.find((item) => item && item.token === token) : null;
+  if (!record) {
+    sendJson(res, 404, { ok: false, error: 'This share link is invalid or has expired.' });
+    return;
+  }
+  sendJson(res, 200, record);
 }
 
 async function handleMeasurementRequest(req, res) {
@@ -547,7 +665,7 @@ async function handleSeedDefaultConcepts(req, res) {
     return;
   }
 
-  await writeJson(conceptIndexPath, nextItems.slice(0, 500));
+  await writeJson(conceptIndexPath, capRecordsPerOwner(nextItems));
   sendJson(res, 200, {
     ok: true,
     seeded,
@@ -973,6 +1091,17 @@ async function handleApi(req, res, url) {
     return true;
   }
 
+  if (req.method === 'GET' && url.pathname.startsWith('/api/concept-shares/')) {
+    const token = decodeURIComponent(url.pathname.slice('/api/concept-shares/'.length));
+    await handleGetConceptShare(req, res, token);
+    return true;
+  }
+
+  if (req.method === 'POST' && url.pathname === '/api/concept-shares') {
+    await handleCreateConceptShare(req, res);
+    return true;
+  }
+
   if (req.method === 'POST' && url.pathname === '/api/concept-images') {
     await handleConceptImage(req, res);
     return true;
@@ -1110,6 +1239,9 @@ async function main() {
   }
 
   await ensureDirectories();
+  await compactLegacyIndexImages(conceptIndexPath);
+  await compactLegacyIndexImages(requestIndexPath);
+  await compactLegacyIndexImages(conceptShareIndexPath);
   const server = http.createServer(requestHandler);
   server.listen(port, host, () => {
     console.log(`Scenique backend listening on http://${host}:${port}`);
