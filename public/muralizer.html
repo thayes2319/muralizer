@@ -17471,7 +17471,7 @@ async function generateImage() {
       aspectRatio,
       model,
       referenceInfluence,
-      generationMode: isPureInspiration ? "reference-two-pass" : (hasReference ? "reference-reimagine" : "text-to-image")
+      generationMode: hasReference ? "reference-reimagine" : "text-to-image"
     };
     const endpointPath = hasReference ? "/api/generate-from-reference" : "/api/generate";
     const generateEndpoint = window.SceniqueBackend?.toUrl
@@ -17512,9 +17512,7 @@ async function generateImage() {
       ? `${baseNegativePrompt}, ${referenceReimagineState.sourceContextToExclude}`
       : baseNegativePrompt;
 
-    if (generateButton) {
-      generateButton.textContent = isPureInspiration ? "Building structure..." : "Generating...";
-    }
+    if (generateButton) generateButton.textContent = "Generating...";
     const response = await fetch(generateEndpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -17526,7 +17524,6 @@ async function generateImage() {
         model,
         reference_image: hasReference ? buildReferenceCropDataUrl() : undefined,
         reference_influence: hasReference ? referenceInfluence : undefined,
-        generation_stage: isPureInspiration ? "structure" : undefined,
         reference_mode: hasReference
           ? (referenceReimagineState.blendWithMuralizer ? "blend" : "inspiration")
           : undefined
@@ -17552,40 +17549,9 @@ async function generateImage() {
     }
 
     const data = await response.json();
-    const structureBase64 = data.image || (data.artifacts && data.artifacts[0].base64);
-    if (!structureBase64 || typeof structureBase64 !== "string") {
+    const imgBase64 = data.image || (data.artifacts && data.artifacts[0].base64);
+    if (!imgBase64 || typeof imgBase64 !== "string") {
       throw new Error("Generate response did not include image data.");
-    }
-    let imgBase64 = structureBase64;
-
-    if (isPureInspiration) {
-      if (generateButton) generateButton.textContent = "Painting finish...";
-      const painterlyEndpoint = window.SceniqueBackend?.toUrl
-        ? window.SceniqueBackend.toUrl("/api/transform-painterly")
-        : "/api/transform-painterly";
-      const painterlyResponse = await fetch(painterlyEndpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          structure_image: `data:image/png;base64,${structureBase64}`,
-          seed: currentSeed,
-          fidelity: 0.55
-        })
-      });
-      if (!painterlyResponse.ok) {
-        const errorBody = await painterlyResponse.json().catch(() => null);
-        const message = String(errorBody?.error || "Painterly transformation failed").trim();
-        const detail = errorBody?.details;
-        const detailReason = Array.isArray(detail?.errors)
-          ? detail.errors.join("; ")
-          : String(detail?.message || detail?.error || detail?.raw || "").trim();
-        throw new Error([message, detailReason].filter(Boolean).join(" -- "));
-      }
-      const painterlyData = await painterlyResponse.json();
-      imgBase64 = painterlyData.image || (painterlyData.artifacts && painterlyData.artifacts[0].base64);
-      if (!imgBase64 || typeof imgBase64 !== "string") {
-        throw new Error("Painterly transformation did not include image data.");
-      }
     }
 
     currentSeed += seedIncrementForThisGeneration;
