@@ -904,12 +904,14 @@ async function handleWallMockupProxy(req, res) {
   // landed here by direct request after 0.5 tested well. The explicit "only
   // on that one wall" prompt/negative-prompt language above is doing the
   // spatial-confinement work; fidelity itself just balances overall
-  // adherence vs. creative freedom. Now user-adjustable via the frontend's
-  // fidelity slider, clamped to this tested-safe band rather than the full
-  // 0-1 provider range.
+  // adherence vs. creative freedom. User-adjustable via the frontend's
+  // fidelity slider. Ceiling raised 0.65 -> 0.90 by request (2026-08-14) --
+  // 0.3-0.65 is the tested-safe band above; 0.65-0.90 is not re-verified
+  // against the bleed problem 0.8 previously caused and carries the same
+  // known risk, just now reachable if the user wants to push past it.
   const requestedFidelity = Number(body.fidelity);
   const fidelity = Number.isFinite(requestedFidelity)
-    ? Math.max(0.3, Math.min(0.65, requestedFidelity))
+    ? Math.max(0.3, Math.min(0.90, requestedFidelity))
     : 0.45;
 
   const form = new FormData();
