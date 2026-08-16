@@ -1017,7 +1017,7 @@ async function handleReferenceAssessment(req, res) {
     ['dynamic presence', /\bdynamic presence\b/i],
     ['prominent subject', /\bprominen(t|tly)\b/i],
     ['foreground subject', /\bforeground\b/i],
-    ['illusionistic depth', /\b(recede|recedes|receding|depth)\b/i],
+    ['illusionistic depth', /\b(recede|recedes|receding|atmospheric depth|sense of depth|providing depth|creating depth)\b/i],
     ['polished finish', /\bpolished finish\b/i],
     ['reflective or metallic surfaces', /\b(reflective|metallic) surfaces\b/i],
     ['precision engineering', /\b(precision engineering|technical sophistication|technical shapes)\b/i]
@@ -1028,7 +1028,7 @@ async function handleReferenceAssessment(req, res) {
   const imageDataUrl = `data:${reference.mimeType};base64,${reference.buffer.toString('base64')}`;
   let result = null;
   let repairInstruction = '';
-  for (let attempt = 0; attempt < 2; attempt += 1) {
+  for (let attempt = 0; attempt < 3; attempt += 1) {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -1076,7 +1076,7 @@ async function handleReferenceAssessment(req, res) {
       result = candidate;
       break;
     }
-    repairInstruction = `\n\nREVISION REQUIRED: Your prior Mural Description used forbidden product-shot language: ${violations.join(', ')}. Rewrite the complete JSON response to remove those ideas, preserve only source-grounded composition, palette, and meaningful features, and express all material or engineering cues as painted marks. Do not mention this review or the prior draft.`;
+    repairInstruction = `\n\nREVISION REQUIRED: Your prior Mural Description used forbidden product-shot language: ${violations.join(', ')}. Rewrite the complete JSON response to remove those ideas. The literal terms ${violations.join(', ')} must not appear anywhere in the rewritten Mural Description, including as a negation. Preserve only source-grounded composition, palette, and meaningful features, and express all material or engineering cues as painted marks. Do not mention this review or the prior draft.`;
   }
 
   if (!result || typeof result.mural_description !== 'string' || !result.mural_description.trim()) {
