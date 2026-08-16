@@ -15771,8 +15771,9 @@ function getReferenceRenderPrompt() {
   const assessedDescription = String(referenceReimagineState.assessedDescription || "").trim();
   const sourceGuidance = PURE_INSPIRATION_PROMPTS[referenceReimagineState.interpretation].sourceGuidance
     || "Create an original, hand-painted image inspired by the supplied reference image. Preserve its central subject, compositional character, and palette without copying it literally.";
-  const categoryGuidance = category
-    ? ` Give the subject an intentional ${getAiGuidedCategorySetting(category)} setting or background${getPureInspirationSubSceneGuidance(subScene)}.`
+  const selectedBackground = getPureInspirationSelectedBackground(category, subScene);
+  const categoryGuidance = selectedBackground
+    ? ` Give the subject an intentional setting or background of ${selectedBackground}.`
     : "";
   const applicationGuidance = applicationStyle && !/^(none|no texture|auto)$/i.test(applicationStyle)
     ? ` Use ${applicationStyle} as the application style.`
@@ -15784,11 +15785,11 @@ function getReferenceRenderPrompt() {
   const interpretation = PURE_INSPIRATION_PROMPTS[referenceReimagineState.interpretation];
   if (referenceReimagineState.interpretation === "ai-guided") {
     const sourceReading = parseAiGuidedSourceReading(assessedDescription);
+    const background = selectedBackground || sourceReading.background;
     const hasSubjectAndBackground = isUsableAiGuidedSourceFact(sourceReading.subject)
-      && isUsableAiGuidedSourceFact(sourceReading.background);
-    const categorySetting = getAiGuidedCategorySetting(category);
+      && isUsableAiGuidedSourceFact(background);
     const outcome = hasSubjectAndBackground
-      ? `${interpretation.outcome} Give the subject, ${sourceReading.subject}, an intentional ${categorySetting} setting or background of ${sourceReading.background}${getPureInspirationSubSceneGuidance(subScene)}.`
+      ? `${interpretation.outcome} Give the subject, ${sourceReading.subject}, an intentional setting or background of ${background}.`
       : `${interpretation.outcome} Give the subject an intentional painted setting or background.`;
     const supportingReading = [
       `Foreground: ${sourceReading.foreground || "none visible"}`,
@@ -15829,8 +15830,10 @@ function getAiGuidedCategorySetting(category) {
   return settings[category] || String(category || "painted").toLowerCase();
 }
 
-function getPureInspirationSubSceneGuidance(subScene) {
-  return subScene ? `, informed by the ${subScene} sub-scene` : "";
+function getPureInspirationSelectedBackground(category, subScene) {
+  const categorySetting = getAiGuidedCategorySetting(category);
+  if (subScene) return `${subScene} in a ${categorySetting} visual direction`;
+  return category ? `${categorySetting} painted forms` : "";
 }
 
 function refreshReferenceRenderPrompt() {
