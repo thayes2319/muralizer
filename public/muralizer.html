@@ -94,7 +94,7 @@ body {
 /* ⭐ BODY WRAPPER — REAL WIDTH CONSTRAINT */
 .body-wrapper {
   position: relative;
-  z-index: 1;
+  z-index: 1000;
   background: transparent;
 
   max-width: 1000px;   /* or whatever width your gallery uses */
@@ -1432,6 +1432,18 @@ margin-top: 15px;
   text-shadow: 0 1px 2px rgba(0,0,0,0.52);
 }
 
+.cpc-compare-loading-status {
+  min-width: 0;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  opacity: 0;
+  transition: opacity 160ms ease;
+  white-space: nowrap;
+}
+
+.cpc-compare-loading-status.is-loading { opacity: 0.92; }
+
 .cpc-compare-tray {
   width: 100%;
   display: grid;
@@ -1532,6 +1544,36 @@ margin-top: 15px;
   align-items: center;
   justify-content: center;
   cursor: pointer;
+}
+
+.cpc-compare-card-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.cpc-compare-order-label {
+  color: rgba(17,81,115,0.72);
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.cpc-compare-reorder {
+  width: 22px;
+  height: 20px;
+  padding: 0;
+  border-radius: 4px;
+  border: 1px solid rgba(17,81,115,0.45);
+  background: rgba(33,143,201,0.14);
+  color: #115173;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.cpc-compare-reorder:hover {
+  background: rgba(33,143,201,0.28);
 }
 
 .cpc-compare-thumb-viewport {
@@ -2994,7 +3036,7 @@ margin-top: 15px;
 
 .reference-interpretation-control {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   overflow: hidden;
   border: 1px solid rgba(33,143,201,.42);
   border-radius: 6px;
@@ -8721,14 +8763,15 @@ select[multiple].collapsible-multi.expanded option:first-child {
               <label onclick="updateReferenceInterpretation('subdued')"><input type="radio" name="referenceInterpretation" value="subdued" onchange="updateReferenceInterpretation(this.value)">Subdued</label>
               <label class="is-selected" onclick="updateReferenceInterpretation('balanced')"><input type="radio" name="referenceInterpretation" value="balanced" checked onchange="updateReferenceInterpretation(this.value)">Balanced</label>
               <label onclick="updateReferenceInterpretation('sleek')"><input type="radio" name="referenceInterpretation" value="sleek" onchange="updateReferenceInterpretation(this.value)">Sleek</label>
+              <label onclick="updateReferenceInterpretation('inkline')"><input type="radio" name="referenceInterpretation" value="inkline" onchange="updateReferenceInterpretation(this.value)">Inkline</label>
             </div>
             <p id="referenceInterpretationHint" class="reference-interpretation-hint">Keeps the source character while refining it into a clear, elegant mural.</p>
             <span class="reference-interpretation-label">People</span>
             <div class="reference-interpretation-control reference-people-control" role="radiogroup" aria-label="People in Pure Inspiration">
-              <label class="is-selected" onclick="updateReferencePeople('match-reference')"><input type="radio" name="referencePeople" value="match-reference" checked onchange="updateReferencePeople(this.value)">Match reference</label>
-              <label onclick="updateReferencePeople('exclude')"><input type="radio" name="referencePeople" value="exclude" onchange="updateReferencePeople(this.value)">Exclude people</label>
+              <label onclick="updateReferencePeople('match-reference')"><input type="radio" name="referencePeople" value="match-reference" onchange="updateReferencePeople(this.value)">Allow source people</label>
+              <label class="is-selected" onclick="updateReferencePeople('exclude')"><input type="radio" name="referencePeople" value="exclude" checked onchange="updateReferencePeople(this.value)">Exclude people</label>
             </div>
-            <p id="referencePeopleHint" class="reference-interpretation-hint">Preserves people only when they are visible and compositionally important in the source.</p>
+            <p id="referencePeopleHint" class="reference-interpretation-hint">Removes people, faces, and human figures even when they appear in the source.</p>
           </div>
           <label class="reference-influence-label" for="referenceInfluence">Source influence</label>
           <div class="reference-influence-row">
@@ -9619,6 +9662,7 @@ If you’re exploring a new direction, try adjusting just 1-2 elements at a time
           <span id="cpcCompareRange" class="cpc-compare-range" aria-live="polite">C1-C3</span>
           <button id="cpcCompareNext" class="cpc-compare-nav-arrow" type="button" aria-label="Show next concepts">&#8250;</button>
         </div>
+        <span id="cpcCompareLoadingStatus" class="cpc-compare-loading-status" aria-live="polite"></span>
         <div class="cpc-compare-toolbar" aria-label="Compare tray controls">
           <button id="cpcClearCompareTray" class="cpc-compare-toolbar-btn" type="button">Clear Tray</button>
           <button id="cpcResumeCompareTray" class="cpc-compare-toolbar-btn" type="button">Resume Auto</button>
@@ -10600,7 +10644,7 @@ function loadScene(scene) {
   if (applicationSelect) applicationSelect.value = savedApplicationStyle || applicationSelect.value;
   if (colorMode) colorMode.value = scene.colorMode || colorMode.value;
   if (fogModeSelect) fogModeSelect.value = scene.fogMode || fogModeSelect.value;
-  if (substrateTextureSelect) substrateTextureSelect.value = scene.substrateTexture || substrateTextureSelect.value;
+  if (substrateTextureSelect) substrateTextureSelect.value = scene.substrateTexture || scene.substrate || substrateTextureSelect.value;
   if (panelTypeSelect) panelTypeSelect.value = scene.panelType || panelTypeSelect.value;
   if (backgroundColorSelect) backgroundColorSelect.value = scene.backgroundColor || "";
 
@@ -13616,6 +13660,7 @@ function buildConceptImageKey(context, conceptName, variant) {
 const cpcBackendImageStore = {};
 const cpcBackendImageMeta = {};
 let cpcBackendImageHydratePromise = null;
+let cpcBackendImageHydrationInProgress = false;
 let cpcOwnerDefaultSeedPromise = null;
 const cpcConceptSessionCacheKey = "cpcConceptImagesByContextSession";
 let storagePruneNoticeShown = false;
@@ -13724,10 +13769,9 @@ function captureCurrentSceneData() {
   return data;
 }
 
-// Pure Inspiration ignores every taxonomy selection below Creative
-// Direction entirely (see PURE_INSPIRATION_HIDDEN_GROUPS) -- when snapshotting
-// a Pure Inspiration generation's scene, strip those fields rather than
-// saving/showing chips for selections that had zero effect on the image.
+// Pure Inspiration uses only Application Style and Substrate Texture below
+// Creative Direction. Strip the remaining inert fields when snapshotting so
+// saved concepts describe exactly what influenced the image.
 // Deliberately NOT baked into captureCurrentSceneData() itself: that
 // function is also used by the unrelated "Save Scene" preset feature
 // (17985/17991 below), where the live taxonomy state is exactly what
@@ -13736,11 +13780,11 @@ function stripPureInspirationSceneFields(scene) {
   const stripped = { ...scene };
   [
     "category", "subScene", "elements", "botanicalForeground",
-    "styleWallpaper", "applicationStyle", "colorMode",
+    "styleWallpaper", "colorMode",
     "primaryHue", "primaryHueName", "primaryHueHex",
     "secondaryHue", "secondaryHueName", "secondaryHueHex",
     "backgroundColor", "backgroundName", "backgroundHueName",
-    "fog", "fogMode", "substrate", "panelType", "feel"
+    "fog", "fogMode", "panelType", "feel"
   ].forEach((key) => { stripped[key] = null; });
   return stripped;
 }
@@ -13915,14 +13959,16 @@ function applyReferenceRecipe(ref, description) {
   referenceReimagineState.assessedCropVersion = 0;
   referenceReimagineState.muralizerDescription = description || "";
   referenceReimagineState.sourceContextToExclude = "";
-  const interpretation = ["subdued", "balanced", "sleek"].includes(ref.interpretation)
+  const interpretation = ["subdued", "balanced", "sleek", "inkline"].includes(ref.interpretation)
     ? ref.interpretation
     : description.includes("Keep the interpretation subdued")
       ? "subdued"
-      : description.includes("refined, contemporary mural")
+      : description.includes("inkline application type")
+        ? "inkline"
+        : description.includes("refined, contemporary mural")
         ? "sleek"
         : "balanced";
-  const peopleMode = ref.peopleMode === "exclude" ? "exclude" : "match-reference";
+  const peopleMode = ref.peopleMode === "match-reference" ? "match-reference" : "exclude";
 
   const sourceImage = new Image();
   referenceReimagineState.imageReadyPromise = new Promise((resolve) => {
@@ -14298,14 +14344,9 @@ function buildPresentSceneChips(scene) {
     if (value === null || value === undefined || value === "") return;
     rows.push(`<span class="cpc-scene-kv"><b>${presentEsc(label)}</b>${presentEsc(String(value))}</span>`);
   };
-  // Pure Inspiration ignores every Creative Direction selection entirely
-  // (see PURE_INSPIRATION_HIDDEN_GROUPS / buildReferenceGenerationDescription)
-  // -- captureFullRecipeScene still snapshots whatever those selectors
-  // happened to show regardless, since it's the one shared capture function
-  // every save path uses, but presenting that unused snapshot here as if it
-  // described this concept is misleading. scene.reference is only attached
-  // when a reference photo was used at all; blendWithMuralizer === false on
-  // it means specifically Pure Inspiration (Blend genuinely does use these).
+  // Pure Inspiration uses only Application Style and Substrate Texture from
+  // Creative Direction. Its other selection fields remain excluded here so
+  // a saved concept shows only settings that influenced the image.
   const isPureInspirationConcept = scene.reference && scene.reference.blendWithMuralizer === false;
   if (!isPureInspirationConcept) {
     push("Scene", scene.category);
@@ -14316,6 +14357,9 @@ function buildPresentSceneChips(scene) {
     push("Secondary", scene.secondaryHueName || scene.secondaryHueHex || scene.secondaryHue);
     push("Background", scene.backgroundHueName || scene.backgroundName || scene.backgroundColor);
     push("Fog", scene.fog);
+    push("Substrate", scene.substrate);
+    push("Application", scene.applicationStyle);
+  } else {
     push("Substrate", scene.substrate);
     push("Application", scene.applicationStyle);
   }
@@ -15286,6 +15330,8 @@ function resolveBackendImageUrl(imageUrl) {
 async function hydrateBackendConceptImages() {
   if (cpcBackendImageHydratePromise) return cpcBackendImageHydratePromise;
 
+  cpcBackendImageHydrationInProgress = true;
+  window.dispatchEvent(new CustomEvent("cpc-concept-images-hydration", { detail: { loading: true } }));
   cpcBackendImageHydratePromise = (async () => {
     try {
       let records = null;
@@ -15336,6 +15382,9 @@ async function hydrateBackendConceptImages() {
       });
     } catch (err) {
       console.warn("Unable to hydrate backend concept images:", err);
+    } finally {
+      cpcBackendImageHydrationInProgress = false;
+      window.dispatchEvent(new CustomEvent("cpc-concept-images-hydration", { detail: { loading: false } }));
     }
   })();
 
@@ -15570,7 +15619,7 @@ const referenceReimagineState = {
   muralizerDescription: "",
   sourceContextToExclude: "",
   interpretation: "balanced",
-  peopleMode: "match-reference",
+  peopleMode: "exclude",
   blendWithMuralizer: false
 };
 
@@ -15615,6 +15664,11 @@ const PURE_INSPIRATION_PROMPTS = {
   sleek: {
     hint: "A sharp, graphic, contemporary treatment with clean silhouettes and decisive visual structure.",
     direction: "Present a sleek, contemporary hand-painted image with bold clean silhouettes, sharp deliberate edges and lines, simplified geometry, polished color fields, and controlled visible brushwork. Treat its gleams and reflections subtly rather than realistically, capturing the play of light and shadow across its curves and edges. Use a refined modern editorial design language with crisp focal forms and controlled contrast; avoid photographic rendering, weathering, visual clutter, and ornate detail."
+  },
+  inkline: {
+    hint: "Bright, bold inkline treatment with sharp edges, graphic silhouettes, and dramatized reflections.",
+    sourceGuidance: "Create an original, hand-painted image inspired by the supplied reference image. Preserve its central subject, overall compositional character, and palette without copying it literally.",
+    direction: "Create an edgy, sleekly modern, contemporary hand-painted image with an inkline treatment, bright and bold clean silhouettes, sharp deliberate edges and lines, simplified geometry, polished color fields, and controlled tight brushwork. Treat its shines, gleams, and reflections stylistically - emphasizing and dramatizing them greatly."
   }
 };
 
@@ -15631,7 +15685,7 @@ function updateReferenceInterpretation(value) {
 }
 
 function updateReferencePeople(value) {
-  const peopleMode = value === "exclude" ? "exclude" : "match-reference";
+  const peopleMode = value === "match-reference" ? "match-reference" : "exclude";
   referenceReimagineState.peopleMode = peopleMode;
   document.querySelectorAll("input[name=\"referencePeople\"]").forEach((input) => {
     input.checked = input.value === peopleMode;
@@ -15641,7 +15695,7 @@ function updateReferencePeople(value) {
   if (hint) {
     hint.textContent = peopleMode === "exclude"
       ? "Removes people, faces, and human figures even when they appear in the source."
-      : "Preserves people only when they are visible and compositionally important in the source.";
+      : "Allows people already present in the source to remain.";
   }
   refreshReferenceRenderPrompt();
 }
@@ -15652,12 +15706,18 @@ function getReferenceRenderPrompt() {
   }
   const useBrief = document.getElementById("referenceUseBrief")?.checked;
   const editableBrief = useBrief ? String(document.getElementById("referenceBrief")?.value || "").trim() : "";
-  const sourceGuidance = "Create an original, elegant, hand-painted image inspired by the supplied reference image. Preserve its central subject, compositional character, and palette without copying it literally.";
-  const peopleGuidance = referenceReimagineState.peopleMode === "match-reference"
-    ? " People must match the reference image: if no people are visible in the reference, the generated artwork must contain no people, faces, or human figures. If people are visible, retain only their presence and rough placement; never invent, add, or foreground additional people."
+  const applicationStyle = String(document.getElementById("applicationSelect")?.value || "").trim();
+  const substrateTexture = String(document.getElementById("substrateTextureSelect")?.value || "").trim();
+  const sourceGuidance = PURE_INSPIRATION_PROMPTS[referenceReimagineState.interpretation].sourceGuidance
+    || "Create an original, elegant, hand-painted image inspired by the supplied reference image. Preserve its central subject, compositional character, and palette without copying it literally.";
+  const applicationGuidance = applicationStyle && !/^(none|no texture|auto)$/i.test(applicationStyle)
+    ? ` Use ${applicationStyle} as the application style.`
+    : "";
+  const substrateGuidance = substrateTexture && !/^(none|no texture|auto)$/i.test(substrateTexture)
+    ? ` Let the texture of ${substrateTexture} subtly inform the painted surface without implying a physical wall or room.`
     : "";
   const briefGuidance = editableBrief ? ` Additional creative brief: ${editableBrief}` : "";
-  return `${sourceGuidance}\n\n${PURE_INSPIRATION_PROMPTS[referenceReimagineState.interpretation].direction}${peopleGuidance}${briefGuidance}`;
+  return `${sourceGuidance}\n\n${PURE_INSPIRATION_PROMPTS[referenceReimagineState.interpretation].direction}${applicationGuidance}${substrateGuidance}${briefGuidance}`;
 }
 
 function refreshReferenceRenderPrompt() {
@@ -15705,8 +15765,8 @@ function clearReferenceReimagine() {
   referenceReimagineState.assessedDescription = "";
   referenceReimagineState.muralizerDescription = "";
   referenceReimagineState.sourceContextToExclude = "";
-  referenceReimagineState.peopleMode = "match-reference";
-  updateReferencePeople("match-reference");
+  referenceReimagineState.peopleMode = "exclude";
+  updateReferencePeople("exclude");
   const input = document.getElementById("referenceReimagineInput");
   const preview = document.getElementById("referenceReimaginePreview");
   const editor = document.getElementById("referenceCropEditor");
@@ -15749,14 +15809,12 @@ function applyReferenceMuralDescription() {
   autoExpand(promptBox);
 }
 
-// Pure Inspiration ignores every selection below Creative Direction
-// entirely (buildReferenceGenerationDescription returns assessedDescription
-// regardless of what's picked) -- hiding them avoids the false impression
-// that fiddling with Category/Feel/etc. does anything in that mode. Inspired
-// Blend and Muralizer-led both actually use these, so they stay visible.
+// Pure Inspiration accepts only the two surface-treatment selections below.
+// The scene-building, color, and installation controls remain hidden because
+// they compete with the uploaded reference's subject, composition, and palette.
 const PURE_INSPIRATION_HIDDEN_GROUPS = [
   "feelGroup", "categoryGroup", "subSceneGroup", "elementsGroup", "botanicalGroup",
-  "applicationGroup", "finishGroup", "colorModeGroup", "fogGroup", "substrateGroup", "panelGroup"
+  "finishGroup", "colorModeGroup", "fogGroup", "panelGroup"
 ];
 
 function updateSelectionGroupsVisibility() {
@@ -15765,6 +15823,12 @@ function updateSelectionGroupsVisibility() {
   PURE_INSPIRATION_HIDDEN_GROUPS.forEach((id) => {
     const el = document.getElementById(id);
     if (el) el.style.display = isPureInspiration ? "none" : "";
+  });
+  ["applicationGroup", "substrateGroup"].forEach((id) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (isPureInspiration) el.classList.remove("hidden");
+    el.style.display = "";
   });
   // .color-layout (the Auto-Color swatch/palette-fade graphic) is a sibling
   // of colorModeGroup, not nested inside it, so the ID-based loop above
@@ -16055,6 +16119,7 @@ async function handleReferenceReimagineFile(file) {
   if (inputEl) inputEl.value = "";
 
   const dataUrl = normalized.dataUrl;
+  const previousMuralizerDescription = document.getElementById("imagePrompt")?.value || "";
   referenceReimagineState.dataUrl = dataUrl;
   referenceReimagineState.mimeType = normalized.blob.type || "image/jpeg";
   referenceReimagineState.name = file.name;
@@ -16063,11 +16128,10 @@ async function handleReferenceReimagineFile(file) {
   referenceReimagineState.cropVersion = 0;
   referenceReimagineState.assessedCropVersion = -1;
   referenceReimagineState.assessedDescription = "";
-  updateReferencePeople("match-reference");
-  // Snapshot whatever selection-driven description is currently in the
-  // prompt box -- this is what "Blend with Muralizer" mode falls back to
-  // using instead of the AI's read of the uploaded photo.
-  referenceReimagineState.muralizerDescription = document.getElementById("imagePrompt")?.value || "";
+  updateReferencePeople("exclude");
+  // Preserve the pre-upload Muralizer description for Blend mode; the live
+  // prompt is now the freshly generated Pure Inspiration direction.
+  referenceReimagineState.muralizerDescription = previousMuralizerDescription;
   const sourceImage = new Image();
   referenceReimagineState.imageReadyPromise = new Promise((resolve) => {
     sourceImage.onload = () => {
@@ -16099,11 +16163,6 @@ async function handleReferenceReimagineFile(file) {
   if (name) name.textContent = file.name;
   preview?.classList.add("is-visible");
   setReferenceAssessmentStatus("Preparing your creative direction...", true);
-  const promptBox = document.getElementById("imagePrompt");
-  if (promptBox) {
-    promptBox.value = "";
-    autoExpand(promptBox);
-  }
 }
 
 function initializeReferenceReimagineDropzone() {
@@ -20664,14 +20723,12 @@ if (data.colorMode === "Auto-Color") {
 
 
 const promptBox = document.getElementById("imagePrompt");
-// While in "Blend with Muralizer" mode, the box shows the selection-driven
-// description but generation itself pulls from muralizerDescription (see
-// buildReferenceGenerationDescription) -- captured here so it stays current
-// as selections change. In "Inspiration only" mode, selection changes
-// should NOT touch the box at all -- it stays driven purely by the image
-// assessment.
+// Blend continues to use the full selection-led description. Pure Inspiration
+// updates only its approved Application Style and Substrate Texture guidance.
 if (promptBox && referenceReimagineState.dataUrl && referenceReimagineState.blendWithMuralizer) {
   referenceReimagineState.muralizerDescription = generateDescription(data);
+  applyReferenceMuralDescription();
+} else if (promptBox && referenceReimagineState.dataUrl) {
   applyReferenceMuralDescription();
 } else if (promptBox && !referenceReimagineState.dataUrl) {
   const description = generateDescription(data);
@@ -20946,6 +21003,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const comparePrevBtn = document.getElementById("cpcComparePrev");
   const compareNextBtn = document.getElementById("cpcCompareNext");
   const compareRangeEl = document.getElementById("cpcCompareRange");
+  const compareLoadingStatusEl = document.getElementById("cpcCompareLoadingStatus");
   const clearCompareTrayBtn = document.getElementById("cpcClearCompareTray");
   const resumeCompareTrayBtn = document.getElementById("cpcResumeCompareTray");
   const addClientBtn = document.getElementById("addClientBtn");
@@ -21722,9 +21780,8 @@ document.addEventListener("DOMContentLoaded", () => {
       if (value === null || value === undefined || value === "") return;
       rows.push(`<span class="cpc-scene-kv"><b>${escapeHtml(label)}</b>${escapeHtml(String(value))}</span>`);
     };
-    // Same reasoning as buildPresentSceneChips above: Pure Inspiration never
-    // uses these Creative Direction selections, so showing them here would
-    // misrepresent how this concept was actually generated.
+    // Pure Inspiration uses only Application Style and Substrate Texture;
+    // every other Creative Direction selection remains excluded here.
     const isPureInspirationConcept = scene.reference && scene.reference.blendWithMuralizer === false;
     if (!isPureInspirationConcept) {
     push("Scene", scene.category);
@@ -21738,6 +21795,9 @@ document.addEventListener("DOMContentLoaded", () => {
     push("Substrate", scene.substrate);
     push("Application", scene.applicationStyle);
     push("Style", scene.styleWallpaper);
+    } else {
+    push("Substrate", scene.substrate);
+    push("Application", scene.applicationStyle);
     }
     push("Reference file", scene.reference?.name);
     if (scene.description) {
@@ -22727,13 +22787,8 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
-    // Scrolling the window is inert once pinned concepts already fill all 3
-    // slots (buildCompareRenderSelections() always places pins first, the
-    // window-based auto-fill only ever reaches leftover slots) -- disable
-    // both arrows rather than let them silently appear to do nothing.
-    const isFullyPinned = compareSelections.length >= 3;
-    if (comparePrevBtn) comparePrevBtn.disabled = isFullyPinned || windowStart === 0;
-    if (compareNextBtn) compareNextBtn.disabled = isFullyPinned || windowEnd >= concepts.length;
+    if (comparePrevBtn) comparePrevBtn.disabled = windowStart === 0;
+    if (compareNextBtn) compareNextBtn.disabled = windowEnd >= concepts.length;
   }
 
   function renderCompareTray() {
@@ -22742,42 +22797,19 @@ document.addEventListener("DOMContentLoaded", () => {
     const renderSelections = buildCompareRenderSelections();
     updateCompareNavigator(renderSelections);
 
+    if (compareLoadingStatusEl) {
+      compareLoadingStatusEl.textContent = cpcBackendImageHydrationInProgress ? "Loading concepts..." : "";
+      compareLoadingStatusEl.classList.toggle("is-loading", cpcBackendImageHydrationInProgress);
+    }
+
     if (resumeCompareTrayBtn) {
       resumeCompareTrayBtn.disabled = !compareAutoFillPaused;
     }
 
     const slotEntries = [null, null, null];
-    const overflowEntries = [];
+    const orderedSelections = renderSelections.slice(0, 3);
 
-    const orderedSelections = renderSelections.slice(0, 3).sort((a, b) => {
-      const aCtxIndex = contexts.findIndex((ctx) => buildCpcContextKey(ctx) === a.contextKey);
-      const bCtxIndex = contexts.findIndex((ctx) => buildCpcContextKey(ctx) === b.contextKey);
-      const aCtx = aCtxIndex >= 0 ? contexts[aCtxIndex] : null;
-      const bCtx = bCtxIndex >= 0 ? contexts[bCtxIndex] : null;
-      const aConcepts = Array.isArray(aCtx && aCtx.concepts) && aCtx.concepts.length ? aCtx.concepts : [{ name: "c1" }];
-      const bConcepts = Array.isArray(bCtx && bCtx.concepts) && bCtx.concepts.length ? bCtx.concepts : [{ name: "c1" }];
-
-      const aIdx = aConcepts.findIndex((concept, idx) => {
-        const name = (concept && concept.name) || `c${idx + 1}`;
-        return String(name).toLowerCase() === String(a.conceptName || "c1").toLowerCase();
-      });
-      const bIdx = bConcepts.findIndex((concept, idx) => {
-        const name = (concept && concept.name) || `c${idx + 1}`;
-        return String(name).toLowerCase() === String(b.conceptName || "c1").toLowerCase();
-      });
-
-      const aRank = getConceptRank(a.conceptName, aIdx >= 0 ? aIdx : 0);
-      const bRank = getConceptRank(b.conceptName, bIdx >= 0 ? bIdx : 0);
-      if (aRank !== bRank) return aRank - bRank;
-
-      const aPinnedAt = Number(a && a.pinnedAt) || 0;
-      const bPinnedAt = Number(b && b.pinnedAt) || 0;
-      if (aPinnedAt !== bPinnedAt) return aPinnedAt - bPinnedAt;
-
-      return String(a && a.id || "").localeCompare(String(b && b.id || ""));
-    });
-
-    orderedSelections.forEach((item) => {
+    orderedSelections.forEach((item, slotIndex) => {
       const ctxIndex = contexts.findIndex((ctx) => buildCpcContextKey(ctx) === item.contextKey);
       if (ctxIndex < 0) return;
 
@@ -22802,20 +22834,8 @@ document.addEventListener("DOMContentLoaded", () => {
         thumbSrc,
         itemId: item.id
       };
-
-      const preferredSlot = Math.max(0, Math.min(2, conceptIndex % 3));
-      if (!slotEntries[preferredSlot]) {
-        slotEntries[preferredSlot] = entry;
-      } else {
-        overflowEntries.push(entry);
-      }
+      slotEntries[slotIndex] = entry;
     });
-
-    for (let i = 0; i < slotEntries.length && overflowEntries.length; i += 1) {
-      if (!slotEntries[i]) {
-        slotEntries[i] = overflowEntries.shift();
-      }
-    }
 
     const slotHtml = slotEntries.map((entry) => {
       if (!entry) return '<div class="cpc-compare-slot empty">Select Concept</div>';
@@ -22824,7 +22844,12 @@ document.addEventListener("DOMContentLoaded", () => {
           <div class="cpc-compare-card" role="button" tabindex="0" data-compare-activate-index="${entry.ctxIndex}" data-compare-activate-concept="${escapeHtml(entry.conceptName)}" aria-label="Activate ${escapeHtml(entry.label)}">
             <div class="cpc-compare-card-top">
               <span class="cpc-compare-card-label">${escapeHtml(entry.label)}</span>
-              <span class="cpc-compare-remove" role="button" data-compare-remove-id="${escapeHtml(entry.itemId)}" aria-label="Remove ${escapeHtml(entry.label)}">×</span>
+              <span class="cpc-compare-card-controls">
+                <span class="cpc-compare-order-label">Order</span>
+                <button class="cpc-compare-reorder" type="button" data-compare-move-id="${escapeHtml(entry.itemId)}" data-compare-move-direction="-1" aria-label="Move ${escapeHtml(entry.label)} left" title="Move left">←</button>
+                <button class="cpc-compare-reorder" type="button" data-compare-move-id="${escapeHtml(entry.itemId)}" data-compare-move-direction="1" aria-label="Move ${escapeHtml(entry.label)} right" title="Move right">→</button>
+                <span class="cpc-compare-remove" role="button" data-compare-remove-id="${escapeHtml(entry.itemId)}" aria-label="Remove ${escapeHtml(entry.label)}">×</span>
+              </span>
             </div>
             ${entry.thumbSrc ? `<div class="cpc-compare-thumb-viewport"><img class="cpc-compare-thumb" src="${entry.thumbSrc}" alt="${escapeHtml(entry.label)} preview" draggable="false"><div class="cpc-compare-zoom-controls"><button class="cpc-compare-zoom-btn" type="button" data-zoom-action="out" aria-label="Zoom out">-</button><button class="cpc-compare-zoom-btn" type="button" data-zoom-action="reset" aria-label="Reset zoom to 1:1">1:1</button><button class="cpc-compare-zoom-btn" type="button" data-zoom-action="fit-width" aria-label="Auto fit to remove whitespace">↔</button><button class="cpc-compare-zoom-btn" type="button" data-zoom-action="in" aria-label="Zoom in">+</button></div></div>` : `<div class="cpc-compare-thumb-empty">No image</div>`}
           </div>
@@ -23110,6 +23135,27 @@ document.addEventListener("DOMContentLoaded", () => {
 
     initCompareThumbPanning(compareTrayEl);
 
+    Array.from(compareTrayEl.querySelectorAll("[data-compare-move-id]")).forEach((btn) => {
+      btn.addEventListener("click", (event) => {
+        event.stopPropagation();
+        const itemId = String(btn.dataset.compareMoveId || "").trim();
+        const direction = Number(btn.dataset.compareMoveDirection);
+        const orderedItems = buildCompareRenderSelections().slice(0, 3);
+        const currentIndex = orderedItems.findIndex((item) => item.id === itemId);
+        const nextIndex = currentIndex + direction;
+        if (currentIndex < 0 || nextIndex < 0 || nextIndex >= orderedItems.length) return;
+        [orderedItems[currentIndex], orderedItems[nextIndex]] = [orderedItems[nextIndex], orderedItems[currentIndex]];
+        compareSelections = orderedItems.map((item, index) => ({
+          ...item,
+          pinned: true,
+          pinnedAt: Number(item.pinnedAt) || Date.now() + index
+        }));
+        compareAutoFillPaused = true;
+        orderedItems.forEach((item) => compareSuppressedIds.delete(item.id));
+        renderOpenProjectChips(getActiveProjectIndex());
+      });
+    });
+
     Array.from(compareTrayEl.querySelectorAll("[data-compare-remove-id]")).forEach((btn) => {
       btn.addEventListener("click", (event) => {
         event.stopPropagation();
@@ -23144,6 +23190,15 @@ document.addEventListener("DOMContentLoaded", () => {
         });
       });
   }
+
+  window.addEventListener("cpc-concept-images-hydration", (event) => {
+    if (compareLoadingStatusEl) {
+      const loading = !!event.detail?.loading;
+      compareLoadingStatusEl.textContent = loading ? "Loading concepts..." : "";
+      compareLoadingStatusEl.classList.toggle("is-loading", loading);
+    }
+    if (!event.detail?.loading) renderCompareTray();
+  });
 
   function renderOpenProjectChips(activeIndex) {
     openSet.innerHTML = contexts.map((ctx, idx) => {
@@ -23627,8 +23682,12 @@ document.addEventListener("DOMContentLoaded", () => {
     if (targetWindowStart === compareWindowStart) return;
 
     compareWindowStart = targetWindowStart;
+    // Paging always shows the requested three-concept window. Pins and a
+    // custom card order apply only to the current tray, not to browsing.
+    compareSelections = [];
+    compareSuppressedIds.clear();
     compareAutoFillPaused = false;
-    renderCompareTray();
+    renderOpenProjectChips(getActiveProjectIndex());
   };
 
   comparePrevBtn?.addEventListener("click", () => moveCompareWindow(-1));
