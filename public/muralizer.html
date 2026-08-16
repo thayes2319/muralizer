@@ -15635,7 +15635,8 @@ const referenceReimagineState = {
   sourceContextToExclude: "",
   interpretation: "balanced",
   peopleMode: "exclude",
-  blendWithMuralizer: false
+  blendWithMuralizer: false,
+  pureInspirationSelectionSnapshot: null
 };
 
 let muralGenerationInProgress = false;
@@ -15773,7 +15774,7 @@ function getReferenceRenderPrompt() {
     || "Create an original, hand-painted image inspired by the supplied reference image. Preserve its central subject, compositional character, and palette without copying it literally.";
   const selectedBackground = getPureInspirationSelectedBackground(category, subScene);
   const categoryGuidance = selectedBackground
-    ? ` Give the subject an intentional setting or background of ${selectedBackground}.`
+    ? ` Give the subject an intentional setting of ${selectedBackground}.`
     : "";
   const applicationGuidance = applicationStyle && !/^(none|no texture|auto)$/i.test(applicationStyle)
     ? ` Use ${applicationStyle} as the application style.`
@@ -15789,7 +15790,7 @@ function getReferenceRenderPrompt() {
     const hasSubjectAndBackground = isUsableAiGuidedSourceFact(sourceReading.subject)
       && isUsableAiGuidedSourceFact(background);
     const outcome = hasSubjectAndBackground
-      ? `${interpretation.outcome} Give the subject, ${sourceReading.subject}, an intentional setting or background of ${background}.`
+      ? `${interpretation.outcome} Give the subject, ${sourceReading.subject}, an intentional setting of ${background}.`
       : `${interpretation.outcome} Give the subject an intentional painted setting or background.`;
     const supportingReading = [
       `Foreground: ${sourceReading.foreground || "none visible"}`,
@@ -15817,6 +15818,12 @@ function isUsableAiGuidedSourceFact(value) {
   return Boolean(value) && !/^(none|none visible)$/i.test(value);
 }
 
+const PURE_INSPIRATION_AUTO_VALUE = "__inspiration_auto__";
+
+function isPureInspirationAutoValue(value) {
+  return String(value || "") === PURE_INSPIRATION_AUTO_VALUE;
+}
+
 function getAiGuidedCategorySetting(category) {
   const settings = {
     "Blank Scene": "simplified",
@@ -15831,8 +15838,9 @@ function getAiGuidedCategorySetting(category) {
 }
 
 function getPureInspirationSelectedBackground(category, subScene) {
+  if (isPureInspirationAutoValue(category)) return "";
   const categorySetting = getAiGuidedCategorySetting(category);
-  if (subScene) return `${subScene} in a ${categorySetting} visual direction`;
+  if (subScene && !isPureInspirationAutoValue(subScene)) return `${subScene} in a ${categorySetting} visual direction`;
   return category ? `${categorySetting} painted forms` : "";
 }
 
@@ -15933,14 +15941,66 @@ const PURE_INSPIRATION_HIDDEN_GROUPS = [
   "finishGroup", "colorModeGroup", "fogGroup", "panelGroup"
 ];
 
+function ensurePureInspirationAutoOption(select) {
+  if (!select || select.querySelector(`option[value="${PURE_INSPIRATION_AUTO_VALUE}"]`)) return;
+  const option = document.createElement("option");
+  option.value = PURE_INSPIRATION_AUTO_VALUE;
+  option.textContent = "Auto (use inspiration)";
+  option.dataset.pureInspirationAuto = "true";
+  select.insertBefore(option, select.firstChild);
+}
+
+function removePureInspirationAutoOption(select) {
+  select?.querySelector(`option[value="${PURE_INSPIRATION_AUTO_VALUE}"]`)?.remove();
+}
+
+function syncPureInspirationSelectionControls(isPureInspiration) {
+  const category = document.getElementById("categorySelect");
+  const subScene = document.getElementById("subSceneSelect");
+  const application = document.getElementById("applicationSelect");
+  const substrate = document.getElementById("substrateTextureSelect");
+  if (!category || !subScene || !application || !substrate) return;
+
+  if (isPureInspiration && !referenceReimagineState.pureInspirationSelectionSnapshot) {
+    referenceReimagineState.pureInspirationSelectionSnapshot = {
+      category: category.value,
+      subScene: subScene.value,
+      application: application.value,
+      substrate: substrate.value
+    };
+    [category, subScene, application, substrate].forEach(ensurePureInspirationAutoOption);
+    [category, subScene, application, substrate].forEach((select) => {
+      select.value = PURE_INSPIRATION_AUTO_VALUE;
+    });
+    return true;
+  }
+
+  if (!isPureInspiration && referenceReimagineState.pureInspirationSelectionSnapshot) {
+    const saved = referenceReimagineState.pureInspirationSelectionSnapshot;
+    removePureInspirationAutoOption(category);
+    category.value = saved.category;
+    buildSubSceneSelect(saved.category);
+    removePureInspirationAutoOption(subScene);
+    subScene.value = saved.subScene;
+    removePureInspirationAutoOption(application);
+    application.value = saved.application;
+    removePureInspirationAutoOption(substrate);
+    substrate.value = saved.substrate;
+    referenceReimagineState.pureInspirationSelectionSnapshot = null;
+    return true;
+  }
+  return false;
+}
+
 function updateSelectionGroupsVisibility() {
   const inInspirationMode = document.getElementById("referenceReimagineBody")?.classList.contains("is-visible");
   const isPureInspiration = Boolean(inInspirationMode) && !referenceReimagineState.blendWithMuralizer;
+  const selectionStateChanged = syncPureInspirationSelectionControls(isPureInspiration);
   PURE_INSPIRATION_HIDDEN_GROUPS.forEach((id) => {
     const el = document.getElementById(id);
     if (el) el.style.display = isPureInspiration ? "none" : "";
   });
-  ["categoryGroup", "applicationGroup", "substrateGroup"].forEach((id) => {
+  ["categoryGroup", "subSceneGroup", "applicationGroup", "substrateGroup"].forEach((id) => {
     const el = document.getElementById(id);
     if (!el) return;
     if (isPureInspiration) el.classList.remove("hidden");
@@ -15951,6 +16011,9 @@ function updateSelectionGroupsVisibility() {
   // never reaches it.
   const colorLayout = document.querySelector(".color-layout");
   if (colorLayout) colorLayout.style.display = isPureInspiration ? "none" : "";
+  if (selectionStateChanged && isPureInspiration && referenceReimagineState.dataUrl) {
+    refreshReferenceRenderPrompt();
+  }
 }
 
 const REFERENCE_REIMAGINE_COPY = {
@@ -15968,6 +16031,7 @@ function updateReferenceReimagineCopy() {
 
 function updateReferenceDirectionMode(mode) {
   referenceReimagineState.blendWithMuralizer = mode === "blend";
+  if (referenceReimagineState.blendWithMuralizer) syncPureInspirationSelectionControls(false);
   document.querySelectorAll(".reference-direction-mode label").forEach((label) => {
     label.classList.toggle("is-selected", label.querySelector("input")?.checked);
   });
@@ -16115,6 +16179,7 @@ function updateCreativeDirectionMode(mode) {
   document.getElementById("referenceDirectionMode")?.classList.toggle("is-visible", isInspiration);
   document.getElementById("creativeDirectionBranch")?.classList.toggle("is-visible", isInspiration);
   if (!isInspiration) {
+    syncPureInspirationSelectionControls(false);
     clearReferenceReimagine();
     // Confirmed bug: switching to Via Selections cleared the reference state
     // and updated visibility, but never rebuilt imagePrompt itself -- it kept
@@ -20165,7 +20230,14 @@ categorySelect?.addEventListener("change", () => {
   const isPureInspiration = document.getElementById("referenceReimagineBody")?.classList.contains("is-visible")
     && !referenceReimagineState.blendWithMuralizer;
   if (isPureInspiration) {
-    buildSubSceneSelect(cat);
+    if (isPureInspirationAutoValue(cat)) {
+      ensurePureInspirationAutoOption(subSceneSelect);
+      subSceneSelect.value = PURE_INSPIRATION_AUTO_VALUE;
+    } else {
+      buildSubSceneSelect(cat);
+      ensurePureInspirationAutoOption(subSceneSelect);
+      subSceneSelect.value = PURE_INSPIRATION_AUTO_VALUE;
+    }
     refreshReferenceRenderPrompt();
     return;
   }
