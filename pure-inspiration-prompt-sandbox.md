@@ -8,7 +8,7 @@ The interpretation mode remains the primary composition and treatment control. T
 
 | Selection | Candidate | Proposed prompt injection | Rationale |
 | --- | --- | --- | --- |
-| Application Style | Yes | `Use {applicationStyle} as the application style.` | Directly controls mark-making and rendering technique while preserving the supplied subject and composition. |
+| Application Style | Yes | Add `in a {applicationStyle} application style` to the first outcome sentence. | Stability gives the opening rendering instruction disproportionate weight; place a deliberately selected application style beside the painted outcome, before source facts and composition. |
 | Substrate Texture | Yes | `Let the texture of {substrateTexture} subtly inform the painted surface without implying a physical wall or room.` | Adds controlled material character without changing composition. |
 | Surface Finish | Later, test separately | `Use a {finish} painted surface treatment.` | Can support metallic, reflective, or matte work, but may conflict with the reference's light and reflection behavior. |
 | Color Mode / palettes | No, initially | None | Pure Inspiration should preserve the supplied palette; independent color controls are likely to undermine that promise. |
@@ -16,11 +16,31 @@ The interpretation mode remains the primary composition and treatment control. T
 | Category / Sub-scene / Elements | No | None | These compete directly with the reference subject and composition. |
 | Fog / Panel Type | No | None | Neither contributes reliable art-direction value to a reference-led image. |
 
-## Intended Runtime Shape
+## Prompt Authority And Order
 
-For every Pure Inspiration mode, append only the active, approved injections after that mode's interpretation paragraph:
+Stability prompt order is functional. Earlier content establishes the image's authority hierarchy; later content should only refine it.
 
-`{modeDirection} Use {applicationStyle} as the application style. Let the texture of {substrateTexture} subtly inform the painted surface without implying a physical wall or room.`
+1. **Outcome and selected Application Style:** Establish the new image as hand-painted, then add a selected application style in the same first sentence. An Auto application state contributes nothing.
+2. **Selected Category/Sub-Scene or assessed background:** A deliberate Category/Sub-Scene selection replaces the assessment's background. Without a selection, use the AI-assessed background.
+3. **Global painterly rules:** Keep the two-dimensional, non-photographic contract before supporting details.
+4. **Assessment facts:** Keep foreground and composition concise and subordinate. Subject belongs in the opening outcome sentence for AI-guided mode.
+5. **Substrate Texture and optional brief:** Append only when deliberately selected. `None` is an explicit no-texture choice; `Auto (use inspiration)` contributes nothing.
+
+### AI-Guided Runtime Shape
+
+```text
+Create an original, hand-painted decorative image in a {applicationStyle} application style. Use visible, controlled brushwork, layered opaque color, simplified painted forms, and non-photorealistic light. Give the subject, {assessedSubject}, an intentional setting of {selectedSceneOrAssessedBackground}.
+
+The image must read as a designed two-dimensional painting...
+
+Foreground: {assessedForeground}
+
+Composition: {assessedComposition}
+
+Let the texture of {substrateTexture} subtly inform the painted surface without implying a physical wall or room.
+```
+
+Omit any line whose control is Auto or not selected. Do not emit internal control values in the prompt.
 
 ## Shared Source Guidance
 

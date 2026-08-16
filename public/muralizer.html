@@ -15679,7 +15679,7 @@ function setReferenceAssessmentStatus(message, working = false) {
 const PURE_INSPIRATION_PROMPTS = {
   "ai-guided": {
     hint: "AI studies the source and writes painterly art direction before generating.",
-    outcome: "Create an original, hand-painted decorative image with visible, controlled brushwork, layered opaque color, simplified painted forms, and non-photorealistic light.",
+    outcome: "Create an original, hand-painted decorative image. Use visible, controlled brushwork, layered opaque color, simplified painted forms, and non-photorealistic light.",
     rules: "The image must read as a designed two-dimensional painting. Use broad brush marks, expressive color blocks, and selective hand-drawn linework. Treat any reflective, polished, metallic, technical, or precise qualities from the source only as loose painted suggestions."
   },
   subdued: {
@@ -15776,11 +15776,7 @@ function getReferenceRenderPrompt() {
   const categoryGuidance = selectedBackground
     ? ` Give the subject an intentional setting of ${selectedBackground}.`
     : "";
-  const applicationGuidance = applicationStyle
-    && !isPureInspirationAutoValue(applicationStyle)
-    && !/^(none|no texture|auto)$/i.test(applicationStyle)
-    ? ` Use ${applicationStyle} as the application style.`
-    : "";
+  const sourceOutcome = applyPureInspirationApplicationStyle(sourceGuidance, applicationStyle);
   const substrateGuidance = substrateTexture
     && !isPureInspirationAutoValue(substrateTexture)
     && !/^(none|no texture|auto)$/i.test(substrateTexture)
@@ -15793,20 +15789,28 @@ function getReferenceRenderPrompt() {
     const background = selectedBackground || sourceReading.background;
     const hasSubjectAndBackground = isUsableAiGuidedSourceFact(sourceReading.subject)
       && isUsableAiGuidedSourceFact(background);
-    const outcome = hasSubjectAndBackground
+    const baseOutcome = hasSubjectAndBackground
       ? `${interpretation.outcome} Give the subject, ${sourceReading.subject}, an intentional setting of ${background}.`
       : `${interpretation.outcome} Give the subject an intentional painted setting or background.`;
+    const outcome = applyPureInspirationApplicationStyle(baseOutcome, applicationStyle);
     const supportingReading = [
       `Foreground: ${sourceReading.foreground || "none visible"}`,
       `Composition: ${sourceReading.composition || "preserve the source's overall composition"}`
     ].join("\n\n");
-    const finishingGuidance = [applicationGuidance, substrateGuidance, briefGuidance]
+    const finishingGuidance = [substrateGuidance, briefGuidance]
       .map((guidance) => guidance.trim())
       .filter(Boolean)
       .join("\n\n");
     return `${outcome}\n\n${interpretation.rules}\n\n${supportingReading}${finishingGuidance ? `\n\n${finishingGuidance}` : ""}`;
   }
-  return `${sourceGuidance}${categoryGuidance}\n\n${interpretation.direction}${applicationGuidance}${substrateGuidance}${briefGuidance}`;
+  return `${sourceOutcome}${categoryGuidance}\n\n${interpretation.direction}${substrateGuidance}${briefGuidance}`;
+}
+
+function applyPureInspirationApplicationStyle(outcome, applicationStyle) {
+  if (!applicationStyle || isPureInspirationAutoValue(applicationStyle) || /^(none|no texture|auto)$/i.test(applicationStyle)) {
+    return outcome;
+  }
+  return String(outcome).replace(/\bimage\b/i, `image in a ${applicationStyle} application style`);
 }
 
 function parseAiGuidedSourceReading(description) {
@@ -15937,9 +15941,9 @@ function applyReferenceMuralDescription() {
   autoExpand(promptBox);
 }
 
-// Pure Inspiration accepts only the two surface-treatment selections below.
-// The scene-building, color, and installation controls remain hidden because
-// they compete with the uploaded reference's subject, composition, and palette.
+// Pure Inspiration exposes optional Category, Sub-Scene, Application Style,
+// and Substrate Texture controls. They begin as Auto so the reference remains
+// authoritative until a user deliberately chooses an override.
 const PURE_INSPIRATION_HIDDEN_GROUPS = [
   "feelGroup", "elementsGroup", "botanicalGroup",
   "finishGroup", "colorModeGroup", "fogGroup", "panelGroup"
@@ -18424,6 +18428,9 @@ const attributes = {
       "Terraced Farmland Panorama",
       "Coastal Cliff Settlement",
       "Mountain and Sea",
+      "Gulf Coast Beachfront",
+      "West Coast Beachfront",
+      "Caribbean Beachfront",
       "Trees",
       "Birds Only"
     ]
