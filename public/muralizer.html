@@ -24161,6 +24161,18 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
+// Browsers can restore the last selected radio button after a reload, even
+// though the markup's intended first-load default is Via Selections. Reset
+// that transient form state unless a live reference survives a back/forward
+// restoration.
+window.addEventListener("pageshow", () => {
+  if (referenceReimagineState.dataUrl) return;
+  const muralizerMode = document.querySelector('input[name="creativeDirectionMode"][value="muralizer"]');
+  if (!muralizerMode) return;
+  muralizerMode.checked = true;
+  updateCreativeDirectionMode("muralizer");
+});
+
 </script>
 
 
