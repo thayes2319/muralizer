@@ -15770,7 +15770,7 @@ function getReferenceRenderPrompt() {
     : "";
   const briefGuidance = editableBrief ? ` Additional creative brief: ${editableBrief}` : "";
   const aiGuidance = referenceReimagineState.interpretation === "ai-guided" && assessedDescription
-    ? `Use this AI-assessed art direction as the primary guide:\n${assessedDescription}\n\n`
+    ? `${assessedDescription}\n\n`
     : sourceGuidance + "\n\n";
   return `${aiGuidance}${PURE_INSPIRATION_PROMPTS[referenceReimagineState.interpretation].direction}${applicationGuidance}${substrateGuidance}${briefGuidance}`;
 }
