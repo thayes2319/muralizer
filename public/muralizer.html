@@ -15764,47 +15764,68 @@ function getReferenceRenderPrompt() {
   if (referenceReimagineState.blendWithMuralizer) {
     return document.getElementById("imagePrompt")?.value.trim() || referenceReimagineState.muralizerDescription.trim();
   }
+  const interpretation = PURE_INSPIRATION_PROMPTS[referenceReimagineState.interpretation];
+  const selections = getPureInspirationPromptSelections();
+  if (referenceReimagineState.interpretation === "ai-guided") {
+    return buildAiGuidedPureInspirationPrompt(interpretation, selections);
+  }
+  return buildDirectPureInspirationPrompt(interpretation, selections);
+}
+
+function getPureInspirationPromptSelections() {
   const useBrief = document.getElementById("referenceUseBrief")?.checked;
-  const editableBrief = useBrief ? String(document.getElementById("referenceBrief")?.value || "").trim() : "";
   const category = String(document.getElementById("categorySelect")?.value || "").trim();
   const subScene = String(document.getElementById("subSceneSelect")?.value || "").trim();
   const applicationStyle = String(document.getElementById("applicationSelect")?.value || "").trim();
   const substrateTexture = String(document.getElementById("substrateTextureSelect")?.value || "").trim();
-  const assessedDescription = String(referenceReimagineState.assessedDescription || "").trim();
-  const sourceGuidance = PURE_INSPIRATION_PROMPTS[referenceReimagineState.interpretation].sourceGuidance
+  return {
+    assessedDescription: String(referenceReimagineState.assessedDescription || "").trim(),
+    applicationStyle,
+    selectedBackground: getPureInspirationSelectedBackground(category, subScene),
+    substrateGuidance: getPureInspirationSubstrateGuidance(substrateTexture),
+    briefGuidance: useBrief ? String(document.getElementById("referenceBrief")?.value || "").trim() : ""
+  };
+}
+
+function buildAiGuidedPureInspirationPrompt(interpretation, selections) {
+  const sourceReading = parseAiGuidedSourceReading(selections.assessedDescription);
+  const background = selections.selectedBackground || sourceReading.background;
+  const hasSubjectAndBackground = isUsableAiGuidedSourceFact(sourceReading.subject)
+    && isUsableAiGuidedSourceFact(background);
+  const baseOutcome = hasSubjectAndBackground
+    ? `${interpretation.outcome} Give the subject, ${sourceReading.subject}, an intentional setting of ${background}.`
+    : `${interpretation.outcome} Give the subject an intentional painted setting or background.`;
+  const outcome = applyPureInspirationApplicationStyle(baseOutcome, selections.applicationStyle);
+  const sourceFacts = [
+    `Foreground: ${sourceReading.foreground || "none visible"}`,
+    `Composition: ${sourceReading.composition || "preserve the source's overall composition"}`
+  ].join("\n\n");
+  const surfaceRefinements = [selections.substrateGuidance, selections.briefGuidance]
+    .map((guidance) => guidance.trim())
+    .filter(Boolean)
+    .join("\n\n");
+  return `${outcome}\n\n${interpretation.rules}\n\n${sourceFacts}${surfaceRefinements ? `\n\n${surfaceRefinements}` : ""}`;
+}
+
+function buildDirectPureInspirationPrompt(interpretation, selections) {
+  const sourceGuidance = interpretation.sourceGuidance
     || "Create an original, hand-painted image inspired by the supplied reference image. Preserve its central subject, compositional character, and palette without copying it literally.";
-  const selectedBackground = getPureInspirationSelectedBackground(category, subScene);
-  const categoryGuidance = selectedBackground
-    ? ` Give the subject an intentional setting of ${selectedBackground}.`
+  const outcome = applyPureInspirationApplicationStyle(sourceGuidance, selections.applicationStyle);
+  const sceneOverride = selections.selectedBackground
+    ? ` Give the subject an intentional setting of ${selections.selectedBackground}.`
     : "";
-  const sourceOutcome = applyPureInspirationApplicationStyle(sourceGuidance, applicationStyle);
-  const substrateGuidance = substrateTexture
-    && !isPureInspirationAutoValue(substrateTexture)
-    && !/^(none|no texture|auto)$/i.test(substrateTexture)
-    ? ` Let the texture of ${substrateTexture} subtly inform the painted surface without implying a physical wall or room.`
-    : "";
-  const briefGuidance = editableBrief ? ` Additional creative brief: ${editableBrief}` : "";
-  const interpretation = PURE_INSPIRATION_PROMPTS[referenceReimagineState.interpretation];
-  if (referenceReimagineState.interpretation === "ai-guided") {
-    const sourceReading = parseAiGuidedSourceReading(assessedDescription);
-    const background = selectedBackground || sourceReading.background;
-    const hasSubjectAndBackground = isUsableAiGuidedSourceFact(sourceReading.subject)
-      && isUsableAiGuidedSourceFact(background);
-    const baseOutcome = hasSubjectAndBackground
-      ? `${interpretation.outcome} Give the subject, ${sourceReading.subject}, an intentional setting of ${background}.`
-      : `${interpretation.outcome} Give the subject an intentional painted setting or background.`;
-    const outcome = applyPureInspirationApplicationStyle(baseOutcome, applicationStyle);
-    const supportingReading = [
-      `Foreground: ${sourceReading.foreground || "none visible"}`,
-      `Composition: ${sourceReading.composition || "preserve the source's overall composition"}`
-    ].join("\n\n");
-    const finishingGuidance = [substrateGuidance, briefGuidance]
-      .map((guidance) => guidance.trim())
-      .filter(Boolean)
-      .join("\n\n");
-    return `${outcome}\n\n${interpretation.rules}\n\n${supportingReading}${finishingGuidance ? `\n\n${finishingGuidance}` : ""}`;
+  const surfaceRefinements = [
+    selections.substrateGuidance,
+    selections.briefGuidance ? `Additional creative brief: ${selections.briefGuidance}` : ""
+  ].filter(Boolean).join(" ");
+  return `${outcome}${sceneOverride}\n\n${interpretation.direction}${surfaceRefinements ? ` ${surfaceRefinements}` : ""}`;
+}
+
+function getPureInspirationSubstrateGuidance(substrateTexture) {
+  if (!substrateTexture || isPureInspirationAutoValue(substrateTexture) || /^(none|no texture|auto)$/i.test(substrateTexture)) {
+    return "";
   }
-  return `${sourceOutcome}${categoryGuidance}\n\n${interpretation.direction}${substrateGuidance}${briefGuidance}`;
+  return `Let the texture of ${substrateTexture} subtly inform the painted surface without implying a physical wall or room.`;
 }
 
 function applyPureInspirationApplicationStyle(outcome, applicationStyle) {
