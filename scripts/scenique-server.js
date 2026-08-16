@@ -1026,7 +1026,14 @@ async function handleReferenceAssessment(req, res) {
   const imageDataUrl = `data:${reference.mimeType};base64,${reference.buffer.toString('base64')}`;
   let result = null;
   let repairInstruction = '';
+  let priorCandidate = null;
   for (let attempt = 0; attempt < 3; attempt += 1) {
+    const content = attempt === 0
+      ? [
+        { type: 'text', text: instructions },
+        { type: 'image_url', image_url: { url: imageDataUrl, detail: 'high' } }
+      ]
+      : [{ type: 'text', text: repairInstruction }];
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -1041,10 +1048,7 @@ async function handleReferenceAssessment(req, res) {
           { role: 'system', content: 'You are a precise mural-art direction assessor. Follow the requested JSON schema exactly.' },
           {
             role: 'user',
-            content: [
-              { type: 'text', text: `${instructions}${repairInstruction}` },
-              { type: 'image_url', image_url: { url: imageDataUrl, detail: 'high' } }
-            ]
+            content
           }
         ]
       })
@@ -1074,7 +1078,8 @@ async function handleReferenceAssessment(req, res) {
       result = candidate;
       break;
     }
-    repairInstruction = `\n\nREVISION REQUIRED: Your prior Mural Description used forbidden product-shot language: ${violations.join(', ')}. Rewrite the complete JSON response to remove those ideas. The literal terms ${violations.join(', ')} must not appear anywhere in the rewritten Mural Description, including as a negation. Preserve only source-grounded composition, palette, and meaningful features, and express all material or engineering cues as painted marks. Do not mention this review or the prior draft.`;
+    priorCandidate = candidate;
+    repairInstruction = `Rewrite this assessment JSON as a concise, production-ready mural brief. The Mural Description must contain exactly three short paragraphs: an "A hand-painted mural of" opening that names only enduring subject, palette, silhouette, and simplified setting; a "Using the same brushwork technique" paragraph that joins those elements as one painted composition; and a "Use" paragraph that directs only painted marks, selective highlights, gestural linework, and flat decorative treatment. Remove literal product, photographic, or camera description. The literal terms ${violations.join(', ')} must not appear anywhere in the rewritten Mural Description, including as a negation. Return the same JSON schema only. Prior JSON:\n${JSON.stringify(priorCandidate)}`;
   }
 
   if (!result || typeof result.mural_description !== 'string' || !result.mural_description.trim()) {
