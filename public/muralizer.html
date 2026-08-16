@@ -15776,10 +15776,14 @@ function getReferenceRenderPrompt() {
   const categoryGuidance = selectedBackground
     ? ` Give the subject an intentional setting of ${selectedBackground}.`
     : "";
-  const applicationGuidance = applicationStyle && !/^(none|no texture|auto)$/i.test(applicationStyle)
+  const applicationGuidance = applicationStyle
+    && !isPureInspirationAutoValue(applicationStyle)
+    && !/^(none|no texture|auto)$/i.test(applicationStyle)
     ? ` Use ${applicationStyle} as the application style.`
     : "";
-  const substrateGuidance = substrateTexture && !/^(none|no texture|auto)$/i.test(substrateTexture)
+  const substrateGuidance = substrateTexture
+    && !isPureInspirationAutoValue(substrateTexture)
+    && !/^(none|no texture|auto)$/i.test(substrateTexture)
     ? ` Let the texture of ${substrateTexture} subtly inform the painted surface without implying a physical wall or room.`
     : "";
   const briefGuidance = editableBrief ? ` Additional creative brief: ${editableBrief}` : "";
