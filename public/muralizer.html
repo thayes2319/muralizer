@@ -10399,10 +10399,15 @@ document.addEventListener("DOMContentLoaded", () => {
 async function generateImageWithPrompt(promptText) {
   const box = document.getElementById("imagePrompt");
   const old = box.value;
+  const referenceDescription = referenceReimagineState.dataUrl
+    ? buildReferenceGenerationDescription()
+    : "";
+  const resolvedPrompt = String(promptText || "").trim() || referenceDescription;
 
-  box.value = promptText;
+  box.value = resolvedPrompt;
   await generateImage();
-  box.value = old;
+  box.value = old || referenceDescription;
+  autoExpand(box);
 }
 
 
@@ -17588,7 +17593,16 @@ async function generateImage() {
     // applyReferenceMuralDescription() on every mode/assessment change, but
     // the box remains user-editable, so whatever's actually displayed here
     // is what actually gets sent, including manual edits.
-    const prompt = document.getElementById("imagePrompt").value;
+    const promptBox = document.getElementById("imagePrompt");
+    let prompt = promptBox.value.trim();
+    if (hasReference && !prompt) {
+      prompt = buildReferenceGenerationDescription().trim();
+      if (!prompt) {
+        throw new Error("Inspiration analysis did not produce creative direction.");
+      }
+      promptBox.value = prompt;
+      autoExpand(promptBox);
+    }
     const model = document.getElementById("imageModelSelector").value;
     const referenceInfluence = hasReference
       ? Number(document.getElementById("referenceInfluence")?.value || 45) / 100
