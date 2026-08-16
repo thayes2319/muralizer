@@ -78,6 +78,30 @@ function sanitizeSceneForIndex(scene) {
   };
 }
 
+async function persistSceneReference(id, scene) {
+  const sanitizedScene = sanitizeSceneForIndex(scene);
+  const source = scene?.reference;
+  const parsedReference = parseImageDataUrl(source?.dataUrl || source?.imageDataUrl || '');
+  if (!parsedReference || !sanitizedScene?.reference) return sanitizedScene;
+
+  const extension = parsedReference.mimeType === 'image/jpeg'
+    ? 'jpg'
+    : parsedReference.mimeType.split('/')[1];
+  const fileName = `${id}.reference.${extension}`;
+  const filePath = path.join(conceptDir, fileName);
+  await fs.writeFile(filePath, parsedReference.buffer);
+
+  return {
+    ...sanitizedScene,
+    reference: {
+      ...sanitizedScene.reference,
+      assetUrl: `/storage/concept-images/${fileName}`,
+      assetPath: path.relative(dataDir, filePath),
+      assetSizeBytes: parsedReference.buffer.length
+    }
+  };
+}
+
 const upstreamApiKey = String(
   process.env.MURALIZER_API_KEY
   || process.env.STABILITY_API_KEY
@@ -336,6 +360,10 @@ async function handleConceptImage(req, res) {
     await fs.writeFile(imagePath, imageBuffer);
   }
 
+  const scene = body.savedConcept
+    ? await persistSceneReference(id, body.scene)
+    : sanitizeSceneForIndex(body.scene);
+
   const record = {
     ...body,
     id,
@@ -344,7 +372,7 @@ async function handleConceptImage(req, res) {
     imageUrl,
     imagePath: path.relative(dataDir, imagePath),
     imageSizeBytes: imageBuffer ? imageBuffer.length : null,
-    scene: sanitizeSceneForIndex(body.scene),
+    scene,
     imageBase64: undefined,
     imageDataUrl: undefined
   };

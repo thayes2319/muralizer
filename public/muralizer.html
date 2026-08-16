@@ -13666,6 +13666,8 @@ const SAVED_RECIPES_KEY = "muralizerSavedRecipes";
 const SAVED_RECIPES_MIGRATED_KEY = "muralizerSavedRecipesMigrated";
 const SAVED_RECIPES_MAX = 300;
 const UNCATEGORIZED_RECIPE_LABEL = "Inspiration-based (no category)";
+const referenceAssetDataUrlCache = new Map();
+let referenceRecipeLoadVersion = 0;
 
 function readSavedRecipes() {
   try {
@@ -13748,6 +13750,31 @@ function captureFullRecipeScene() {
   return scene;
 }
 
+function loadReferenceAssetDataUrl(assetUrl) {
+  if (referenceAssetDataUrlCache.has(assetUrl)) {
+    return referenceAssetDataUrlCache.get(assetUrl);
+  }
+
+  const load = fetch(assetUrl)
+    .then((response) => {
+      if (!response.ok) throw new Error(`Reference asset unavailable (${response.status})`);
+      return response.blob();
+    })
+    .then((blob) => new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ""));
+      reader.onerror = () => reject(new Error("Reference asset could not be decoded."));
+      reader.readAsDataURL(blob);
+    }))
+    .catch((error) => {
+      referenceAssetDataUrlCache.delete(assetUrl);
+      throw error;
+    });
+
+  referenceAssetDataUrlCache.set(assetUrl, load);
+  return load;
+}
+
 // Restores a saved reference image into the UI/state without re-running the
 // (paid, async) vision assessment -- description is the same distilled
 // "what this image is about" text that assessment would produce again from
@@ -13755,6 +13782,19 @@ function captureFullRecipeScene() {
 // instant and free. Mirrors handleReferenceReimagineFile's DOM/state setup,
 // starting from an already-normalized dataUrl instead of a fresh File.
 function applyReferenceRecipe(ref, description) {
+  const loadVersion = ++referenceRecipeLoadVersion;
+  const storedAssetUrl = ref?.assetUrl ? resolveBackendImageUrl(ref.assetUrl) : "";
+  if (!ref?.dataUrl && storedAssetUrl) {
+    loadReferenceAssetDataUrl(storedAssetUrl)
+      .then((dataUrl) => {
+        if (loadVersion !== referenceRecipeLoadVersion || !dataUrl) return;
+        applyReferenceRecipe({ ...ref, dataUrl }, description);
+      })
+      .catch((error) => console.warn("Saved inspiration image could not be restored:", error));
+    return;
+  }
+
+  if (!ref?.dataUrl) return;
   const modeInput = document.querySelector(
     `input[name="creativeDirectionMode"][value="inspiration"]`
   );
@@ -15175,6 +15215,11 @@ async function hydrateBackendConceptImages() {
         if (!prev || createdAt > prev.createdAt) {
           cpcBackendImageStore[savedKey] = imageUrl;
           cpcBackendImageMeta[savedKey] = { createdAt, id: String(record && record.id || "") };
+          const savedScene = record && record.scene;
+          const locallyStoredScene = getConceptSceneForKey(savedKey);
+          if (savedScene && !locallyStoredScene?.reference?.dataUrl) {
+            mergeConceptSceneEntries({ [savedKey]: savedScene });
+          }
         }
       });
     } catch (err) {
@@ -23266,7 +23311,7 @@ document.addEventListener("DOMContentLoaded", () => {
         imageKey: savedKey,
         saveAction: choice,
         savedConcept: true,
-        scene: stripReferenceImageForBackend(savedScene),
+        scene: savedScene,
         imageBase64
       });
 
