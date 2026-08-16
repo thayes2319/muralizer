@@ -15725,8 +15725,8 @@ async function updateReferenceInterpretation(value) {
   if (interpretation === "ai-guided" && referenceReimagineState.dataUrl) {
     const hasAssessment = Boolean(String(referenceReimagineState.assessedDescription || "").trim());
     if (!hasAssessment) {
-      showAiAssessmentPrompt("AI is assessing your inspiration image. Painterly art direction will appear here automatically.");
-      setReferenceAssessmentStatus("AI is studying your inspiration image and updating Mural Description...", true);
+      showAiAssessmentPrompt("AI is assessing your inspiration image. No further action is needed; painterly art direction will appear here automatically.");
+      setReferenceAssessmentStatus("AI is studying your inspiration image. No further action is needed while Mural Description updates...", true);
     }
     const assessed = await ensureReferenceAssessment();
     if (!assessed) {
