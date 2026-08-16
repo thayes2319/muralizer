@@ -15764,11 +15764,15 @@ function getReferenceRenderPrompt() {
   }
   const useBrief = document.getElementById("referenceUseBrief")?.checked;
   const editableBrief = useBrief ? String(document.getElementById("referenceBrief")?.value || "").trim() : "";
+  const category = String(document.getElementById("categorySelect")?.value || "").trim();
   const applicationStyle = String(document.getElementById("applicationSelect")?.value || "").trim();
   const substrateTexture = String(document.getElementById("substrateTextureSelect")?.value || "").trim();
   const assessedDescription = String(referenceReimagineState.assessedDescription || "").trim();
   const sourceGuidance = PURE_INSPIRATION_PROMPTS[referenceReimagineState.interpretation].sourceGuidance
     || "Create an original, hand-painted image inspired by the supplied reference image. Preserve its central subject, compositional character, and palette without copying it literally.";
+  const categoryGuidance = category
+    ? ` Give the subject an intentional ${getAiGuidedCategorySetting(category)} setting or background.`
+    : "";
   const applicationGuidance = applicationStyle && !/^(none|no texture|auto)$/i.test(applicationStyle)
     ? ` Use ${applicationStyle} as the application style.`
     : "";
@@ -15781,8 +15785,9 @@ function getReferenceRenderPrompt() {
     const sourceReading = parseAiGuidedSourceReading(assessedDescription);
     const hasSubjectAndBackground = isUsableAiGuidedSourceFact(sourceReading.subject)
       && isUsableAiGuidedSourceFact(sourceReading.background);
+    const categorySetting = getAiGuidedCategorySetting(category);
     const outcome = hasSubjectAndBackground
-      ? `${interpretation.outcome} Give the subject, ${sourceReading.subject}, an intentional painted setting or background of ${sourceReading.background}.`
+      ? `${interpretation.outcome} Give the subject, ${sourceReading.subject}, an intentional ${categorySetting} setting or background of ${sourceReading.background}.`
       : `${interpretation.outcome} Give the subject an intentional painted setting or background.`;
     const supportingReading = [
       `Foreground: ${sourceReading.foreground || "none visible"}`,
@@ -15794,7 +15799,7 @@ function getReferenceRenderPrompt() {
       .join("\n\n");
     return `${outcome}\n\n${interpretation.rules}\n\n${supportingReading}${finishingGuidance ? `\n\n${finishingGuidance}` : ""}`;
   }
-  return `${sourceGuidance}\n\n${interpretation.direction}${applicationGuidance}${substrateGuidance}${briefGuidance}`;
+  return `${sourceGuidance}${categoryGuidance}\n\n${interpretation.direction}${applicationGuidance}${substrateGuidance}${briefGuidance}`;
 }
 
 function parseAiGuidedSourceReading(description) {
@@ -15808,6 +15813,19 @@ function parseAiGuidedSourceReading(description) {
 
 function isUsableAiGuidedSourceFact(value) {
   return Boolean(value) && !/^(none|none visible)$/i.test(value);
+}
+
+function getAiGuidedCategorySetting(category) {
+  const settings = {
+    "Blank Scene": "simplified",
+    "Chinoiserie": "Chinoiserie-inspired",
+    "Prints & Pattern": "decorative patterned",
+    "Atmosphere": "atmospheric",
+    "Ombré": "ombre",
+    "Dégradé": "graduated-color",
+    "Kids": "playful"
+  };
+  return settings[category] || String(category || "painted").toLowerCase();
 }
 
 function refreshReferenceRenderPrompt() {
@@ -15903,7 +15921,7 @@ function applyReferenceMuralDescription() {
 // The scene-building, color, and installation controls remain hidden because
 // they compete with the uploaded reference's subject, composition, and palette.
 const PURE_INSPIRATION_HIDDEN_GROUPS = [
-  "feelGroup", "categoryGroup", "subSceneGroup", "elementsGroup", "botanicalGroup",
+  "feelGroup", "subSceneGroup", "elementsGroup", "botanicalGroup",
   "finishGroup", "colorModeGroup", "fogGroup", "panelGroup"
 ];
 
@@ -15914,7 +15932,7 @@ function updateSelectionGroupsVisibility() {
     const el = document.getElementById(id);
     if (el) el.style.display = isPureInspiration ? "none" : "";
   });
-  ["applicationGroup", "substrateGroup"].forEach((id) => {
+  ["categoryGroup", "applicationGroup", "substrateGroup"].forEach((id) => {
     const el = document.getElementById(id);
     if (!el) return;
     if (isPureInspiration) el.classList.remove("hidden");
@@ -20135,6 +20153,13 @@ function applyCategoryRules(cat) {
 // ============================================================
 categorySelect?.addEventListener("change", () => {
   const cat = categorySelect.value;
+
+  const isPureInspiration = document.getElementById("referenceReimagineBody")?.classList.contains("is-visible")
+    && !referenceReimagineState.blendWithMuralizer;
+  if (isPureInspiration) {
+    refreshReferenceRenderPrompt();
+    return;
+  }
 
   applyCategoryRules(cat);   // ← the ONLY rebuild
 
