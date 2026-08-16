@@ -15740,6 +15740,25 @@ function clampReferenceCrop() {
   const minimumSize = 0.12;
   crop.width = Math.max(minimumSize, Math.min(1, crop.width));
   crop.height = Math.max(minimumSize, Math.min(1, crop.height));
+
+  const image = referenceReimagineState.image;
+  if (image?.naturalWidth && image?.naturalHeight) {
+    const providerMinimumAspect = 1 / 2.5;
+    const providerMaximumAspect = 2.5;
+    const imageAspect = image.naturalWidth / image.naturalHeight;
+    const cropAspect = imageAspect * crop.width / crop.height;
+    const centerX = crop.left + crop.width / 2;
+    const centerY = crop.top + crop.height / 2;
+
+    if (cropAspect > providerMaximumAspect) {
+      crop.width = Math.max(minimumSize, Math.min(1, providerMaximumAspect * crop.height / imageAspect));
+      crop.left = centerX - crop.width / 2;
+    } else if (cropAspect < providerMinimumAspect) {
+      crop.height = Math.max(minimumSize, Math.min(1, imageAspect * crop.width / providerMinimumAspect));
+      crop.top = centerY - crop.height / 2;
+    }
+  }
+
   crop.left = Math.max(0, Math.min(1 - crop.width, crop.left));
   crop.top = Math.max(0, Math.min(1 - crop.height, crop.top));
 }
