@@ -1016,8 +1016,6 @@ async function handleReferenceAssessment(req, res) {
     ['aggressive stance', /\baggressive stance\b/i],
     ['dynamic presence', /\bdynamic presence\b/i],
     ['prominent subject', /\bprominen(t|tly)\b/i],
-    ['foreground subject', /\bforeground\b/i],
-    ['illusionistic depth', /\b(recede|recedes|receding|atmospheric depth|sense of depth|providing depth|creating depth)\b/i],
     ['polished finish', /\bpolished finish\b/i],
     ['reflective or metallic surfaces', /\b(reflective|metallic) surfaces\b/i],
     ['precision engineering', /\b(precision engineering|technical sophistication|technical shapes)\b/i]
