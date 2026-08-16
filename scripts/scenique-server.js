@@ -839,8 +839,8 @@ async function handleReferenceGenerateProxy(req, res) {
   // side-by-side against both a photographic and an already-painterly
   // reference, across the full influence range, with consistently painterly
   // results either way.
-  const paintedStyle = 'STYLE REQUIREMENT -- takes priority over every realism cue in the reference or mural brief: render a flat, expressive, clearly hand-painted decorative mural, with unmistakable broad brush marks, layered opaque color, simplified painted shapes, and deliberate hand-drawn linework. The result must read immediately as a two-dimensional artwork on a wall, never as a photograph, product render, or cinematic still. Build the subject into a complete painted scenic environment: create a readable background and setting around it with at least two layers of stylized context appropriate to the subject, such as terrain, water, sky, vegetation, distant structural silhouettes, or abstract landscape forms. Do not isolate the subject against a blank studio backdrop, empty asphalt or floor plane, or product-display setting. Treat the reference image strictly as a guide to subject placement and composition, never as a rendering exemplar. Reinterpret words such as realistic, reflective, metallic, polished, detailed, or precise as loose painted suggestions only: no physically accurate materials, no glossy reflections, no precise surface texture, no camera-like lighting, and no illusionistic depth. Convert depicted light, atmosphere, natural forms, built forms, and material surfaces into visible painterly marks and expressive blocks of color. Ignore any glare, reflections, or lighting artifacts from the reference photo being captured under real light; those are not part of the artwork.';
-  const exclusions = 'Never depict furniture, chairs, tables, sofas, beds, lamps, windows, doors, rooms, walls, floors, ceilings, interior architecture, text, logos, frames, or borders.';
+  const paintedStyle = 'STYLE REQUIREMENT -- takes priority over every realism cue in the reference or mural brief: render a flat, expressive, clearly hand-painted decorative mural, with unmistakable broad brush marks, layered opaque color, simplified painted shapes, and deliberate hand-drawn linework. The result must read immediately as a two-dimensional artwork on a wall, never as a photograph, product render, or cinematic still. Treat the reference image strictly as a guide to subject placement and composition, never as a rendering exemplar. Reinterpret words such as realistic, reflective, metallic, polished, detailed, or precise as loose painted suggestions only: no physically accurate materials, no glossy reflections, no precise surface texture, no camera-like lighting, and no illusionistic depth. Convert depicted light, atmosphere, natural forms, built forms, and material surfaces into visible painterly marks and expressive blocks of color. Ignore any glare, reflections, or lighting artifacts from the reference photo being captured under real light; those are not part of the artwork.';
+  const exclusions = 'Never depict furniture, chairs, tables, sofas, beds, lamps, windows, doors, rooms, walls, floors, ceilings, architecture, text, logos, frames, or borders.';
   form.append('prompt', `${prompt}\n\n${muralOnly} ${paintedStyle} ${exclusions}`);
   form.append('output_format', 'png');
   form.append('control_strength', String(controlStrength));
@@ -1000,6 +1000,8 @@ async function handleReferenceAssessment(req, res) {
   }
 
   const currentDescription = String(body.current_description || '').trim();
+  const assessmentMode = body.assessment_mode === 'source-reading' ? 'source-reading' : 'art-direction';
+  const sourceReadingLabels = ['Foreground:', 'Subject:', 'Background:', 'Composition:'];
   const schema = {
     name: 'reference_mural_assessment',
     strict: true,
@@ -1026,7 +1028,7 @@ async function handleReferenceAssessment(req, res) {
       required: ['assessment', 'mural_description']
     }
   };
-  const instructions = [
+  const artDirectionInstructions = [
     'Assess the supplied inspiration image and write a concise, production-ready Mural Description.',
     'Work forward from the intended painted mural, not backward from a photographic caption. Use the source only to identify enduring subject, large palette relationships, silhouette, gesture, and compositional masses that can survive in the new artwork. Deliberately discard any source detail whose only expression would be literal rendering: branding, exact product components, wheel or surface detail, reflections, gloss, camera perspective, atmospheric depth, capture lighting, or staged setting. Do not identify artists, brands, locations, rooms, furniture, walls, frames, or installed-mural context as design content.',
     'The reference is often a snapshot of an already-installed wall covering, so it frequently carries capture artifacts that are not part of the design: glare, reflections, lens flare, specular highlights, or lighting hotspots from the surface being photographed under real light. Note any such artifacts you observe in source_context_to_exclude (for example "glare across the upper-right area" or "reflective sheen along the lower edge") so they can be explicitly excluded -- these are never design content and must never be described as part of the Mural Description itself. Distinguish these capture artifacts from a deliberate painted color gradient or ombre fade, which IS design content and belongs in the Mural Description, not in source_context_to_exclude: a design gradient transitions smoothly across a broad area and follows the artwork\'s own color logic and composition, while a capture artifact is a localized, sharp-edged, often overexposed or blown-out highlight that is inconsistent with the surrounding painted palette and looks camera- or light-source-dependent rather than intentionally placed. When genuinely uncertain which one you are seeing, prefer treating it as design content rather than excluding it.',
@@ -1037,6 +1039,16 @@ async function handleReferenceAssessment(req, res) {
     'Return an assessment with concise evidence and a 2-4 paragraph Mural Description. The description must remain editable by the user.',
     currentDescription ? `The user\'s current description is: ${currentDescription}` : 'There is no current user description.'
   ].join('\n');
+  const sourceReadingInstructions = [
+    'Inspect the supplied inspiration image and return a concise source reading for a separate painterly image-generation system.',
+    'This is not art direction. The image-generation system already has its own overall painted outcome and rendering rules. Your role is only to identify source content that it may adapt, without adding style, medium, lighting, realism, scenic, or quality instructions of your own.',
+    'Set mural_description to exactly four short labeled lines in this order: "Foreground:", "Subject:", "Background:", and "Composition:". Include every label even when the relevant area is absent; say "none visible" rather than inventing content. Foreground, subject, and background should identify only broad enduring forms and palette relationships. Composition should state only the most important spatial relationship, crop, balance, or directional gesture.',
+    'Curtail source detail aggressively. Keep only large silhouettes, broad color families, major foreground/background relationships, and composition. Exclude brand names, logos, lettering, exact product components, wheels, surface texture, reflections, gloss, camera angle, lens effects, photographic lighting, staged settings, material accuracy, and any adjective that turns the source into a product image. Do not use product, performance, or camera language.',
+    'Use source_context_to_exclude only for capture artifacts such as glare, reflections, lens flare, specular highlights, or lighting hotspots. Do not treat those artifacts as image content.',
+    'Return the existing JSON schema only.',
+    currentDescription ? `The user\'s current description is: ${currentDescription}` : 'There is no current user description.'
+  ].join('\n');
+  const instructions = assessmentMode === 'source-reading' ? sourceReadingInstructions : artDirectionInstructions;
   const forbiddenMuralTerms = [
     ['sleek', /\bsleek\b/i],
     ['high-performance', /\bhigh-performance\b/i],
@@ -1103,12 +1115,17 @@ async function handleReferenceAssessment(req, res) {
     }
 
     const violations = findForbiddenMuralTerms(candidate.mural_description);
-    if (!violations.length) {
+    const hasStructuredSourceReading = assessmentMode !== 'source-reading' || sourceReadingLabels.every((label) =>
+      new RegExp(`^${label.replace(':', '\\:')}`, 'mi').test(candidate.mural_description)
+    );
+    if (!violations.length && hasStructuredSourceReading) {
       result = candidate;
       break;
     }
     priorCandidate = candidate;
-    repairInstruction = `Rewrite this assessment JSON as a concise, production-ready mural brief. The Mural Description must contain exactly three short paragraphs: an "A hand-painted mural of" opening that names only enduring subject, palette, silhouette, and simplified setting; a "Using the same brushwork technique" paragraph that joins those elements as one painted composition; and a "Use" paragraph that directs only painted marks, selective highlights, gestural linework, and flat decorative treatment. Remove literal product, photographic, or camera description. The literal terms ${violations.join(', ')} must not appear anywhere in the rewritten Mural Description, including as a negation. Return the same JSON schema only. Prior JSON:\n${JSON.stringify(priorCandidate)}`;
+    repairInstruction = assessmentMode === 'source-reading'
+      ? `Rewrite this assessment JSON as a constrained source reading. mural_description must be exactly four short labeled lines in this order: Foreground:, Subject:, Background:, Composition:. It must identify only broad source forms, broad palette relationships, and the key spatial relationship; it must contain no image-generation or rendering directions. The literal terms ${violations.join(', ') || 'none'} must not appear anywhere in mural_description, including as a negation. Return the same JSON schema only. Prior JSON:\n${JSON.stringify(priorCandidate)}`
+      : `Rewrite this assessment JSON as a concise, production-ready mural brief. The Mural Description must contain exactly three short paragraphs: an "A hand-painted mural of" opening that names only enduring subject, palette, silhouette, and simplified setting; a "Using the same brushwork technique" paragraph that joins those elements as one painted composition; and a "Use" paragraph that directs only painted marks, selective highlights, gestural linework, and flat decorative treatment. Remove literal product, photographic, or camera description. The literal terms ${violations.join(', ')} must not appear anywhere in the rewritten Mural Description, including as a negation. Return the same JSON schema only. Prior JSON:\n${JSON.stringify(priorCandidate)}`;
   }
 
   if (!result || typeof result.mural_description !== 'string' || !result.mural_description.trim()) {

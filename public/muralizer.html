@@ -15678,7 +15678,8 @@ function setReferenceAssessmentStatus(message, working = false) {
 const PURE_INSPIRATION_PROMPTS = {
   "ai-guided": {
     hint: "AI studies the source and writes painterly art direction before generating.",
-    direction: "Render the assessed direction as an original, hand-painted image with visible, controlled brushwork and non-photorealistic light. Build a complete, layered painted environment behind and around the central subject; use scenic setting forms appropriate to the source rather than a blank studio backdrop, bare ground plane, or isolated product-style composition."
+    outcome: "Create an original, hand-painted decorative image with visible, controlled brushwork, layered opaque color, simplified painted forms, and non-photorealistic light. Give the subject an intentional painted setting or background rather than treating it as an isolated product or camera subject.",
+    rules: "Overall rules: the image must read as a designed two-dimensional painting, never a photograph, product render, or cinematic still. Use broad brush marks, expressive color blocks, and selective hand-drawn linework. Treat any reflective, polished, metallic, technical, or precise qualities from the source only as loose painted suggestions. The source reading below identifies content and composition only; it does not override these rendering rules."
   },
   subdued: {
     hint: "Quieter forms, softer contrast, and restrained detail while staying close to the source.",
@@ -15775,10 +15776,14 @@ function getReferenceRenderPrompt() {
     ? ` Let the texture of ${substrateTexture} subtly inform the painted surface without implying a physical wall or room.`
     : "";
   const briefGuidance = editableBrief ? ` Additional creative brief: ${editableBrief}` : "";
-  const aiGuidance = referenceReimagineState.interpretation === "ai-guided" && assessedDescription
-    ? `${assessedDescription}\n\n`
-    : sourceGuidance + "\n\n";
-  return `${aiGuidance}${PURE_INSPIRATION_PROMPTS[referenceReimagineState.interpretation].direction}${applicationGuidance}${substrateGuidance}${briefGuidance}`;
+  const interpretation = PURE_INSPIRATION_PROMPTS[referenceReimagineState.interpretation];
+  if (referenceReimagineState.interpretation === "ai-guided") {
+    const sourceReading = assessedDescription
+      ? `Source reading to adapt as painted content, not as rendering instruction:\n${assessedDescription}`
+      : "Source reading: preserve the source's main subject, foreground/background relationship, broad palette, and overall composition without copying its photographic treatment.";
+    return `${interpretation.outcome}\n\n${interpretation.rules}\n\n${sourceReading}${applicationGuidance}${substrateGuidance}${briefGuidance}`;
+  }
+  return `${sourceGuidance}\n\n${interpretation.direction}${applicationGuidance}${substrateGuidance}${briefGuidance}`;
 }
 
 function refreshReferenceRenderPrompt() {
@@ -15953,7 +15958,10 @@ async function assessReferenceAndWriteDescription() {
   const assessedCropVersion = referenceReimagineState.cropVersion;
   const describeButton = document.getElementById("referenceDescribeBtn");
   if (describeButton) describeButton.disabled = true;
-  setReferenceAssessmentStatus("Drafting art direction from your source...", true);
+  const isAiGuided = referenceReimagineState.interpretation === "ai-guided";
+  setReferenceAssessmentStatus(isAiGuided
+    ? "Reading foreground, subject, background, and composition..."
+    : "Drafting art direction from your source...", true);
 
   const assessment = (async () => {
     try {
@@ -15965,7 +15973,10 @@ async function assessReferenceAndWriteDescription() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         reference_image: source,
-        current_description: ""
+        current_description: "",
+        assessment_mode: referenceReimagineState.interpretation === "ai-guided"
+          ? "source-reading"
+          : "art-direction"
       })
     });
     const result = await response.json().catch(() => null);
@@ -15986,7 +15997,7 @@ async function assessReferenceAndWriteDescription() {
       : "Editable art direction is ready. Apply cleanup only for source artifacts you want excluded.";
     referenceReimagineState.assessedCropVersion = assessedCropVersion;
     if (referenceReimagineState.cropVersion === assessedCropVersion) {
-      setReferenceAssessmentStatus("Editable art direction ready.");
+      setReferenceAssessmentStatus(isAiGuided ? "Source reading ready." : "Editable art direction ready.");
       if (!muralGenerationInProgress) setMuralProgress("");
     }
     return true;
