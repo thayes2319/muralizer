@@ -2982,6 +2982,7 @@ margin-top: 15px;
 .reference-direction-mode label.is-selected { background: #216d87; color: #fff; }
 
 .reference-assessment-status { min-height: 16px; margin: 5px 0 0; color: #58636a; font-size: 11px; line-height: 1.35; }
+.reference-assessment-status.is-working { color: #216d87; font-weight: 700; }
 
 .reference-crop-editor {
   display: none;
@@ -3209,6 +3210,45 @@ margin-top: 15px;
 #generateMuralBtn:active {
   transform: scale(0.97);
   animation: none;
+}
+
+#generateMuralBtn:disabled {
+  background-color: #8ca19a !important;
+  border-color: #aebbb7;
+  box-shadow: none;
+  cursor: wait;
+  transform: none;
+  animation: none;
+}
+
+.mural-progress {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 18px;
+  margin: 5px auto 0;
+  color: #265266;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.35;
+  text-align: center;
+}
+
+.mural-progress[hidden] { display: none; }
+
+.mural-progress-mark {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: #218fc9;
+  animation: muralProgressPulse 1.15s ease-in-out infinite;
+}
+
+@keyframes muralProgressPulse {
+  0%, 100% { opacity: .35; transform: scale(.8); }
+  50% { opacity: 1; transform: scale(1.2); }
 }
 
 
@@ -9342,6 +9382,11 @@ If you’re exploring a new direction, try adjusting just 1-2 elements at a time
   <button id="generateMuralBtn" onclick="handleGenerate()">Muralize it</button>
 </div>
 
+<div id="muralProgress" class="mural-progress" role="status" aria-live="polite" hidden>
+  <span class="mural-progress-mark" aria-hidden="true"></span>
+  <span id="muralProgressText"></span>
+</div>
+
 
 
 <div id="creativeChangeControl" class="creative-change muralize-it-block">
@@ -10249,10 +10294,15 @@ function goToPricing() {
 // ============================================================
 // HANDLE GENERATE (WITH EDIT MODE DECISION LAYER)
 // ============================================================
-function handleGenerate() {
+async function handleGenerate() {
   if (!localStorage.getItem("seenFloatNote")) {
     const modal = document.getElementById("floatNoteModal");
     if (modal) modal.classList.add("visible");
+    return;
+  }
+
+  if (referenceNeedsAssessment()) {
+    setReferenceAssessmentStatus("Preparing your creative direction...", true);
     return;
   }
 
@@ -15360,6 +15410,46 @@ const referenceReimagineState = {
   blendWithMuralizer: false
 };
 
+let muralGenerationInProgress = false;
+
+function referenceNeedsAssessment() {
+  return Boolean(referenceReimagineState.dataUrl) && (
+    Boolean(referenceReimagineState.assessmentPromise) ||
+    referenceReimagineState.assessedCropVersion !== referenceReimagineState.cropVersion ||
+    !referenceReimagineState.assessedDescription
+  );
+}
+
+function setMuralProgress(message) {
+  const progress = document.getElementById("muralProgress");
+  const text = document.getElementById("muralProgressText");
+  if (!progress || !text) return;
+  text.textContent = message || "";
+  progress.hidden = !message;
+}
+
+function syncGenerateAvailability() {
+  const button = document.getElementById("generateMuralBtn");
+  if (!button) return;
+  const waitingForDirection = referenceNeedsAssessment();
+  button.disabled = muralGenerationInProgress || waitingForDirection;
+  button.textContent = muralGenerationInProgress
+    ? "Creating mural..."
+    : waitingForDirection
+      ? "Preparing inspiration..."
+      : "Muralize it";
+}
+
+function setReferenceAssessmentStatus(message, working = false) {
+  const status = document.getElementById("referenceAssessmentStatus");
+  if (status) {
+    status.textContent = message || "";
+    status.classList.toggle("is-working", working);
+  }
+  if (working) setMuralProgress("Preparing your creative direction");
+  syncGenerateAvailability();
+}
+
 function updateReferenceInfluence(value) {
   // Ceiling raised 65 -> 100 by request (2026-08-14), matching the backend
   // clamp in handleReferenceGenerateProxy -- see that comment for why.
@@ -15406,7 +15496,12 @@ function clearReferenceReimagine() {
   if (input) input.value = "";
   preview?.classList.remove("is-visible");
   editor?.classList.remove("is-visible");
-  if (assessmentStatus) assessmentStatus.textContent = "";
+  if (assessmentStatus) {
+    assessmentStatus.textContent = "";
+    assessmentStatus.classList.remove("is-working");
+  }
+  if (!muralGenerationInProgress) setMuralProgress("");
+  syncGenerateAvailability();
 }
 
 function buildReferenceGenerationDescription() {
@@ -15501,7 +15596,7 @@ async function assessReferenceAndWriteDescription() {
   const status = document.getElementById("referenceAssessmentStatus");
   const promptBox = document.getElementById("imagePrompt");
   const assessedCropVersion = referenceReimagineState.cropVersion;
-  if (status) status.textContent = "Analyzing inspiration...";
+  setReferenceAssessmentStatus("Building your creative direction...", true);
 
   const assessment = (async () => {
     try {
@@ -15532,14 +15627,18 @@ async function assessReferenceAndWriteDescription() {
       promptBox.dispatchEvent(new Event("input", { bubbles: true }));
     }
     referenceReimagineState.assessedCropVersion = assessedCropVersion;
-    if (status) status.textContent = "Inspiration analyzed.";
+    if (referenceReimagineState.cropVersion === assessedCropVersion) {
+      setReferenceAssessmentStatus("Creative direction ready.");
+      if (!muralGenerationInProgress) setMuralProgress("");
+    }
     return true;
     } catch (error) {
     console.error("Reference assessment error:", error);
-    if (status) status.textContent = error.message || "Assessment could not be completed.";
+    setReferenceAssessmentStatus(error.message || "Creative direction could not be prepared.");
     return false;
     } finally {
       referenceReimagineState.assessmentPromise = null;
+      syncGenerateAvailability();
     }
   })();
   referenceReimagineState.assessmentPromise = assessment;
@@ -15548,6 +15647,7 @@ async function assessReferenceAndWriteDescription() {
 
 function scheduleReferenceAssessment() {
   clearTimeout(referenceReimagineState.assessmentTimer);
+  setReferenceAssessmentStatus("Preparing your creative direction...", true);
   referenceReimagineState.assessmentTimer = setTimeout(() => {
     assessReferenceAndWriteDescription();
   }, 300);
@@ -15652,7 +15752,7 @@ async function handleReferenceReimagineFile(file) {
   // EXIF/ICC/HDR metadata, and re-renders it as one canonical JPEG within
   // safe size limits -- see libs/image-normalize.js.
   const status = document.getElementById("referenceAssessmentStatus");
-  if (status) status.textContent = "Preparing inspiration image...";
+  setReferenceAssessmentStatus("Preparing inspiration image...", true);
   let normalized;
   try {
     normalized = await normalizeImageFile(file, { maxDimension: 3200, quality: 0.92, maxOutputBytes: 8 * 1024 * 1024 });
@@ -15718,8 +15818,7 @@ async function handleReferenceReimagineFile(file) {
   if (thumb) thumb.src = dataUrl;
   if (name) name.textContent = file.name;
   preview?.classList.add("is-visible");
-  const assessmentStatus = document.getElementById("referenceAssessmentStatus");
-  if (assessmentStatus) assessmentStatus.textContent = "Preparing inspiration analysis...";
+  setReferenceAssessmentStatus("Preparing your creative direction...", true);
   const promptBox = document.getElementById("imagePrompt");
   if (promptBox) {
     promptBox.value = "";
@@ -17457,12 +17556,13 @@ async function generateImage() {
 
   const spinner = document.getElementById("spinner");
   const generateButton = document.getElementById("generateMuralBtn");
-  const generateButtonLabel = generateButton?.textContent || "Muralize it";
   const aspectRatio = document.getElementById("aspectRatioSelect").value;
   const hasReference = Boolean(referenceReimagineState.dataUrl);
 
+  muralGenerationInProgress = true;
+  setMuralProgress("Composing your mural");
+  syncGenerateAvailability();
   spinner?.classList.remove("hidden");
-  if (generateButton) generateButton.disabled = true;
 
   try {
     // Closes the race documented on referenceReimagineState.imageReadyPromise:
@@ -17555,7 +17655,7 @@ async function generateImage() {
       ? `${baseNegativePrompt}, ${referenceReimagineState.sourceContextToExclude}`
       : baseNegativePrompt;
 
-    if (generateButton) generateButton.textContent = "Generating...";
+    setMuralProgress("Bringing the artwork together");
     const response = await fetch(generateEndpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -17597,6 +17697,7 @@ async function generateImage() {
       throw new Error("Generate response did not include image data.");
     }
 
+    setMuralProgress("Finishing the artwork");
     currentSeed = seedForThisGeneration;
     const muralImage = document.getElementById("muralImage");
 
@@ -17671,10 +17772,9 @@ muralImage.src = `data:image/png;base64,${imgBase64}`;
     alert(err?.message || "Generation could not be completed. Please try again.");
   } finally {
     spinner?.classList.add("hidden");
-    if (generateButton) {
-      generateButton.disabled = false;
-      generateButton.textContent = generateButtonLabel;
-    }
+    muralGenerationInProgress = false;
+    if (!referenceNeedsAssessment()) setMuralProgress("");
+    syncGenerateAvailability();
   }
 }
 
