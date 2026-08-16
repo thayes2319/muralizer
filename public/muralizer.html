@@ -2982,6 +2982,91 @@ margin-top: 15px;
 .reference-direction-mode label.is-selected { background: #216d87; color: #fff; }
 
 .reference-assessment-status { min-height: 16px; margin: 5px 0 0; color: #58636a; font-size: 11px; line-height: 1.35; }
+
+.reference-interpretation-label,
+.reference-tools-title {
+  display: block;
+  margin: 12px 0 5px;
+  color: #444;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.reference-interpretation-control {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  overflow: hidden;
+  border: 1px solid rgba(33,143,201,.42);
+  border-radius: 6px;
+}
+
+.reference-people-control { grid-template-columns: repeat(2, 1fr); }
+
+.reference-interpretation-control label {
+  padding: 7px 6px;
+  color: #216d87;
+  background: #f4f8ff;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.reference-interpretation-control label + label { border-left: 1px solid rgba(33,143,201,.32); }
+.reference-interpretation-control input { position: absolute; opacity: 0; pointer-events: none; }
+.reference-interpretation-control label.is-selected { color: #fff; background: #216d87; }
+.reference-interpretation-settings.is-hidden { display: none; }
+
+.reference-interpretation-hint,
+.reference-tools-note {
+  margin: 6px 0 0;
+  color: #58636a;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.reference-tools {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(33,143,201,.22);
+}
+
+.reference-tools-actions { display: flex; flex-wrap: wrap; gap: 7px; }
+
+.reference-tools-actions button {
+  margin: 0;
+  padding: 6px 8px;
+  border: 1px solid rgba(33,143,201,.45);
+  border-radius: 5px;
+  background: #fff;
+  color: #216d87;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.reference-tools-actions button:disabled { cursor: wait; opacity: .65; }
+
+.reference-brief,
+.reference-cleanup-input {
+  box-sizing: border-box;
+  width: 100%;
+  margin-top: 8px;
+  border: 1px solid rgba(33,143,201,.35);
+  border-radius: 5px;
+  background: rgba(255,255,255,.88);
+  color: #2c2c2c;
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.reference-brief { min-height: 92px; padding: 8px; resize: vertical; }
+.reference-cleanup-input { padding: 7px 8px; }
+.reference-cleanup-toggle { display: flex; align-items: center; gap: 6px; margin-top: 8px; color: #444; font-size: 11px; font-weight: 700; }
+.reference-cleanup-toggle input { accent-color: #218FC9; }
+.reference-palette { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+.reference-palette .palette-chip { margin: 0; }
 .reference-assessment-status.is-working { color: #216d87; font-weight: 700; }
 
 .reference-crop-editor {
@@ -8630,12 +8715,40 @@ select[multiple].collapsible-multi.expanded option:first-child {
             </div>
             <p class="reference-crop-help">Drag the crop box to reposition it, or use its side handles to trim one edge at a time.</p>
           </div>
+          <div id="pureInspirationControls" class="reference-interpretation-settings">
+            <span class="reference-interpretation-label">Interpretation</span>
+            <div class="reference-interpretation-control" role="radiogroup" aria-label="Pure Inspiration interpretation">
+              <label onclick="updateReferenceInterpretation('subdued')"><input type="radio" name="referenceInterpretation" value="subdued" onchange="updateReferenceInterpretation(this.value)">Subdued</label>
+              <label class="is-selected" onclick="updateReferenceInterpretation('balanced')"><input type="radio" name="referenceInterpretation" value="balanced" checked onchange="updateReferenceInterpretation(this.value)">Balanced</label>
+              <label onclick="updateReferenceInterpretation('sleek')"><input type="radio" name="referenceInterpretation" value="sleek" onchange="updateReferenceInterpretation(this.value)">Sleek</label>
+            </div>
+            <p id="referenceInterpretationHint" class="reference-interpretation-hint">Keeps the source character while refining it into a clear, elegant mural.</p>
+            <span class="reference-interpretation-label">People</span>
+            <div class="reference-interpretation-control reference-people-control" role="radiogroup" aria-label="People in Pure Inspiration">
+              <label class="is-selected" onclick="updateReferencePeople('match-reference')"><input type="radio" name="referencePeople" value="match-reference" checked onchange="updateReferencePeople(this.value)">Match reference</label>
+              <label onclick="updateReferencePeople('exclude')"><input type="radio" name="referencePeople" value="exclude" onchange="updateReferencePeople(this.value)">Exclude people</label>
+            </div>
+            <p id="referencePeopleHint" class="reference-interpretation-hint">Preserves people only when they are visible and compositionally important in the source.</p>
+          </div>
           <label class="reference-influence-label" for="referenceInfluence">Source influence</label>
           <div class="reference-influence-row">
             <input id="referenceInfluence" type="range" min="30" max="100" value="45" step="1" oninput="updateReferenceInfluence(this.value)">
             <span id="referenceInfluenceValue" class="reference-influence-value">45%</span>
           </div>
           <p id="referenceInfluenceHint" class="reference-influence-hint">Balanced guidance: moderate adherence to the reference's composition/layout.</p>
+          <div class="reference-tools">
+            <span class="reference-tools-title">Image tools (optional)</span>
+            <div class="reference-tools-actions">
+              <button id="referenceDescribeBtn" type="button" onclick="describeReferenceForBrief()" title="Draft editable, subject-specific art direction from this source">Describe for brief</button>
+              <button id="referencePaletteBtn" type="button" onclick="extractReferencePalette()" title="Extract source colors as usable palette notes">Extract palette</button>
+            </div>
+            <div id="referencePalette" class="reference-palette" aria-label="Extracted source palette"></div>
+            <p id="referenceObservationNotes" class="reference-tools-note" aria-live="polite"></p>
+            <textarea id="referenceBrief" class="reference-brief" placeholder="Optional editable art direction from your reference" oninput="refreshReferenceRenderPrompt()"></textarea>
+            <label class="reference-cleanup-toggle"><input id="referenceUseBrief" type="checkbox" onchange="refreshReferenceRenderPrompt()">Use this edited brief for rendering</label>
+            <input id="referenceCleanupInput" class="reference-cleanup-input" type="text" placeholder="Optional cleanup: exclude glare, room context, source text...">
+            <label class="reference-cleanup-toggle"><input id="referenceUseCleanup" type="checkbox">Apply cleanup exclusions</label>
+          </div>
         </div>
       </div>
 
@@ -10301,11 +10414,6 @@ async function handleGenerate() {
     return;
   }
 
-  if (referenceNeedsAssessment()) {
-    setReferenceAssessmentStatus("Preparing your creative direction...", true);
-    return;
-  }
-
   if (!canGenerate()) {
     openOutOfCreditsModal();
     return;
@@ -10390,18 +10498,10 @@ document.addEventListener("DOMContentLoaded", () => {
 // ============================================================
 // EDIT MODE: SAFE IMAGE GENERATION WRAPPER
 // ============================================================
-// async + awaited so the restore below can never run before generateImage()
-// has actually read the box -- generateImage() awaits ensureReferenceAssessment()
-// before reading the prompt when a reference image is set, which used to
-// yield control back here first (an un-awaited call), letting `box.value =
-// old` fire and silently overwrite promptText (e.g. the user's chosen
-// edited description) before generateImage() ever saw it.
 async function generateImageWithPrompt(promptText) {
   const box = document.getElementById("imagePrompt");
   const old = box.value;
-  const referenceDescription = referenceReimagineState.dataUrl
-    ? buildReferenceGenerationDescription()
-    : "";
+  const referenceDescription = referenceReimagineState.dataUrl ? getReferenceRenderPrompt() : "";
   const resolvedPrompt = String(promptText || "").trim() || referenceDescription;
 
   box.value = resolvedPrompt;
@@ -13744,7 +13844,9 @@ function captureFullRecipeScene() {
       name: referenceReimagineState.name,
       crop: { ...referenceReimagineState.crop },
       useFullImage: referenceReimagineState.useFullImage,
-      blendWithMuralizer: referenceReimagineState.blendWithMuralizer
+      blendWithMuralizer: referenceReimagineState.blendWithMuralizer,
+      interpretation: referenceReimagineState.interpretation,
+      peopleMode: referenceReimagineState.peopleMode
     };
   }
   return scene;
@@ -13813,6 +13915,14 @@ function applyReferenceRecipe(ref, description) {
   referenceReimagineState.assessedCropVersion = 0;
   referenceReimagineState.muralizerDescription = description || "";
   referenceReimagineState.sourceContextToExclude = "";
+  const interpretation = ["subdued", "balanced", "sleek"].includes(ref.interpretation)
+    ? ref.interpretation
+    : description.includes("Keep the interpretation subdued")
+      ? "subdued"
+      : description.includes("refined, contemporary mural")
+        ? "sleek"
+        : "balanced";
+  const peopleMode = ref.peopleMode === "exclude" ? "exclude" : "match-reference";
 
   const sourceImage = new Image();
   referenceReimagineState.imageReadyPromise = new Promise((resolve) => {
@@ -13844,6 +13954,8 @@ function applyReferenceRecipe(ref, description) {
   );
   if (directionInput) directionInput.checked = true;
   updateReferenceDirectionMode(ref.blendWithMuralizer ? "blend" : "inspiration");
+  updateReferenceInterpretation(interpretation);
+  updateReferencePeople(peopleMode);
 
   applyReferenceMuralDescription();
 }
@@ -15457,18 +15569,12 @@ const referenceReimagineState = {
   assessedDescription: "",
   muralizerDescription: "",
   sourceContextToExclude: "",
+  interpretation: "balanced",
+  peopleMode: "match-reference",
   blendWithMuralizer: false
 };
 
 let muralGenerationInProgress = false;
-
-function referenceNeedsAssessment() {
-  return Boolean(referenceReimagineState.dataUrl) && (
-    Boolean(referenceReimagineState.assessmentPromise) ||
-    referenceReimagineState.assessedCropVersion !== referenceReimagineState.cropVersion ||
-    !referenceReimagineState.assessedDescription
-  );
-}
 
 function setMuralProgress(message) {
   const progress = document.getElementById("muralProgress");
@@ -15481,13 +15587,10 @@ function setMuralProgress(message) {
 function syncGenerateAvailability() {
   const button = document.getElementById("generateMuralBtn");
   if (!button) return;
-  const waitingForDirection = referenceNeedsAssessment();
-  button.disabled = muralGenerationInProgress || waitingForDirection;
+  button.disabled = muralGenerationInProgress;
   button.textContent = muralGenerationInProgress
-    ? "Creating mural..."
-    : waitingForDirection
-      ? "Preparing inspiration..."
-      : "Muralize it";
+    ? "Generating"
+    : "Muralize it";
 }
 
 function setReferenceAssessmentStatus(message, working = false) {
@@ -15498,6 +15601,69 @@ function setReferenceAssessmentStatus(message, working = false) {
   }
   if (working) setMuralProgress("Preparing your creative direction");
   syncGenerateAvailability();
+}
+
+const PURE_INSPIRATION_PROMPTS = {
+  subdued: {
+    hint: "Quieter forms, softer contrast, and restrained detail while staying close to the source.",
+    direction: "Keep the interpretation subdued: use soft tonal transitions, restrained contrast, simplified detail, and calm, matte painterly surfaces."
+  },
+  balanced: {
+    hint: "Keeps the source character while refining it into a clear, elegant mural.",
+    direction: "Present an elegant, hand-painted interpretation with clear composition, harmonious color, visible but controlled brushwork, and subtle non-photorealistic light."
+  },
+  sleek: {
+    hint: "A sharp, graphic, contemporary treatment with clean silhouettes and decisive visual structure.",
+    direction: "Present a sleek, contemporary hand-painted image with bold clean silhouettes, sharp deliberate edges and lines, simplified geometry, polished color fields, and controlled visible brushwork. Treat its gleams and reflections subtly rather than realistically, capturing the play of light and shadow across its curves and edges. Use a refined modern editorial design language with crisp focal forms and controlled contrast; avoid photographic rendering, weathering, visual clutter, and ornate detail."
+  }
+};
+
+function updateReferenceInterpretation(value) {
+  const interpretation = PURE_INSPIRATION_PROMPTS[value] ? value : "balanced";
+  referenceReimagineState.interpretation = interpretation;
+  document.querySelectorAll("input[name=\"referenceInterpretation\"]").forEach((input) => {
+    input.checked = input.value === interpretation;
+    input.closest("label")?.classList.toggle("is-selected", input.checked);
+  });
+  const hint = document.getElementById("referenceInterpretationHint");
+  if (hint) hint.textContent = PURE_INSPIRATION_PROMPTS[interpretation].hint;
+  refreshReferenceRenderPrompt();
+}
+
+function updateReferencePeople(value) {
+  const peopleMode = value === "exclude" ? "exclude" : "match-reference";
+  referenceReimagineState.peopleMode = peopleMode;
+  document.querySelectorAll("input[name=\"referencePeople\"]").forEach((input) => {
+    input.checked = input.value === peopleMode;
+    input.closest("label")?.classList.toggle("is-selected", input.checked);
+  });
+  const hint = document.getElementById("referencePeopleHint");
+  if (hint) {
+    hint.textContent = peopleMode === "exclude"
+      ? "Removes people, faces, and human figures even when they appear in the source."
+      : "Preserves people only when they are visible and compositionally important in the source.";
+  }
+  refreshReferenceRenderPrompt();
+}
+
+function getReferenceRenderPrompt() {
+  if (referenceReimagineState.blendWithMuralizer) {
+    return document.getElementById("imagePrompt")?.value.trim() || referenceReimagineState.muralizerDescription.trim();
+  }
+  const useBrief = document.getElementById("referenceUseBrief")?.checked;
+  const editableBrief = useBrief ? String(document.getElementById("referenceBrief")?.value || "").trim() : "";
+  const sourceGuidance = "Create an original, elegant, hand-painted image inspired by the supplied reference image. Preserve its central subject, compositional character, and palette without copying it literally.";
+  const peopleGuidance = referenceReimagineState.peopleMode === "match-reference"
+    ? " People must match the reference image: if no people are visible in the reference, the generated artwork must contain no people, faces, or human figures. If people are visible, retain only their presence and rough placement; never invent, add, or foreground additional people."
+    : "";
+  const briefGuidance = editableBrief ? ` Additional creative brief: ${editableBrief}` : "";
+  return `${sourceGuidance}\n\n${PURE_INSPIRATION_PROMPTS[referenceReimagineState.interpretation].direction}${peopleGuidance}${briefGuidance}`;
+}
+
+function refreshReferenceRenderPrompt() {
+  if (!referenceReimagineState.dataUrl || referenceReimagineState.blendWithMuralizer) return;
+  applyReferenceMuralDescription();
+  document.getElementById("imagePrompt")?.dispatchEvent(new Event("input", { bubbles: true }));
 }
 
 function updateReferenceInfluence(value) {
@@ -15539,13 +15705,27 @@ function clearReferenceReimagine() {
   referenceReimagineState.assessedDescription = "";
   referenceReimagineState.muralizerDescription = "";
   referenceReimagineState.sourceContextToExclude = "";
+  referenceReimagineState.peopleMode = "match-reference";
+  updateReferencePeople("match-reference");
   const input = document.getElementById("referenceReimagineInput");
   const preview = document.getElementById("referenceReimaginePreview");
   const editor = document.getElementById("referenceCropEditor");
   const assessmentStatus = document.getElementById("referenceAssessmentStatus");
+  const brief = document.getElementById("referenceBrief");
+  const useBrief = document.getElementById("referenceUseBrief");
+  const cleanup = document.getElementById("referenceCleanupInput");
+  const useCleanup = document.getElementById("referenceUseCleanup");
+  const palette = document.getElementById("referencePalette");
+  const observations = document.getElementById("referenceObservationNotes");
   if (input) input.value = "";
   preview?.classList.remove("is-visible");
   editor?.classList.remove("is-visible");
+  if (brief) brief.value = "";
+  if (useBrief) useBrief.checked = false;
+  if (cleanup) cleanup.value = "";
+  if (useCleanup) useCleanup.checked = false;
+  if (palette) palette.innerHTML = "";
+  if (observations) observations.textContent = "";
   if (assessmentStatus) {
     assessmentStatus.textContent = "";
     assessmentStatus.classList.remove("is-working");
@@ -15558,7 +15738,7 @@ function buildReferenceGenerationDescription() {
   if (referenceReimagineState.blendWithMuralizer && referenceReimagineState.muralizerDescription) {
     return referenceReimagineState.muralizerDescription;
   }
-  return referenceReimagineState.assessedDescription;
+  return getReferenceRenderPrompt();
 }
 
 function applyReferenceMuralDescription() {
@@ -15631,6 +15811,7 @@ function updateReferenceDirectionMode(mode) {
   // updateReferenceInfluence) -- refresh it so switching modes doesn't
   // leave stale wording from the mode you just left.
   updateReferenceInfluence(document.getElementById("referenceInfluence")?.value);
+  document.getElementById("pureInspirationControls")?.classList.toggle("is-hidden", referenceReimagineState.blendWithMuralizer);
   // Showing/hiding 11 selector groups in the same synchronous tick as the
   // pill highlight can make the click itself feel laggy on slower devices
   // -- the browser batches paint until the whole handler returns, so the
@@ -15644,9 +15825,10 @@ async function assessReferenceAndWriteDescription() {
   const source = buildReferenceCropDataUrl();
   if (!source) return;
   const status = document.getElementById("referenceAssessmentStatus");
-  const promptBox = document.getElementById("imagePrompt");
   const assessedCropVersion = referenceReimagineState.cropVersion;
-  setReferenceAssessmentStatus("Building your creative direction...", true);
+  const describeButton = document.getElementById("referenceDescribeBtn");
+  if (describeButton) describeButton.disabled = true;
+  setReferenceAssessmentStatus("Drafting art direction from your source...", true);
 
   const assessment = (async () => {
     try {
@@ -15666,28 +15848,30 @@ async function assessReferenceAndWriteDescription() {
       throw new Error(String(result?.error || `Assessment failed (${response.status})`));
     }
     referenceReimagineState.assessedDescription = result.mural_description;
-    // The assessment already identifies source-photo context (background
-    // furniture, architecture, setting) that shouldn't leak into the mural
-    // -- feed it back in as an extra negative-prompt constraint at
-    // generation time instead of discarding it, since the generic "no
-    // furniture" negative prompt doesn't know what's actually in THIS image.
     referenceReimagineState.sourceContextToExclude = String(result.assessment?.source_context_to_exclude || "").trim();
-    if (promptBox) {
-      applyReferenceMuralDescription();
-      promptBox.dispatchEvent(new Event("input", { bubbles: true }));
-    }
+    const brief = document.getElementById("referenceBrief");
+    const cleanup = document.getElementById("referenceCleanupInput");
+    const observations = document.getElementById("referenceObservationNotes");
+    const elements = result.assessment?.key_elements || result.assessment?.keyElements || result.assessment?.subjects || result.assessment?.subject;
+    const elementText = Array.isArray(elements) ? elements.join(", ") : String(elements || "").trim();
+    if (brief) brief.value = result.mural_description;
+    if (cleanup && referenceReimagineState.sourceContextToExclude) cleanup.value = referenceReimagineState.sourceContextToExclude;
+    if (observations) observations.textContent = elementText
+      ? `Key elements: ${elementText}`
+      : "Editable art direction is ready. Apply cleanup only for source artifacts you want excluded.";
     referenceReimagineState.assessedCropVersion = assessedCropVersion;
     if (referenceReimagineState.cropVersion === assessedCropVersion) {
-      setReferenceAssessmentStatus("Creative direction ready.");
+      setReferenceAssessmentStatus("Editable art direction ready.");
       if (!muralGenerationInProgress) setMuralProgress("");
     }
     return true;
     } catch (error) {
     console.error("Reference assessment error:", error);
-    setReferenceAssessmentStatus(error.message || "Creative direction could not be prepared.");
+    setReferenceAssessmentStatus(error.message || "Art direction could not be prepared.");
     return false;
     } finally {
       referenceReimagineState.assessmentPromise = null;
+      if (describeButton) describeButton.disabled = false;
       syncGenerateAvailability();
     }
   })();
@@ -15697,10 +15881,36 @@ async function assessReferenceAndWriteDescription() {
 
 function scheduleReferenceAssessment() {
   clearTimeout(referenceReimagineState.assessmentTimer);
-  setReferenceAssessmentStatus("Preparing your creative direction...", true);
-  referenceReimagineState.assessmentTimer = setTimeout(() => {
-    assessReferenceAndWriteDescription();
-  }, 300);
+  referenceReimagineState.assessmentTimer = null;
+  referenceReimagineState.assessedCropVersion = -1;
+  setReferenceAssessmentStatus("Inspiration ready.");
+}
+
+function describeReferenceForBrief() {
+  if (!referenceReimagineState.image) {
+    setReferenceAssessmentStatus("Choose an inspiration image first.");
+    return;
+  }
+  return assessReferenceAndWriteDescription();
+}
+
+async function extractReferencePalette() {
+  const source = buildReferenceCropDataUrl();
+  const palette = document.getElementById("referencePalette");
+  const observations = document.getElementById("referenceObservationNotes");
+  const button = document.getElementById("referencePaletteBtn");
+  if (!source || !palette) {
+    if (observations) observations.textContent = "Choose an inspiration image first.";
+    return;
+  }
+  if (button) button.disabled = true;
+  try {
+    const colors = await extractPaletteFromSrc(source, 5);
+    palette.innerHTML = colors.map(({ hex }) => `<button class="palette-chip" type="button" data-hex="${hex}" title="Copy ${hex}"><span class="palette-swatch" style="background:${hex}"></span><span class="palette-hex">${hex}</span></button>`).join("");
+    if (observations) observations.textContent = colors.length ? "Palette extracted. Select a color to copy its hex value." : "A palette could not be read from this source.";
+  } finally {
+    if (button) button.disabled = false;
+  }
 }
 
 async function ensureReferenceAssessment() {
@@ -15853,6 +16063,7 @@ async function handleReferenceReimagineFile(file) {
   referenceReimagineState.cropVersion = 0;
   referenceReimagineState.assessedCropVersion = -1;
   referenceReimagineState.assessedDescription = "";
+  updateReferencePeople("match-reference");
   // Snapshot whatever selection-driven description is currently in the
   // prompt box -- this is what "Blend with Muralizer" mode falls back to
   // using instead of the AI's read of the uploaded photo.
@@ -17649,21 +17860,14 @@ async function generateImage() {
         throw new Error("Inspiration image is still loading -- wait a moment and try again.");
       }
     }
-    if (hasReference && !(await ensureReferenceAssessment())) {
-      throw new Error("Inspiration analysis must finish before creating a reimagined mural.");
-    }
-    // Read straight from the box rather than recomputing from state -- the
-    // box is kept in sync with buildReferenceGenerationDescription() by
-    // applyReferenceMuralDescription() on every mode/assessment change, but
-    // the box remains user-editable, so whatever's actually displayed here
-    // is what actually gets sent, including manual edits.
     const promptBox = document.getElementById("imagePrompt");
-    let prompt = promptBox.value.trim();
+    let prompt = hasReference && !referenceReimagineState.blendWithMuralizer
+      ? getReferenceRenderPrompt()
+      : promptBox.value.trim();
     if (hasReference && !prompt) {
       prompt = buildReferenceGenerationDescription().trim();
-      if (!prompt) {
-        throw new Error("Inspiration analysis did not produce creative direction.");
-      }
+    }
+    if (hasReference && !referenceReimagineState.blendWithMuralizer) {
       promptBox.value = prompt;
       autoExpand(promptBox);
     }
@@ -17686,6 +17890,7 @@ async function generateImage() {
     // the whole thing (not just the name) is what lets a concept's saved
     // recipe be fully restored later, the same as a manually saved one.
     const rawScene = captureFullRecipeScene();
+    rawScene.description = prompt;
     const generationSnapshot = {
       scene: isPureInspiration ? stripPureInspirationSceneFields(rawScene) : rawScene,
       prompt,
@@ -17724,14 +17929,14 @@ async function generateImage() {
       "no depth-of-field, no bokeh, no HDR, no camera grain, " +
       "no realism, no photorealism, not a photograph, " +
       "no image splitting";
-    // Image-specific context the vision assessment flagged in THIS reference
-    // photo (e.g. incidental background furniture/architecture a peacock or
-    // other subject happened to be photographed against) -- the generic
-    // negative prompt above doesn't know what's actually in this particular
-    // image, so append it as an extra constraint when present.
-    const negativePrompt = (hasReference && referenceReimagineState.sourceContextToExclude)
-      ? `${baseNegativePrompt}, ${referenceReimagineState.sourceContextToExclude}`
-      : baseNegativePrompt;
+    const cleanup = document.getElementById("referenceCleanupInput")?.value.trim();
+    const useCleanup = document.getElementById("referenceUseCleanup")?.checked;
+    const peopleExclusions = hasReference && referenceReimagineState.peopleMode === "exclude"
+      ? "no people, no persons, no humans, no human figures, no human bodies, no human silhouettes, no faces, no heads, no portraits, no characters, no crowds"
+      : "";
+    const negativePrompt = [baseNegativePrompt, peopleExclusions, hasReference && useCleanup ? cleanup : ""]
+      .filter(Boolean)
+      .join(", ");
 
     setMuralProgress("Bringing the artwork together");
     const response = await fetch(generateEndpoint, {
@@ -17851,7 +18056,7 @@ muralImage.src = `data:image/png;base64,${imgBase64}`;
   } finally {
     spinner?.classList.add("hidden");
     muralGenerationInProgress = false;
-    if (!referenceNeedsAssessment()) setMuralProgress("");
+    setMuralProgress("");
     syncGenerateAvailability();
   }
 }
