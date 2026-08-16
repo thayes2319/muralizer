@@ -1008,47 +1008,79 @@ async function handleReferenceAssessment(req, res) {
     'Return an assessment with concise evidence and a 2-4 paragraph Mural Description. The description must remain editable by the user.',
     currentDescription ? `The user\'s current description is: ${currentDescription}` : 'There is no current user description.'
   ].join('\n');
+  const forbiddenMuralTerms = [
+    ['sleek', /\bsleek\b/i],
+    ['high-performance', /\bhigh-performance\b/i],
+    ['luxury or premium', /\b(luxury|premium)\b/i],
+    ['aerodynamic', /\baerodynamic\b/i],
+    ['aggressive stance', /\baggressive stance\b/i],
+    ['dynamic presence', /\bdynamic presence\b/i],
+    ['prominent subject', /\bprominen(t|tly)\b/i],
+    ['foreground subject', /\bforeground\b/i],
+    ['illusionistic depth', /\b(recede|recedes|receding|depth)\b/i],
+    ['polished finish', /\bpolished finish\b/i],
+    ['reflective or metallic surfaces', /\b(reflective|metallic) surfaces\b/i],
+    ['precision engineering', /\b(precision engineering|technical sophistication|technical shapes)\b/i]
+  ];
+  const findForbiddenMuralTerms = (description) => forbiddenMuralTerms
+    .filter(([, pattern]) => pattern.test(description))
+    .map(([label]) => label);
   const imageDataUrl = `data:${reference.mimeType};base64,${reference.buffer.toString('base64')}`;
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${openAiApiKey}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      model: openAiVisionModel,
-      temperature: 0.2,
-      response_format: { type: 'json_schema', json_schema: schema },
-      messages: [
-        { role: 'system', content: 'You are a precise mural-art direction assessor. Follow the requested JSON schema exactly.' },
-        {
-          role: 'user',
-          content: [
-            { type: 'text', text: instructions },
-            { type: 'image_url', image_url: { url: imageDataUrl, detail: 'high' } }
-          ]
-        }
-      ]
-    })
-  });
-
-  if (!response.ok) {
-    const details = await response.json().catch(() => null);
-    sendJson(res, response.status || 502, { ok: false, error: 'Reference assessment failed', details });
-    return;
-  }
-
-  const payload = await response.json();
-  const content = payload?.choices?.[0]?.message?.content;
   let result = null;
-  try {
-    result = JSON.parse(String(content || ''));
-  } catch {
-    sendJson(res, 502, { ok: false, error: 'Reference assessment returned an invalid result.' });
-    return;
+  let repairInstruction = '';
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openAiApiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: openAiVisionModel,
+        temperature: 0.2,
+        response_format: { type: 'json_schema', json_schema: schema },
+        messages: [
+          { role: 'system', content: 'You are a precise mural-art direction assessor. Follow the requested JSON schema exactly.' },
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text: `${instructions}${repairInstruction}` },
+              { type: 'image_url', image_url: { url: imageDataUrl, detail: 'high' } }
+            ]
+          }
+        ]
+      })
+    });
+
+    if (!response.ok) {
+      const details = await response.json().catch(() => null);
+      sendJson(res, response.status || 502, { ok: false, error: 'Reference assessment failed', details });
+      return;
+    }
+
+    const payload = await response.json();
+    let candidate = null;
+    try {
+      candidate = JSON.parse(String(payload?.choices?.[0]?.message?.content || ''));
+    } catch {
+      sendJson(res, 502, { ok: false, error: 'Reference assessment returned an invalid result.' });
+      return;
+    }
+    if (!candidate || typeof candidate.mural_description !== 'string' || !candidate.mural_description.trim()) {
+      sendJson(res, 502, { ok: false, error: 'Reference assessment did not produce a mural description.' });
+      return;
+    }
+
+    const violations = findForbiddenMuralTerms(candidate.mural_description);
+    if (!violations.length) {
+      result = candidate;
+      break;
+    }
+    repairInstruction = `\n\nREVISION REQUIRED: Your prior Mural Description used forbidden product-shot language: ${violations.join(', ')}. Rewrite the complete JSON response to remove those ideas, preserve only source-grounded composition, palette, and meaningful features, and express all material or engineering cues as painted marks. Do not mention this review or the prior draft.`;
   }
+
   if (!result || typeof result.mural_description !== 'string' || !result.mural_description.trim()) {
-    sendJson(res, 502, { ok: false, error: 'Reference assessment did not produce a mural description.' });
+    sendJson(res, 502, { ok: false, error: 'Reference assessment could not produce a mural description without product-render language.' });
     return;
   }
 
