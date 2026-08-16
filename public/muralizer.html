@@ -10563,7 +10563,7 @@ async function generateImageWithPrompt(promptText) {
   const resolvedPrompt = String(promptText || "").trim() || referenceDescription;
 
   box.value = resolvedPrompt;
-  await generateImage();
+  await generateImage(resolvedPrompt);
   box.value = old || referenceDescription;
   autoExpand(box);
 }
@@ -17953,7 +17953,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-async function generateImage() {
+async function generateImage(promptOverride = "") {
   const creativeChangeModeForThisGeneration = pendingCreativeChangeMode;
   const seedIncrementForThisGeneration = pendingCreativeSeedIncrement;
   const seedForThisGeneration = creativeChangeModeForThisGeneration === "fresh"
@@ -18002,9 +18002,12 @@ async function generateImage() {
       }
     }
     const promptBox = document.getElementById("imagePrompt");
-    let prompt = hasReference && !referenceReimagineState.blendWithMuralizer
-      ? getReferenceRenderPrompt()
-      : promptBox.value.trim();
+    let prompt = String(promptOverride || "").trim();
+    if (!prompt) {
+      prompt = hasReference && !referenceReimagineState.blendWithMuralizer
+        ? getReferenceRenderPrompt()
+        : promptBox.value.trim();
+    }
     if (hasReference && !prompt) {
       prompt = buildReferenceGenerationDescription().trim();
     }
