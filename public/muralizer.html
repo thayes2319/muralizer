@@ -15678,7 +15678,7 @@ function setReferenceAssessmentStatus(message, working = false) {
 const PURE_INSPIRATION_PROMPTS = {
   "ai-guided": {
     hint: "AI studies the source and writes painterly art direction before generating.",
-    outcome: "Create an original, hand-painted decorative image with visible, controlled brushwork, layered opaque color, simplified painted forms, and non-photorealistic light. Give the subject an intentional painted setting or background.",
+    outcome: "Create an original, hand-painted decorative image with visible, controlled brushwork, layered opaque color, simplified painted forms, and non-photorealistic light.",
     rules: "The image must read as a designed two-dimensional painting. Use broad brush marks, expressive color blocks, and selective hand-drawn linework. Treat any reflective, polished, metallic, technical, or precise qualities from the source only as loose painted suggestions."
   },
   subdued: {
@@ -15778,16 +15778,36 @@ function getReferenceRenderPrompt() {
   const briefGuidance = editableBrief ? ` Additional creative brief: ${editableBrief}` : "";
   const interpretation = PURE_INSPIRATION_PROMPTS[referenceReimagineState.interpretation];
   if (referenceReimagineState.interpretation === "ai-guided") {
-    const sourceReading = assessedDescription
-      ? assessedDescription
-      : "Foreground: none visible\nSubject: preserve the source's main subject\nBackground: preserve the source's broad background relationship\nComposition: preserve the source's overall composition";
+    const sourceReading = parseAiGuidedSourceReading(assessedDescription);
+    const hasSubjectAndBackground = isUsableAiGuidedSourceFact(sourceReading.subject)
+      && isUsableAiGuidedSourceFact(sourceReading.background);
+    const outcome = hasSubjectAndBackground
+      ? `${interpretation.outcome} Give the subject, ${sourceReading.subject}, an intentional painted setting or background of ${sourceReading.background}.`
+      : `${interpretation.outcome} Give the subject an intentional painted setting or background.`;
+    const supportingReading = [
+      `Foreground: ${sourceReading.foreground || "none visible"}`,
+      `Composition: ${sourceReading.composition || "preserve the source's overall composition"}`
+    ].join("\n\n");
     const finishingGuidance = [applicationGuidance, substrateGuidance, briefGuidance]
       .map((guidance) => guidance.trim())
       .filter(Boolean)
       .join("\n\n");
-    return `${interpretation.outcome}\n\n${interpretation.rules}\n\n${sourceReading}${finishingGuidance ? `\n\n${finishingGuidance}` : ""}`;
+    return `${outcome}\n\n${interpretation.rules}\n\n${supportingReading}${finishingGuidance ? `\n\n${finishingGuidance}` : ""}`;
   }
   return `${sourceGuidance}\n\n${interpretation.direction}${applicationGuidance}${substrateGuidance}${briefGuidance}`;
+}
+
+function parseAiGuidedSourceReading(description) {
+  const fields = { foreground: "", subject: "", background: "", composition: "" };
+  String(description || "").split(/\r?\n/).forEach((line) => {
+    const match = line.match(/^\s*(Foreground|Subject|Background|Composition):\s*(.+?)\s*$/i);
+    if (match) fields[match[1].toLowerCase()] = match[2].replace(/[.\s]+$/, "");
+  });
+  return fields;
+}
+
+function isUsableAiGuidedSourceFact(value) {
+  return Boolean(value) && !/^(none|none visible)$/i.test(value);
 }
 
 function refreshReferenceRenderPrompt() {
