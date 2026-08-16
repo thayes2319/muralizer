@@ -8765,7 +8765,7 @@ select[multiple].collapsible-multi.expanded option:first-child {
               <label onclick="updateReferenceInterpretation('sleek')"><input type="radio" name="referenceInterpretation" value="sleek" onchange="updateReferenceInterpretation(this.value)">Sleek</label>
               <label onclick="updateReferenceInterpretation('inkline')"><input type="radio" name="referenceInterpretation" value="inkline" onchange="updateReferenceInterpretation(this.value)">Inkline</label>
             </div>
-            <p id="referenceInterpretationHint" class="reference-interpretation-hint">Keeps the source character while refining it into a clear, elegant mural.</p>
+            <p id="referenceInterpretationHint" class="reference-interpretation-hint">Keeps the source character while refining it into a clear, hand-painted mural.</p>
             <span class="reference-interpretation-label">People</span>
             <div class="reference-interpretation-control reference-people-control" role="radiogroup" aria-label="People in Pure Inspiration">
               <label onclick="updateReferencePeople('match-reference')"><input type="radio" name="referencePeople" value="match-reference" onchange="updateReferencePeople(this.value)">Allow source people</label>
@@ -15658,8 +15658,8 @@ const PURE_INSPIRATION_PROMPTS = {
     direction: "Keep the interpretation subdued: use soft tonal transitions, restrained contrast, simplified detail, and calm, matte painterly surfaces."
   },
   balanced: {
-    hint: "Keeps the source character while refining it into a clear, elegant mural.",
-    direction: "Present an elegant, hand-painted interpretation with clear composition, harmonious color, visible but controlled brushwork, and subtle non-photorealistic light."
+    hint: "Keeps the source character while refining it into a clear, hand-painted mural.",
+    direction: "Present a hand-painted interpretation with clear composition, harmonious color, visible but controlled brushwork, and subtle non-photorealistic light."
   },
   sleek: {
     hint: "A sharp, graphic, contemporary treatment with clean silhouettes and decisive visual structure.",
@@ -15709,7 +15709,7 @@ function getReferenceRenderPrompt() {
   const applicationStyle = String(document.getElementById("applicationSelect")?.value || "").trim();
   const substrateTexture = String(document.getElementById("substrateTextureSelect")?.value || "").trim();
   const sourceGuidance = PURE_INSPIRATION_PROMPTS[referenceReimagineState.interpretation].sourceGuidance
-    || "Create an original, elegant, hand-painted image inspired by the supplied reference image. Preserve its central subject, compositional character, and palette without copying it literally.";
+    || "Create an original, hand-painted image inspired by the supplied reference image. Preserve its central subject, compositional character, and palette without copying it literally.";
   const applicationGuidance = applicationStyle && !/^(none|no texture|auto)$/i.test(applicationStyle)
     ? ` Use ${applicationStyle} as the application style.`
     : "";
