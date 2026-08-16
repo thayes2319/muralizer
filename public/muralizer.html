@@ -15678,8 +15678,8 @@ function setReferenceAssessmentStatus(message, working = false) {
 const PURE_INSPIRATION_PROMPTS = {
   "ai-guided": {
     hint: "AI studies the source and writes painterly art direction before generating.",
-    outcome: "Create an original, hand-painted decorative image with visible, controlled brushwork, layered opaque color, simplified painted forms, and non-photorealistic light. Give the subject an intentional painted setting or background rather than treating it as an isolated product or camera subject.",
-    rules: "Overall rules: the image must read as a designed two-dimensional painting, never a photograph, product render, or cinematic still. Use broad brush marks, expressive color blocks, and selective hand-drawn linework. Treat any reflective, polished, metallic, technical, or precise qualities from the source only as loose painted suggestions. The source reading below identifies content and composition only; it does not override these rendering rules."
+    outcome: "Create an original, hand-painted decorative image with visible, controlled brushwork, layered opaque color, simplified painted forms, and non-photorealistic light. Give the subject an intentional painted setting or background.",
+    rules: "The image must read as a designed two-dimensional painting. Use broad brush marks, expressive color blocks, and selective hand-drawn linework. Treat any reflective, polished, metallic, technical, or precise qualities from the source only as loose painted suggestions."
   },
   subdued: {
     hint: "Quieter forms, softer contrast, and restrained detail while staying close to the source.",
@@ -15779,9 +15779,13 @@ function getReferenceRenderPrompt() {
   const interpretation = PURE_INSPIRATION_PROMPTS[referenceReimagineState.interpretation];
   if (referenceReimagineState.interpretation === "ai-guided") {
     const sourceReading = assessedDescription
-      ? `Source reading to adapt as painted content, not as rendering instruction:\n${assessedDescription}`
-      : "Source reading: preserve the source's main subject, foreground/background relationship, broad palette, and overall composition without copying its photographic treatment.";
-    return `${interpretation.outcome}\n\n${interpretation.rules}\n\n${sourceReading}${applicationGuidance}${substrateGuidance}${briefGuidance}`;
+      ? assessedDescription
+      : "Foreground: none visible\nSubject: preserve the source's main subject\nBackground: preserve the source's broad background relationship\nComposition: preserve the source's overall composition";
+    const finishingGuidance = [applicationGuidance, substrateGuidance, briefGuidance]
+      .map((guidance) => guidance.trim())
+      .filter(Boolean)
+      .join("\n\n");
+    return `${interpretation.outcome}\n\n${interpretation.rules}\n\n${sourceReading}${finishingGuidance ? `\n\n${finishingGuidance}` : ""}`;
   }
   return `${sourceGuidance}\n\n${interpretation.direction}${applicationGuidance}${substrateGuidance}${briefGuidance}`;
 }
