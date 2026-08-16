@@ -3042,7 +3042,7 @@ margin-top: 15px;
 
 .reference-interpretation-control {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   overflow: hidden;
   border: 1px solid rgba(33,143,201,.42);
   border-radius: 6px;
@@ -3051,6 +3051,7 @@ margin-top: 15px;
 .reference-people-control { grid-template-columns: repeat(2, 1fr); }
 
 .reference-interpretation-control label {
+  min-width: 0;
   padding: 7px 6px;
   color: #216d87;
   background: #f4f8ff;
@@ -8766,6 +8767,7 @@ select[multiple].collapsible-multi.expanded option:first-child {
           <div id="pureInspirationControls" class="reference-interpretation-settings">
             <span class="reference-interpretation-label">Interpretation</span>
             <div class="reference-interpretation-control" role="radiogroup" aria-label="Pure Inspiration interpretation">
+              <label title="AI Guided: assess the source and write painterly art direction" onclick="updateReferenceInterpretation('ai-guided')"><input type="radio" name="referenceInterpretation" value="ai-guided" aria-label="AI Guided" onchange="updateReferenceInterpretation(this.value)">AI</label>
               <label onclick="updateReferenceInterpretation('subdued')"><input type="radio" name="referenceInterpretation" value="subdued" onchange="updateReferenceInterpretation(this.value)">Subdued</label>
               <label class="is-selected" onclick="updateReferenceInterpretation('balanced')"><input type="radio" name="referenceInterpretation" value="balanced" checked onchange="updateReferenceInterpretation(this.value)">Balanced</label>
               <label onclick="updateReferenceInterpretation('sleek')"><input type="radio" name="referenceInterpretation" value="sleek" onchange="updateReferenceInterpretation(this.value)">Sleek</label>
@@ -13896,6 +13898,7 @@ function captureFullRecipeScene() {
       useFullImage: referenceReimagineState.useFullImage,
       blendWithMuralizer: referenceReimagineState.blendWithMuralizer,
       interpretation: referenceReimagineState.interpretation,
+      assessedDescription: referenceReimagineState.assessedDescription,
       peopleMode: referenceReimagineState.peopleMode
     };
   }
@@ -13961,11 +13964,11 @@ function applyReferenceRecipe(ref, description) {
     : { left: 0, top: 0, width: 1, height: 1 };
   referenceReimagineState.useFullImage = ref.useFullImage !== false;
   referenceReimagineState.cropVersion = 0;
-  referenceReimagineState.assessedDescription = description || "";
+  referenceReimagineState.assessedDescription = ref.assessedDescription || description || "";
   referenceReimagineState.assessedCropVersion = 0;
   referenceReimagineState.muralizerDescription = description || "";
   referenceReimagineState.sourceContextToExclude = "";
-  const interpretation = ["subdued", "balanced", "sleek", "inkline"].includes(ref.interpretation)
+  const interpretation = ["ai-guided", "subdued", "balanced", "sleek", "inkline"].includes(ref.interpretation)
     ? ref.interpretation
     : description.includes("Keep the interpretation subdued")
       ? "subdued"
@@ -15659,6 +15662,10 @@ function setReferenceAssessmentStatus(message, working = false) {
 }
 
 const PURE_INSPIRATION_PROMPTS = {
+  "ai-guided": {
+    hint: "AI studies the source and writes painterly art direction before generating.",
+    direction: "Render the assessed direction as an original, hand-painted mural with visible, controlled brushwork and non-photorealistic light."
+  },
   subdued: {
     hint: "Quieter forms, softer contrast, and restrained detail while staying close to the source.",
     direction: "Keep the interpretation subdued: use soft tonal transitions, restrained contrast, simplified detail, and calm, matte painterly surfaces."
@@ -15678,7 +15685,7 @@ const PURE_INSPIRATION_PROMPTS = {
   }
 };
 
-function updateReferenceInterpretation(value) {
+async function updateReferenceInterpretation(value) {
   const interpretation = PURE_INSPIRATION_PROMPTS[value] ? value : "balanced";
   referenceReimagineState.interpretation = interpretation;
   document.querySelectorAll("input[name=\"referenceInterpretation\"]").forEach((input) => {
@@ -15687,6 +15694,10 @@ function updateReferenceInterpretation(value) {
   });
   const hint = document.getElementById("referenceInterpretationHint");
   if (hint) hint.textContent = PURE_INSPIRATION_PROMPTS[interpretation].hint;
+  if (interpretation === "ai-guided" && referenceReimagineState.dataUrl) {
+    const assessed = await ensureReferenceAssessment();
+    if (!assessed) return;
+  }
   refreshReferenceRenderPrompt();
 }
 
@@ -15714,6 +15725,7 @@ function getReferenceRenderPrompt() {
   const editableBrief = useBrief ? String(document.getElementById("referenceBrief")?.value || "").trim() : "";
   const applicationStyle = String(document.getElementById("applicationSelect")?.value || "").trim();
   const substrateTexture = String(document.getElementById("substrateTextureSelect")?.value || "").trim();
+  const assessedDescription = String(referenceReimagineState.assessedDescription || "").trim();
   const sourceGuidance = PURE_INSPIRATION_PROMPTS[referenceReimagineState.interpretation].sourceGuidance
     || "Create an original, hand-painted image inspired by the supplied reference image. Preserve its central subject, compositional character, and palette without copying it literally.";
   const applicationGuidance = applicationStyle && !/^(none|no texture|auto)$/i.test(applicationStyle)
@@ -15723,7 +15735,10 @@ function getReferenceRenderPrompt() {
     ? ` Let the texture of ${substrateTexture} subtly inform the painted surface without implying a physical wall or room.`
     : "";
   const briefGuidance = editableBrief ? ` Additional creative brief: ${editableBrief}` : "";
-  return `${sourceGuidance}\n\n${PURE_INSPIRATION_PROMPTS[referenceReimagineState.interpretation].direction}${applicationGuidance}${substrateGuidance}${briefGuidance}`;
+  const aiGuidance = referenceReimagineState.interpretation === "ai-guided" && assessedDescription
+    ? `Use this AI-assessed art direction as the primary guide:\n${assessedDescription}\n\n`
+    : sourceGuidance + "\n\n";
+  return `${aiGuidance}${PURE_INSPIRATION_PROMPTS[referenceReimagineState.interpretation].direction}${applicationGuidance}${substrateGuidance}${briefGuidance}`;
 }
 
 function refreshReferenceRenderPrompt() {
@@ -17923,6 +17938,12 @@ async function generateImage() {
       }
       if (!referenceReimagineState.image) {
         throw new Error("Inspiration image is still loading -- wait a moment and try again.");
+      }
+      if (!referenceReimagineState.blendWithMuralizer && referenceReimagineState.interpretation === "ai-guided") {
+        const assessed = await ensureReferenceAssessment();
+        if (!assessed || !String(referenceReimagineState.assessedDescription || "").trim()) {
+          throw new Error("AI art direction could not be prepared. Choose another interpretation or try again.");
+        }
       }
     }
     const promptBox = document.getElementById("imagePrompt");
