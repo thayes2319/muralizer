@@ -1661,6 +1661,12 @@ margin-top: 15px;
   justify-content: center;
 }
 
+.cpc-compare-thumb-empty.is-loading {
+  border-style: solid;
+  background: rgba(232,247,252,0.82);
+  color: #176f9c;
+}
+
 .mural-wrapper .cpc-compare-tray {
   display: none;
   min-height: 240px;
@@ -22798,7 +22804,7 @@ document.addEventListener("DOMContentLoaded", () => {
     updateCompareNavigator(renderSelections);
 
     if (compareLoadingStatusEl) {
-      compareLoadingStatusEl.textContent = cpcBackendImageHydrationInProgress ? "Loading concepts..." : "";
+      compareLoadingStatusEl.textContent = cpcBackendImageHydrationInProgress ? "Loading saved concepts..." : "";
       compareLoadingStatusEl.classList.toggle("is-loading", cpcBackendImageHydrationInProgress);
     }
 
@@ -22839,6 +22845,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const slotHtml = slotEntries.map((entry) => {
       if (!entry) return '<div class="cpc-compare-slot empty">Select Concept</div>';
+      const isLoadingImage = !entry.thumbSrc && cpcBackendImageHydrationInProgress;
+      const emptyThumb = isLoadingImage
+        ? '<div class="cpc-compare-thumb-empty is-loading" role="status">Loading saved concept...</div>'
+        : '<div class="cpc-compare-thumb-empty">No saved image</div>';
       return `
         <div class="cpc-compare-slot">
           <div class="cpc-compare-card" role="button" tabindex="0" data-compare-activate-index="${entry.ctxIndex}" data-compare-activate-concept="${escapeHtml(entry.conceptName)}" aria-label="Activate ${escapeHtml(entry.label)}">
@@ -22851,7 +22861,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 <span class="cpc-compare-remove" role="button" data-compare-remove-id="${escapeHtml(entry.itemId)}" aria-label="Remove ${escapeHtml(entry.label)}">×</span>
               </span>
             </div>
-            ${entry.thumbSrc ? `<div class="cpc-compare-thumb-viewport"><img class="cpc-compare-thumb" src="${entry.thumbSrc}" alt="${escapeHtml(entry.label)} preview" draggable="false"><div class="cpc-compare-zoom-controls"><button class="cpc-compare-zoom-btn" type="button" data-zoom-action="out" aria-label="Zoom out">-</button><button class="cpc-compare-zoom-btn" type="button" data-zoom-action="reset" aria-label="Reset zoom to 1:1">1:1</button><button class="cpc-compare-zoom-btn" type="button" data-zoom-action="fit-width" aria-label="Auto fit to remove whitespace">↔</button><button class="cpc-compare-zoom-btn" type="button" data-zoom-action="in" aria-label="Zoom in">+</button></div></div>` : `<div class="cpc-compare-thumb-empty">No image</div>`}
+            ${entry.thumbSrc ? `<div class="cpc-compare-thumb-viewport"><img class="cpc-compare-thumb" src="${entry.thumbSrc}" alt="${escapeHtml(entry.label)} preview" draggable="false"><div class="cpc-compare-zoom-controls"><button class="cpc-compare-zoom-btn" type="button" data-zoom-action="out" aria-label="Zoom out">-</button><button class="cpc-compare-zoom-btn" type="button" data-zoom-action="reset" aria-label="Reset zoom to 1:1">1:1</button><button class="cpc-compare-zoom-btn" type="button" data-zoom-action="fit-width" aria-label="Auto fit to remove whitespace">↔</button><button class="cpc-compare-zoom-btn" type="button" data-zoom-action="in" aria-label="Zoom in">+</button></div></div>` : emptyThumb}
           </div>
         </div>
       `;
@@ -23194,10 +23204,10 @@ document.addEventListener("DOMContentLoaded", () => {
   window.addEventListener("cpc-concept-images-hydration", (event) => {
     if (compareLoadingStatusEl) {
       const loading = !!event.detail?.loading;
-      compareLoadingStatusEl.textContent = loading ? "Loading concepts..." : "";
+      compareLoadingStatusEl.textContent = loading ? "Loading saved concepts..." : "";
       compareLoadingStatusEl.classList.toggle("is-loading", loading);
     }
-    if (!event.detail?.loading) renderCompareTray();
+    renderCompareTray();
   });
 
   function renderOpenProjectChips(activeIndex) {
