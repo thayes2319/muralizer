@@ -15702,6 +15702,7 @@ const PURE_INSPIRATION_PROMPTS = {
 };
 
 function showAiAssessmentPrompt(message, shouldScroll = false) {
+  if (!proUnlocked) return;
   const panel = document.querySelector(".mzr-panel.mural-description");
   const promptBox = document.getElementById("imagePrompt");
   if (!panel || !promptBox) return;
