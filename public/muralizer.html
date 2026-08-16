@@ -15645,10 +15645,18 @@ function setMuralProgress(message) {
 function syncGenerateAvailability() {
   const button = document.getElementById("generateMuralBtn");
   if (!button) return;
-  button.disabled = muralGenerationInProgress;
+  const aiAssessmentNeeded = Boolean(
+    referenceReimagineState.dataUrl &&
+    !referenceReimagineState.blendWithMuralizer &&
+    referenceReimagineState.interpretation === "ai-guided" &&
+    !String(referenceReimagineState.assessedDescription || "").trim()
+  );
+  button.disabled = muralGenerationInProgress || aiAssessmentNeeded;
   button.textContent = muralGenerationInProgress
     ? "Generating"
-    : "Muralize it";
+    : aiAssessmentNeeded
+      ? "Assessing inspiration"
+      : "Muralize it";
 }
 
 function setReferenceAssessmentStatus(message, working = false) {
@@ -15685,6 +15693,18 @@ const PURE_INSPIRATION_PROMPTS = {
   }
 };
 
+function showAiAssessmentPrompt(message, shouldScroll = false) {
+  const panel = document.querySelector(".mzr-panel.mural-description");
+  const promptBox = document.getElementById("imagePrompt");
+  if (!panel || !promptBox) return;
+  panel.style.display = "block";
+  panel.classList.remove("collapsed");
+  panel.classList.add("expanded");
+  promptBox.value = message;
+  autoExpand(promptBox);
+  if (shouldScroll) panel.scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
 async function updateReferenceInterpretation(value) {
   const interpretation = PURE_INSPIRATION_PROMPTS[value] ? value : "balanced";
   referenceReimagineState.interpretation = interpretation;
@@ -15694,9 +15714,23 @@ async function updateReferenceInterpretation(value) {
   });
   const hint = document.getElementById("referenceInterpretationHint");
   if (hint) hint.textContent = PURE_INSPIRATION_PROMPTS[interpretation].hint;
+  syncGenerateAvailability();
+  if (interpretation !== "ai-guided") setReferenceAssessmentStatus("");
   if (interpretation === "ai-guided" && referenceReimagineState.dataUrl) {
+    const hasAssessment = Boolean(String(referenceReimagineState.assessedDescription || "").trim());
+    if (!hasAssessment) {
+      showAiAssessmentPrompt("AI is assessing your inspiration image. Painterly art direction will appear here automatically.");
+      setReferenceAssessmentStatus("AI is studying your inspiration image and updating Mural Description...", true);
+    }
     const assessed = await ensureReferenceAssessment();
-    if (!assessed) return;
+    if (!assessed) {
+      showAiAssessmentPrompt("AI assessment did not complete. Select another interpretation or tap AI to try again.");
+      return;
+    }
+    setReferenceAssessmentStatus("AI painterly art direction is ready in Mural Description.");
+    refreshReferenceRenderPrompt();
+    showAiAssessmentPrompt(document.getElementById("imagePrompt")?.value || "", true);
+    return;
   }
   refreshReferenceRenderPrompt();
 }
