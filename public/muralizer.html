@@ -3061,6 +3061,11 @@ margin-top: 15px;
   text-align: center;
 }
 
+.reference-interpretation-control .reference-ai-guided-label {
+  font-size: 10px;
+  white-space: nowrap;
+}
+
 .reference-interpretation-control label + label { border-left: 1px solid rgba(33,143,201,.32); }
 .reference-interpretation-control input { position: absolute; opacity: 0; pointer-events: none; }
 .reference-interpretation-control label.is-selected { color: #fff; background: #216d87; }
@@ -8767,7 +8772,7 @@ select[multiple].collapsible-multi.expanded option:first-child {
           <div id="pureInspirationControls" class="reference-interpretation-settings">
             <span class="reference-interpretation-label">Interpretation</span>
             <div class="reference-interpretation-control" role="radiogroup" aria-label="Pure Inspiration interpretation">
-              <label title="AI Guided: assess the source and write painterly art direction" onclick="updateReferenceInterpretation('ai-guided')"><input type="radio" name="referenceInterpretation" value="ai-guided" aria-label="AI Guided" onchange="updateReferenceInterpretation(this.value)">AI</label>
+              <label class="reference-ai-guided-label" title="AI-driven: assess the source and write painterly art direction" onclick="updateReferenceInterpretation('ai-guided')"><input type="radio" name="referenceInterpretation" value="ai-guided" aria-label="AI-driven" onchange="updateReferenceInterpretation(this.value)">AI-driven</label>
               <label onclick="updateReferenceInterpretation('subdued')"><input type="radio" name="referenceInterpretation" value="subdued" onchange="updateReferenceInterpretation(this.value)">Subdued</label>
               <label class="is-selected" onclick="updateReferenceInterpretation('balanced')"><input type="radio" name="referenceInterpretation" value="balanced" checked onchange="updateReferenceInterpretation(this.value)">Balanced</label>
               <label onclick="updateReferenceInterpretation('sleek')"><input type="radio" name="referenceInterpretation" value="sleek" onchange="updateReferenceInterpretation(this.value)">Sleek</label>
