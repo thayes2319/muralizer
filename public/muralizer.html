@@ -15801,6 +15801,7 @@ async function updateReferenceInterpretation(value) {
   const hint = document.getElementById("referenceInterpretationHint");
   if (hint) hint.textContent = PURE_INSPIRATION_PROMPTS[interpretation].hint;
   syncGraphicInkTreatmentVisibility();
+  if (interpretation === "inkline") applyGraphicPureInspirationDefaults();
   syncGenerateAvailability();
   if (interpretation !== "ai-guided") setReferenceAssessmentStatus("");
   if (interpretation === "ai-guided" && referenceReimagineState.dataUrl) {
@@ -15826,6 +15827,20 @@ function syncGraphicInkTreatmentVisibility() {
   const control = document.getElementById("graphicInkTreatment");
   if (!control) return;
   control.hidden = referenceReimagineState.blendWithMuralizer || referenceReimagineState.interpretation !== "inkline";
+}
+
+function applyGraphicPureInspirationDefaults() {
+  updateGraphicInkTreatment("color");
+  const category = document.getElementById("categorySelect");
+  const subScene = document.getElementById("subSceneSelect");
+  const application = document.getElementById("applicationSelect");
+  if (!category || !subScene || !application) return;
+
+  category.value = "Scenic";
+  buildSubSceneSelect("Scenic");
+  ensurePureInspirationAutoOption(subScene);
+  subScene.value = "City Panoramic";
+  application.value = "Neo‑Manga Inkline";
 }
 
 function updateGraphicInkTreatment(value) {
