@@ -8807,7 +8807,7 @@ select[multiple].collapsible-multi.expanded option:first-child {
               <label onclick="updateReferenceInterpretation('subdued')"><input type="radio" name="referenceInterpretation" value="subdued" onchange="updateReferenceInterpretation(this.value)">Subdued</label>
               <label class="is-selected" onclick="updateReferenceInterpretation('balanced')"><input type="radio" name="referenceInterpretation" value="balanced" checked onchange="updateReferenceInterpretation(this.value)">Balanced</label>
               <label onclick="updateReferenceInterpretation('sleek')"><input type="radio" name="referenceInterpretation" value="sleek" onchange="updateReferenceInterpretation(this.value)">Sleek</label>
-              <label onclick="updateReferenceInterpretation('inkline')"><input type="radio" name="referenceInterpretation" value="inkline" onchange="updateReferenceInterpretation(this.value)">Inkline</label>
+              <label onclick="updateReferenceInterpretation('inkline')"><input type="radio" name="referenceInterpretation" value="inkline" onchange="updateReferenceInterpretation(this.value)">Graphic</label>
             </div>
             <p id="referenceInterpretationHint" class="reference-interpretation-hint">Keeps the source character while refining it into a clear, hand-painted mural.</p>
             <span class="reference-interpretation-label">People</span>
@@ -15730,7 +15730,7 @@ const PURE_INSPIRATION_PROMPTS = {
     direction: "Present a sleek, contemporary image with bold clean silhouettes, sharp deliberate edges and lines, simplified geometry, polished color fields, and controlled visual texture. Treat its gleams and reflections subtly rather than realistically, capturing the play of light and shadow across its curves and edges. Use a refined modern editorial design language with crisp focal forms and controlled contrast; avoid photographic rendering, weathering, visual clutter, and ornate detail."
   },
   inkline: {
-    hint: "Bright, bold inkline treatment with sharp edges, graphic silhouettes, and dramatized reflections.",
+    hint: "Clean contours, controlled color planes, stylized highlights, and a polished editorial finish.",
     sourceGuidance: "Create an original, inked image inspired by the supplied reference image. Preserve its central subject, overall compositional character, and palette.",
     direction: "Create an edgy, sleekly modern, contemporary image with bright and bold clean silhouettes, sharp deliberate edges and lines, simplified geometry, polished color fields, and controlled visual texture. Treat its shines, gleams, and reflections graphically and stylistically - emphasizing and dramatizing them greatly."
   }
