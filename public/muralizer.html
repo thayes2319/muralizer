@@ -3109,6 +3109,38 @@ margin-top: 15px;
 
 .graphic-ink-swatch.monochrome { background: linear-gradient(90deg, #161616 0 50%, #fff 50% 100%); }
 
+.contrast-calibrator {
+  margin-top: 10px;
+  padding: 8px;
+  border-left: 3px solid #216d87;
+  background: rgba(228,243,249,.7);
+}
+
+.contrast-calibrator[hidden] { display: none; }
+
+.contrast-calibrator-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.contrast-calibrator-title { color: #216d87; font-size: 11px; font-weight: 700; }
+
+.contrast-calibrator-action {
+  padding: 4px 7px;
+  border: 1px solid rgba(33,109,135,.5);
+  border-radius: 4px;
+  background: #fff;
+  color: #216d87;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.contrast-calibrator-action:disabled { cursor: wait; opacity: .65; }
+.contrast-calibrator-readout { margin: 5px 0 0; color: #34434b; font-size: 11px; line-height: 1.35; }
+
 .reference-interpretation-hint,
 .reference-tools-note {
   margin: 6px 0 0;
@@ -8864,6 +8896,13 @@ select[multiple].collapsible-multi.expanded option:first-child {
             <span id="referenceInfluenceValue" class="reference-influence-value">45%</span>
           </div>
           <p id="referenceInfluenceHint" class="reference-influence-hint">Balanced guidance: moderate adherence to the reference's composition/layout.</p>
+          <div id="contrastCalibrator" class="contrast-calibrator" hidden>
+            <div class="contrast-calibrator-header">
+              <span class="contrast-calibrator-title">Contrast read</span>
+              <button id="contrastCalibratorRead" class="contrast-calibrator-action" type="button" onclick="runContrastCalibration()">Read</button>
+            </div>
+            <p id="contrastCalibratorReadout" class="contrast-calibrator-readout" aria-live="polite">Read the source and selected setting for a starting Source Influence.</p>
+          </div>
           <div class="reference-tools">
             <span class="reference-tools-title">Image tools (optional)</span>
             <div class="reference-tools-actions">
@@ -15711,6 +15750,7 @@ const referenceReimagineState = {
   sourceContextToExclude: "",
   interpretation: "balanced",
   graphicInkTreatment: "color",
+  contrastCalibrationKey: "",
   peopleMode: "exclude",
   blendWithMuralizer: false,
   pureInspirationSelectionSnapshot: null
@@ -16001,7 +16041,104 @@ function getPureInspirationSelectedBackground(category, subScene) {
   return category ? `${categorySetting} painted forms` : "";
 }
 
+function getContrastCalibrationKey() {
+  const category = document.getElementById("categorySelect")?.value || "";
+  const subScene = document.getElementById("subSceneSelect")?.value || "";
+  return `${referenceReimagineState.cropVersion}|${category}|${subScene}`;
+}
+
+function syncContrastCalibrator() {
+  const calibrator = document.getElementById("contrastCalibrator");
+  if (!calibrator) return;
+  const hasSetting = Boolean(getPureInspirationSelectedBackground(
+    document.getElementById("categorySelect")?.value,
+    document.getElementById("subSceneSelect")?.value
+  ));
+  const available = Boolean(referenceReimagineState.dataUrl) && !referenceReimagineState.blendWithMuralizer && hasSetting;
+  calibrator.hidden = !available;
+  if (!available) return;
+
+  const key = getContrastCalibrationKey();
+  if (referenceReimagineState.contrastCalibrationKey !== key) {
+    referenceReimagineState.contrastCalibrationKey = "";
+    const readout = document.getElementById("contrastCalibratorReadout");
+    if (readout) readout.textContent = "Read the source and selected setting for a starting Source Influence.";
+  }
+}
+
+function classifyContrastProfile(value, source) {
+  const text = String(value || "").toLowerCase();
+  if (/city|urban|street|rooftop|neon|architecture|building|skyline/.test(text)) return "urban";
+  if (/meadow|mountain|sea|coast|beach|river|lake|farmland|forest|tree|garden|animal|bird|flower|botanical/.test(text)) return "natural";
+  if (source && /car|convertible|vehicle|truck|motorcycle|train|aircraft|boat|bicycle/.test(text)) return "transport";
+  if (/car|convertible|vehicle|truck|motorcycle|train|aircraft|boat|bicycle/.test(text)) return "transport";
+  if (/person|people|portrait|figure|face|human/.test(text)) return "human";
+  return "other";
+}
+
+function calculateContrastCalibration(subject, setting) {
+  const sourceProfile = classifyContrastProfile(subject, true);
+  const settingProfile = classifyContrastProfile(setting, false);
+  const subjectLabel = String(subject || "the source subject").trim();
+  if (sourceProfile === "other" || settingProfile === "other") {
+    return { label: "Open relationship", influence: 55, reason: `The relationship between ${subjectLabel} and this setting is open; 55% keeps both in play.` };
+  }
+  if ((sourceProfile === "urban" && settingProfile === "urban") || (sourceProfile === "natural" && settingProfile === "natural") || (sourceProfile === "transport" && settingProfile === "urban")) {
+    return { label: "Natural agreement", influence: 65, reason: `${subjectLabel} and this setting naturally agree; 65% preserves more source character.` };
+  }
+  if ((sourceProfile === "transport" && settingProfile === "natural") || (sourceProfile === "natural" && settingProfile === "urban") || (sourceProfile === "urban" && settingProfile === "natural")) {
+    return { label: "Strong contrast", influence: 40, reason: `${subjectLabel} and this setting strongly contrast; 40% gives the setting room to remain distinct.` };
+  }
+  return { label: "Moderate contrast", influence: 50, reason: `${subjectLabel} and this setting have some contrast; 50% balances their authority.` };
+}
+
+function escapeContrastText(value) {
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+async function runContrastCalibration() {
+  const source = buildReferenceCropDataUrl();
+  const setting = getPureInspirationSelectedBackground(
+    document.getElementById("categorySelect")?.value,
+    document.getElementById("subSceneSelect")?.value
+  );
+  const readout = document.getElementById("contrastCalibratorReadout");
+  const button = document.getElementById("contrastCalibratorRead");
+  if (!source || !setting || !readout || !button) return;
+
+  button.disabled = true;
+  readout.textContent = "Reading source and setting...";
+  try {
+    const endpoint = window.SceniqueBackend?.toUrl
+      ? window.SceniqueBackend.toUrl("/api/assess-reference")
+      : "/api/assess-reference";
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ reference_image: source, current_description: "", assessment_mode: "source-reading" })
+    });
+    const result = await response.json().catch(() => null);
+    if (!response.ok || !result?.mural_description) throw new Error(String(result?.error || "Source read unavailable."));
+
+    const sourceReading = parseAiGuidedSourceReading(result.mural_description);
+    const subject = sourceReading.subject || result.assessment?.subject || result.assessment?.key_elements?.[0] || "the source subject";
+    const calibration = calculateContrastCalibration(subject, setting);
+    referenceReimagineState.contrastCalibrationKey = getContrastCalibrationKey();
+    readout.innerHTML = `<b>${escapeContrastText(calibration.label)} - ${calibration.influence}%</b><br>${escapeContrastText(calibration.reason)} <button class="contrast-calibrator-action" type="button" onclick="updateReferenceInfluence(${calibration.influence})">Use ${calibration.influence}%</button>`;
+  } catch (error) {
+    readout.textContent = error.message || "Contrast read unavailable.";
+  } finally {
+    button.disabled = false;
+  }
+}
+
 function refreshReferenceRenderPrompt() {
+  syncContrastCalibrator();
   if (!referenceReimagineState.dataUrl || referenceReimagineState.blendWithMuralizer) return;
   applyReferenceMuralDescription();
   document.getElementById("imagePrompt")?.dispatchEvent(new Event("input", { bubbles: true }));
@@ -16077,6 +16214,7 @@ function clearReferenceReimagine() {
     assessmentStatus.textContent = "";
     assessmentStatus.classList.remove("is-working");
   }
+  syncContrastCalibrator();
   if (!muralGenerationInProgress) setMuralProgress("");
   syncGenerateAvailability();
 }
@@ -16220,6 +16358,7 @@ function updateReferenceDirectionMode(mode) {
   updateReferenceInfluence(document.getElementById("referenceInfluence")?.value);
   document.getElementById("pureInspirationControls")?.classList.toggle("is-hidden", referenceReimagineState.blendWithMuralizer);
   syncGraphicInkTreatmentVisibility();
+  syncContrastCalibrator();
   // Showing/hiding 11 selector groups in the same synchronous tick as the
   // pill highlight can make the click itself feel laggy on slower devices
   // -- the browser batches paint until the whole handler returns, so the
