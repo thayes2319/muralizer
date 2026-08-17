@@ -16099,6 +16099,22 @@ function getSourceAuthorityFlags(subject, setting, applicationStyle) {
   return flags;
 }
 
+function getSourceAuthorityGuidance(flags) {
+  const labels = new Set(flags.map((flag) => flag.label));
+  const currentInfluence = Math.max(30, Math.min(100, Number(document.getElementById("referenceInfluence")?.value || 45)));
+  const lowerInfluence = Math.max(30, currentInfluence - 10);
+  const expectations = [];
+  if (labels.has("Context")) expectations.push("At higher Source Influence, expect the source subject and its original context to dominate; lower influence gives the selected setting more room to remain distinct.");
+  if (labels.has("Rendering")) expectations.push("At higher Source Influence, expect source materials and visual realism to remain stronger; lower influence gives the selected rendering treatment more authority across subject and setting.");
+  if (labels.has("Palette")) expectations.push("At higher Source Influence, expect more of the source palette to persist against the black-and-white treatment; lower influence gives the value structure more authority.");
+  return {
+    expectations,
+    suggestion: expectations.length
+      ? `Compare the current ${currentInfluence}% setting with ${lowerInfluence}% Source Influence.`
+      : "Keep Source Influence where you judge it best."
+  };
+}
+
 function escapeContrastText(value) {
   return String(value || "")
     .replace(/&/g, "&amp;")
@@ -16136,9 +16152,10 @@ async function runContrastCalibration() {
     const sourceReading = parseAiGuidedSourceReading(result.mural_description);
     const subject = sourceReading.subject || result.assessment?.subject || result.assessment?.key_elements?.[0] || "the source subject";
     const flags = getSourceAuthorityFlags(subject, setting, applicationStyle);
+    const guidance = getSourceAuthorityGuidance(flags);
     referenceReimagineState.contrastCalibrationKey = getContrastCalibrationKey();
     readout.innerHTML = flags.length
-      ? `<b>${flags.length} source-authority ${flags.length === 1 ? "flag" : "flags"}</b><br>${flags.map((flag) => `<b>${escapeContrastText(flag.label)}:</b> ${escapeContrastText(flag.detail)}`).join("<br>")}`
+      ? `<b>${flags.length} source-authority ${flags.length === 1 ? "flag" : "flags"}</b><br>${flags.map((flag) => `<b>${escapeContrastText(flag.label)}:</b> ${escapeContrastText(flag.detail)}`).join("<br>")}<br><b>Expect:</b> ${guidance.expectations.map(escapeContrastText).join("<br>")}<br><b>Suggested test:</b> ${escapeContrastText(guidance.suggestion)}`
       : "No clear source-authority flags detected. Keep Source Influence where you judge it best.";
   } catch (error) {
     readout.textContent = error.message || "Contrast read unavailable.";
