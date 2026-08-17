@@ -8896,13 +8896,6 @@ select[multiple].collapsible-multi.expanded option:first-child {
             <span id="referenceInfluenceValue" class="reference-influence-value">45%</span>
           </div>
           <p id="referenceInfluenceHint" class="reference-influence-hint">Balanced guidance: moderate adherence to the reference's composition/layout.</p>
-          <div id="contrastCalibrator" class="contrast-calibrator" hidden>
-            <div class="contrast-calibrator-header">
-              <span class="contrast-calibrator-title">Source authority</span>
-              <button id="contrastCalibratorRead" class="contrast-calibrator-action" type="button" onclick="runContrastCalibration()">Check</button>
-            </div>
-            <p id="contrastCalibratorReadout" class="contrast-calibrator-readout" aria-live="polite">Read the source and selected setting for a starting Source Influence.</p>
-          </div>
           <div class="reference-tools">
             <span class="reference-tools-title">Image tools (optional)</span>
             <div class="reference-tools-actions">
@@ -9556,6 +9549,14 @@ If you’re exploring a new direction, try adjusting just 1-2 elements at a time
 
         </div>
         <select id="substrateTextureSelect"></select>
+      </div>
+
+      <div id="contrastCalibrator" class="contrast-calibrator" hidden>
+        <div class="contrast-calibrator-header">
+          <span class="contrast-calibrator-title">Source authority</span>
+          <button id="contrastCalibratorRead" class="contrast-calibrator-action" type="button" onclick="runContrastCalibration()">Check</button>
+        </div>
+        <p id="contrastCalibratorReadout" class="contrast-calibrator-readout" aria-live="polite">Check which controls are actively competing with source authority.</p>
       </div>
 
       <!-- Panel Type -->
