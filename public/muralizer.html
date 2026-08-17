@@ -16101,18 +16101,11 @@ function getSourceAuthorityFlags(subject, setting, applicationStyle) {
 
 function getSourceAuthorityGuidance(flags) {
   const labels = new Set(flags.map((flag) => flag.label));
-  const currentInfluence = Math.max(30, Math.min(100, Number(document.getElementById("referenceInfluence")?.value || 45)));
-  const lowerInfluence = Math.max(30, currentInfluence - 10);
-  const expectations = [];
-  if (labels.has("Context")) expectations.push("At higher Source Influence, expect the source subject and its original context to dominate; lower influence gives the selected setting more room to remain distinct.");
-  if (labels.has("Rendering")) expectations.push("At higher Source Influence, expect source materials and visual realism to remain stronger; lower influence gives the selected rendering treatment more authority across subject and setting.");
-  if (labels.has("Palette")) expectations.push("At higher Source Influence, expect more of the source palette to persist against the black-and-white treatment; lower influence gives the value structure more authority.");
-  return {
-    expectations,
-    suggestion: expectations.length
-      ? `Compare the current ${currentInfluence}% setting with ${lowerInfluence}% Source Influence.`
-      : "Keep Source Influence where you judge it best."
-  };
+  const recommendations = [];
+  if (labels.has("Context")) recommendations.push("Go higher if the main subject is not clearly visible or begins blending into the selected setting. Higher Source Influence preserves the source subject more distinctly.");
+  if (labels.has("Rendering")) recommendations.push("Go lower if the selected Application Style is not visible enough. Lower Source Influence gives the rendering treatment more authority over source materials and realism.");
+  if (labels.has("Palette")) recommendations.push("Go lower if the black-and-white treatment is not taking hold. Lower Source Influence gives the value structure more authority over the source palette.");
+  return recommendations;
 }
 
 function escapeContrastText(value) {
@@ -16155,7 +16148,7 @@ async function runContrastCalibration() {
     const guidance = getSourceAuthorityGuidance(flags);
     referenceReimagineState.contrastCalibrationKey = getContrastCalibrationKey();
     readout.innerHTML = flags.length
-      ? `<b>${flags.length} source-authority ${flags.length === 1 ? "flag" : "flags"}</b><br>${flags.map((flag) => `<b>${escapeContrastText(flag.label)}:</b> ${escapeContrastText(flag.detail)}`).join("<br>")}<br><b>Expect:</b> ${guidance.expectations.map(escapeContrastText).join("<br>")}<br><b>Suggested test:</b> ${escapeContrastText(guidance.suggestion)}`
+      ? `<b>${flags.length} source-authority ${flags.length === 1 ? "flag" : "flags"}</b><br>${flags.map((flag) => `<b>${escapeContrastText(flag.label)}:</b> ${escapeContrastText(flag.detail)}`).join("<br>")}<br><b>Adjust Source Influence:</b><br>${guidance.map(escapeContrastText).join("<br>")}`
       : "No clear source-authority flags detected. Keep Source Influence where you judge it best.";
   } catch (error) {
     readout.textContent = error.message || "Contrast read unavailable.";
