@@ -8898,8 +8898,8 @@ select[multiple].collapsible-multi.expanded option:first-child {
           <p id="referenceInfluenceHint" class="reference-influence-hint">Balanced guidance: moderate adherence to the reference's composition/layout.</p>
           <div id="contrastCalibrator" class="contrast-calibrator" hidden>
             <div class="contrast-calibrator-header">
-              <span class="contrast-calibrator-title">Contrast read</span>
-              <button id="contrastCalibratorRead" class="contrast-calibrator-action" type="button" onclick="runContrastCalibration()">Read</button>
+              <span class="contrast-calibrator-title">Contrast check</span>
+              <button id="contrastCalibratorRead" class="contrast-calibrator-action" type="button" onclick="runContrastCalibration()">Check</button>
             </div>
             <p id="contrastCalibratorReadout" class="contrast-calibrator-readout" aria-live="polite">Read the source and selected setting for a starting Source Influence.</p>
           </div>
@@ -16080,16 +16080,10 @@ function calculateContrastCalibration(subject, setting) {
   const sourceProfile = classifyContrastProfile(subject, true);
   const settingProfile = classifyContrastProfile(setting, false);
   const subjectLabel = String(subject || "the source subject").trim();
-  if (sourceProfile === "other" || settingProfile === "other") {
-    return { label: "Open relationship", influence: 55, reason: `The relationship between ${subjectLabel} and this setting is open; 55% keeps both in play.` };
-  }
-  if ((sourceProfile === "urban" && settingProfile === "urban") || (sourceProfile === "natural" && settingProfile === "natural") || (sourceProfile === "transport" && settingProfile === "urban")) {
-    return { label: "Natural agreement", influence: 65, reason: `${subjectLabel} and this setting naturally agree; 65% preserves more source character.` };
-  }
   if ((sourceProfile === "transport" && settingProfile === "natural") || (sourceProfile === "natural" && settingProfile === "urban") || (sourceProfile === "urban" && settingProfile === "natural")) {
-    return { label: "Strong contrast", influence: 40, reason: `${subjectLabel} and this setting strongly contrast; 40% gives the setting room to remain distinct.` };
+    return { influence: 40, reason: `${subjectLabel} and this setting clearly contrast. Start at 40% so the setting can remain distinct.` };
   }
-  return { label: "Moderate contrast", influence: 50, reason: `${subjectLabel} and this setting have some contrast; 50% balances their authority.` };
+  return null;
 }
 
 function escapeContrastText(value) {
@@ -16129,7 +16123,9 @@ async function runContrastCalibration() {
     const subject = sourceReading.subject || result.assessment?.subject || result.assessment?.key_elements?.[0] || "the source subject";
     const calibration = calculateContrastCalibration(subject, setting);
     referenceReimagineState.contrastCalibrationKey = getContrastCalibrationKey();
-    readout.innerHTML = `<b>${escapeContrastText(calibration.label)} - ${calibration.influence}%</b><br>${escapeContrastText(calibration.reason)} <button class="contrast-calibrator-action" type="button" onclick="updateReferenceInfluence(${calibration.influence})">Use ${calibration.influence}%</button>`;
+    readout.innerHTML = calibration
+      ? `<b>Clear contextual contrast - ${calibration.influence}%</b><br>${escapeContrastText(calibration.reason)} <button class="contrast-calibrator-action" type="button" onclick="updateReferenceInfluence(${calibration.influence})">Use ${calibration.influence}%</button>`
+      : "No clear contextual contradiction detected. Keep Source Influence where you judge it best.";
   } catch (error) {
     readout.textContent = error.message || "Contrast read unavailable.";
   } finally {
