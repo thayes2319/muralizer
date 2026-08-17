@@ -15849,7 +15849,7 @@ function buildDirectPureInspirationPrompt(interpretation, selections) {
     ? applyInklineApplicationStyle(sourceGuidance, selections.applicationStyle)
     : applyPureInspirationApplicationStyle(sourceGuidance, selections.applicationStyle);
   const sceneOverride = selections.selectedBackground
-    ? ` Give the subject an intentional setting of ${selections.selectedBackground}. Allow any contradiction between the subject and the setting.`
+    ? ` Give the subject an intentional setting of ${selections.selectedBackground}. Allow any contradiction between the subject and the setting - as pure contrast, not blending.`
     : "";
   const surfaceRefinements = [
     selections.substrateGuidance,
