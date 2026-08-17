@@ -15731,7 +15731,7 @@ const PURE_INSPIRATION_PROMPTS = {
   },
   inkline: {
     hint: "Clean contours, controlled color planes, stylized highlights, and a polished editorial finish.",
-    sourceGuidance: "Create an original, inked image inspired by the supplied reference image. Preserve its central subject, overall compositional character, and palette.",
+    sourceGuidance: "Create an original, inked image inspired by the reference image. Preserve its central subject, overall compositional character, and palette.",
     direction: "Create an edgy, sleekly modern, contemporary image with bright and bold clean silhouettes, sharp deliberate edges and lines, simplified geometry, polished color fields, and controlled visual texture. Treat its shines, gleams, and reflections graphically and stylistically - emphasizing and dramatizing them greatly."
   }
 };
@@ -15844,7 +15844,7 @@ function buildAiGuidedPureInspirationPrompt(interpretation, selections) {
 
 function buildDirectPureInspirationPrompt(interpretation, selections) {
   const sourceGuidance = interpretation.sourceGuidance
-    || "Create an original, hand-painted image inspired by the supplied reference image. Preserve its central subject, compositional character, and palette.";
+    || "Create an original, hand-painted image inspired by the reference image. Preserve its central subject, compositional character, and palette.";
   const outcome = interpretation === PURE_INSPIRATION_PROMPTS.inkline
     ? applyInklineApplicationStyle(sourceGuidance, selections.applicationStyle)
     : applyPureInspirationApplicationStyle(sourceGuidance, selections.applicationStyle);
