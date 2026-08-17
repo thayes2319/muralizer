@@ -3602,6 +3602,36 @@ button, select {
   text-align: right;
 }
 
+.creative-reference-influence {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  margin-top: 9px;
+  padding: 8px 4px 0;
+  border-top: 1px solid rgba(255,255,255,0.18);
+}
+
+.creative-reference-influence label,
+.creative-reference-influence-value {
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.creative-reference-influence input {
+  width: 100%;
+  margin: 0;
+  accent-color: #72c3e8;
+}
+
+.creative-reference-influence-value {
+  min-width: 32px;
+  color: #c9ecfb;
+  text-align: right;
+}
+
 
 
 
@@ -9583,6 +9613,11 @@ If you’re exploring a new direction, try adjusting just 1-2 elements at a time
       <span id="creativeVariationValue" class="creative-variation-readout">Fine</span>
     </div>
   </details>
+  <div id="creativeReferenceInfluence" class="creative-reference-influence" hidden>
+    <label for="creativeReferenceInfluenceSlider">Source influence</label>
+    <input id="creativeReferenceInfluenceSlider" type="range" min="30" max="100" value="45" step="1" aria-label="Source influence" oninput="updateReferenceInfluence(this.value)">
+    <span id="creativeReferenceInfluenceValue" class="creative-reference-influence-value">45%</span>
+  </div>
 </div>
 
 
@@ -15888,9 +15923,15 @@ function updateReferenceInfluence(value) {
   // distributed instead of "Strong" silently swallowing the whole new
   // 53-100 range.
   const normalized = Math.max(30, Math.min(100, Number(value) || 45));
+  ["referenceInfluence", "creativeReferenceInfluenceSlider"].forEach((id) => {
+    const control = document.getElementById(id);
+    if (control) control.value = String(normalized);
+  });
   const label = document.getElementById("referenceInfluenceValue");
+  const creativeLabel = document.getElementById("creativeReferenceInfluenceValue");
   const hint = document.getElementById("referenceInfluenceHint");
   if (label) label.textContent = `${normalized}%`;
+  if (creativeLabel) creativeLabel.textContent = `${normalized}%`;
   if (hint) {
     // Both reference paths use Style control. In Pure Inspiration this is
     // the identity-preserving pass; in Blend it remains visual guidance.
@@ -16222,6 +16263,9 @@ function updateCreativeDirectionMode(mode) {
     // text happened to be sitting in the box already.
     updateOutput();
   }
+  const creativeReferenceInfluence = document.getElementById("creativeReferenceInfluence");
+  if (creativeReferenceInfluence) creativeReferenceInfluence.hidden = !isInspiration;
+  if (isInspiration) updateReferenceInfluence(document.getElementById("referenceInfluence")?.value);
   updateReferenceReimagineCopy();
   updateSelectionGroupsVisibility();
 }
