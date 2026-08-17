@@ -24161,16 +24161,46 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-// Browsers can restore the last selected radio button after a reload, even
-// though the markup's intended first-load default is Via Selections. Reset
-// that transient form state unless a live reference survives a back/forward
-// restoration.
+// Browsers can restore stale form values after reload, even though the
+// Muralizer startup state has explicit defaults. Reapply that state unless a
+// live reference survives a back/forward restoration.
+function restoreMuralizerDefaultSelections() {
+  const muralizerMode = document.querySelector('input[name="creativeDirectionMode"][value="muralizer"]');
+  const category = document.getElementById("categorySelect");
+  const subScene = document.getElementById("subSceneSelect");
+  const elements = document.getElementById("elementsSelect");
+  const botanicalForeground = document.getElementById("botanicalForegroundSelect");
+  const application = document.getElementById("applicationSelect");
+  const fog = document.getElementById("fogModeSelect");
+  const substrate = document.getElementById("substrateTextureSelect");
+  const panel = document.getElementById("panelTypeSelect");
+  const colorMode = document.getElementById("colorMode");
+  const finish = document.getElementById("finishSlider");
+
+  if (muralizerMode) muralizerMode.checked = true;
+  if (category) category.value = "Scenic";
+  buildSubSceneSelect("Scenic");
+  if (subScene) subScene.value = "Meadow Flatlands";
+  buildElementsSelect("Scenic");
+  [elements, botanicalForeground].forEach((select) => {
+    if (select) Array.from(select.options).forEach((option) => { option.selected = false; });
+  });
+  if (application) application.value = "hand-painted oils";
+  if (fog) fog.value = "none";
+  if (substrate) substrate.value = "none";
+  if (panel) panel.value = "none";
+  if (colorMode) colorMode.value = "Auto-Color";
+  if (finish) finish.value = "0";
+  selectedFeels = [];
+  document.querySelectorAll(".feel-btn.active").forEach((button) => button.classList.remove("active"));
+  updateCreativeDirectionMode("muralizer");
+  colorMode?.dispatchEvent(new Event("change", { bubbles: true }));
+  updateOutput();
+}
+
 window.addEventListener("pageshow", () => {
   if (referenceReimagineState.dataUrl) return;
-  const muralizerMode = document.querySelector('input[name="creativeDirectionMode"][value="muralizer"]');
-  if (!muralizerMode) return;
-  muralizerMode.checked = true;
-  updateCreativeDirectionMode("muralizer");
+  restoreMuralizerDefaultSelections();
 });
 
 </script>
