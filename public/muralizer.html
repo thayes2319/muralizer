@@ -8898,7 +8898,7 @@ select[multiple].collapsible-multi.expanded option:first-child {
           <p id="referenceInfluenceHint" class="reference-influence-hint">Balanced guidance: moderate adherence to the reference's composition/layout.</p>
           <div id="contrastCalibrator" class="contrast-calibrator" hidden>
             <div class="contrast-calibrator-header">
-              <span class="contrast-calibrator-title">Contrast check</span>
+              <span class="contrast-calibrator-title">Source authority</span>
               <button id="contrastCalibratorRead" class="contrast-calibrator-action" type="button" onclick="runContrastCalibration()">Check</button>
             </div>
             <p id="contrastCalibratorReadout" class="contrast-calibrator-readout" aria-live="polite">Read the source and selected setting for a starting Source Influence.</p>
@@ -16044,7 +16044,8 @@ function getPureInspirationSelectedBackground(category, subScene) {
 function getContrastCalibrationKey() {
   const category = document.getElementById("categorySelect")?.value || "";
   const subScene = document.getElementById("subSceneSelect")?.value || "";
-  return `${referenceReimagineState.cropVersion}|${category}|${subScene}`;
+  const application = document.getElementById("applicationSelect")?.value || "";
+  return `${referenceReimagineState.cropVersion}|${category}|${subScene}|${application}|${referenceReimagineState.interpretation}|${referenceReimagineState.graphicInkTreatment}`;
 }
 
 function syncContrastCalibrator() {
@@ -16062,7 +16063,7 @@ function syncContrastCalibrator() {
   if (referenceReimagineState.contrastCalibrationKey !== key) {
     referenceReimagineState.contrastCalibrationKey = "";
     const readout = document.getElementById("contrastCalibratorReadout");
-    if (readout) readout.textContent = "Read the source and selected setting for a starting Source Influence.";
+    if (readout) readout.textContent = "Check which controls are actively competing with source authority.";
   }
 }
 
@@ -16076,14 +16077,25 @@ function classifyContrastProfile(value, source) {
   return "other";
 }
 
-function calculateContrastCalibration(subject, setting) {
+function getSourceAuthorityFlags(subject, setting, applicationStyle) {
   const sourceProfile = classifyContrastProfile(subject, true);
   const settingProfile = classifyContrastProfile(setting, false);
   const subjectLabel = String(subject || "the source subject").trim();
+  const style = String(applicationStyle || "").trim();
+  const styleKey = style.toLowerCase();
+  const flags = [];
   if ((sourceProfile === "transport" && settingProfile === "natural") || (sourceProfile === "natural" && settingProfile === "urban") || (sourceProfile === "urban" && settingProfile === "natural")) {
-    return { influence: 40, reason: `${subjectLabel} and this setting clearly contrast. Start at 40% so the setting can remain distinct.` };
+    flags.push({ label: "Context", detail: `${subjectLabel} and the selected setting clearly contrast.` });
   }
-  return null;
+  if (/neo.?manga|hand-painted oils|woodblock|screen print|block print/.test(styleKey)) {
+    flags.push({ label: "Rendering", detail: `${style} strongly redirects how the source and setting are rendered.` });
+  } else if (/digitally printed ink/.test(styleKey)) {
+    flags.push({ label: "Rendering", detail: `${style} tends to preserve source realism, so the source may remain visually dominant.` });
+  }
+  if (referenceReimagineState.interpretation === "inkline" && referenceReimagineState.graphicInkTreatment === "monochrome") {
+    flags.push({ label: "Palette", detail: "Black-and-white Graphic treatment replaces the source palette with a value structure." });
+  }
+  return flags;
 }
 
 function escapeContrastText(value) {
@@ -16101,12 +16113,13 @@ async function runContrastCalibration() {
     document.getElementById("categorySelect")?.value,
     document.getElementById("subSceneSelect")?.value
   );
+  const applicationStyle = document.getElementById("applicationSelect")?.value || "";
   const readout = document.getElementById("contrastCalibratorReadout");
   const button = document.getElementById("contrastCalibratorRead");
   if (!source || !setting || !readout || !button) return;
 
   button.disabled = true;
-  readout.textContent = "Reading source and setting...";
+  readout.textContent = "Checking source authority...";
   try {
     const endpoint = window.SceniqueBackend?.toUrl
       ? window.SceniqueBackend.toUrl("/api/assess-reference")
@@ -16121,11 +16134,11 @@ async function runContrastCalibration() {
 
     const sourceReading = parseAiGuidedSourceReading(result.mural_description);
     const subject = sourceReading.subject || result.assessment?.subject || result.assessment?.key_elements?.[0] || "the source subject";
-    const calibration = calculateContrastCalibration(subject, setting);
+    const flags = getSourceAuthorityFlags(subject, setting, applicationStyle);
     referenceReimagineState.contrastCalibrationKey = getContrastCalibrationKey();
-    readout.innerHTML = calibration
-      ? `<b>Clear contextual contrast - ${calibration.influence}%</b><br>${escapeContrastText(calibration.reason)} <button class="contrast-calibrator-action" type="button" onclick="updateReferenceInfluence(${calibration.influence})">Use ${calibration.influence}%</button>`
-      : "No clear contextual contradiction detected. Keep Source Influence where you judge it best.";
+    readout.innerHTML = flags.length
+      ? `<b>${flags.length} source-authority ${flags.length === 1 ? "flag" : "flags"}</b><br>${flags.map((flag) => `<b>${escapeContrastText(flag.label)}:</b> ${escapeContrastText(flag.detail)}`).join("<br>")}`
+      : "No clear source-authority flags detected. Keep Source Influence where you judge it best.";
   } catch (error) {
     readout.textContent = error.message || "Contrast read unavailable.";
   } finally {
