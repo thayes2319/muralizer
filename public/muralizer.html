@@ -3072,6 +3072,43 @@ margin-top: 15px;
 .reference-interpretation-control label.is-selected { color: #fff; background: #216d87; }
 .reference-interpretation-settings.is-hidden { display: none; }
 
+.graphic-ink-treatment {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(33,143,201,.42);
+  border-radius: 6px;
+}
+
+.graphic-ink-treatment label {
+  display: flex;
+  min-height: 32px;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 8px;
+  background: #f4f8ff;
+  cursor: pointer;
+}
+
+.graphic-ink-treatment label + label { border-left: 1px solid rgba(33,143,201,.32); }
+.graphic-ink-treatment input { position: absolute; opacity: 0; pointer-events: none; }
+.graphic-ink-treatment label.is-selected { background: #e4f3f9; box-shadow: inset 0 0 0 2px #216d87; }
+
+.graphic-ink-swatch {
+  display: block;
+  width: 46px;
+  height: 18px;
+  border: 1px solid rgba(20,45,60,.38);
+  border-radius: 3px;
+}
+
+.graphic-ink-swatch.color {
+  background: linear-gradient(90deg, #d53b37 0%, #efb538 22%, #4fa14f 43%, #2c98c5 65%, #7054a5 82%, #d05a98 100%);
+}
+
+.graphic-ink-swatch.monochrome { background: linear-gradient(90deg, #161616 0 50%, #fff 50% 100%); }
+
 .reference-interpretation-hint,
 .reference-tools-note {
   margin: 6px 0 0;
@@ -8816,6 +8853,10 @@ select[multiple].collapsible-multi.expanded option:first-child {
               <label class="is-selected" onclick="updateReferencePeople('exclude')"><input type="radio" name="referencePeople" value="exclude" checked onchange="updateReferencePeople(this.value)">Exclude people</label>
             </div>
             <p id="referencePeopleHint" class="reference-interpretation-hint">Removes people, faces, and human figures even when they appear in the source.</p>
+          </div>
+          <div id="graphicInkTreatment" class="graphic-ink-treatment" role="radiogroup" aria-label="Graphic color treatment" hidden>
+            <label class="is-selected" title="Color-inked"><input type="radio" name="graphicInkTreatment" value="color" aria-label="Color-inked" checked onchange="updateGraphicInkTreatment(this.value)"><span class="graphic-ink-swatch color" aria-hidden="true"></span></label>
+            <label title="Black and white inked"><input type="radio" name="graphicInkTreatment" value="monochrome" aria-label="Black and white inked" onchange="updateGraphicInkTreatment(this.value)"><span class="graphic-ink-swatch monochrome" aria-hidden="true"></span></label>
           </div>
           <label class="reference-influence-label" for="referenceInfluence">Source influence</label>
           <div class="reference-influence-row">
@@ -15669,6 +15710,7 @@ const referenceReimagineState = {
   muralizerDescription: "",
   sourceContextToExclude: "",
   interpretation: "balanced",
+  graphicInkTreatment: "color",
   peopleMode: "exclude",
   blendWithMuralizer: false,
   pureInspirationSelectionSnapshot: null
@@ -15731,7 +15773,7 @@ const PURE_INSPIRATION_PROMPTS = {
   },
   inkline: {
     hint: "Clean contours, controlled color planes, stylized highlights, and a polished editorial finish.",
-    sourceGuidance: "Create an original image in colored inks inspired by the reference image. Preserve its central subject, overall compositional character, and palette.",
+    sourceGuidance: "Create an original color-inked image inspired by the reference image. Preserve its central subject, overall compositional character, and palette.",
     direction: "Create an edgy, sleekly modern, contemporary image with bright and bold clean silhouettes, sharp deliberate edges and lines, simplified geometry, polished color fields, and controlled visual texture. Treat its shines, gleams, and reflections graphically and stylistically - emphasizing and dramatizing them greatly."
   }
 };
@@ -15758,6 +15800,7 @@ async function updateReferenceInterpretation(value) {
   });
   const hint = document.getElementById("referenceInterpretationHint");
   if (hint) hint.textContent = PURE_INSPIRATION_PROMPTS[interpretation].hint;
+  syncGraphicInkTreatmentVisibility();
   syncGenerateAvailability();
   if (interpretation !== "ai-guided") setReferenceAssessmentStatus("");
   if (interpretation === "ai-guided" && referenceReimagineState.dataUrl) {
@@ -15776,6 +15819,22 @@ async function updateReferenceInterpretation(value) {
     showAiAssessmentPrompt(document.getElementById("imagePrompt")?.value || "", true);
     return;
   }
+  refreshReferenceRenderPrompt();
+}
+
+function syncGraphicInkTreatmentVisibility() {
+  const control = document.getElementById("graphicInkTreatment");
+  if (!control) return;
+  control.hidden = referenceReimagineState.blendWithMuralizer || referenceReimagineState.interpretation !== "inkline";
+}
+
+function updateGraphicInkTreatment(value) {
+  const treatment = value === "monochrome" ? "monochrome" : "color";
+  referenceReimagineState.graphicInkTreatment = treatment;
+  document.querySelectorAll('input[name="graphicInkTreatment"]').forEach((input) => {
+    input.checked = input.value === treatment;
+    input.closest("label")?.classList.toggle("is-selected", input.checked);
+  });
   refreshReferenceRenderPrompt();
 }
 
@@ -15843,7 +15902,9 @@ function buildAiGuidedPureInspirationPrompt(interpretation, selections) {
 }
 
 function buildDirectPureInspirationPrompt(interpretation, selections) {
-  const sourceGuidance = interpretation.sourceGuidance
+  const sourceGuidance = interpretation === PURE_INSPIRATION_PROMPTS.inkline
+    ? getGraphicInkSourceGuidance()
+    : interpretation.sourceGuidance
     || "Create an original, hand-painted image inspired by the reference image. Preserve its central subject, compositional character, and palette.";
   const outcome = interpretation === PURE_INSPIRATION_PROMPTS.inkline
     ? applyInklineApplicationStyle(sourceGuidance, selections.applicationStyle)
@@ -15856,6 +15917,12 @@ function buildDirectPureInspirationPrompt(interpretation, selections) {
     selections.briefGuidance ? `Additional creative brief: ${selections.briefGuidance}` : ""
   ].filter(Boolean).join(" ");
   return `${outcome}${sceneOverride}\n\n${interpretation.direction}${surfaceRefinements ? ` ${surfaceRefinements}` : ""}`;
+}
+
+function getGraphicInkSourceGuidance() {
+  return referenceReimagineState.graphicInkTreatment === "monochrome"
+    ? "Create an original inked image inspired by the reference image. Preserve its central subject and overall compositional character. Translate its palette into a black-and-white value structure."
+    : PURE_INSPIRATION_PROMPTS.inkline.sourceGuidance;
 }
 
 function getPureInspirationSubstrateGuidance(substrateTexture) {
@@ -15876,7 +15943,7 @@ function applyInklineApplicationStyle(outcome, applicationStyle) {
   if (!applicationStyle || isPureInspirationAutoValue(applicationStyle) || /^(none|no texture|auto)$/i.test(applicationStyle)) {
     return outcome;
   }
-  return String(outcome).replace(/image in colored inks/i, `image in colored inks using a ${applicationStyle} application style`);
+  return String(outcome).replace(/(color-inked|inked) image/i, `$1 image using a ${applicationStyle} application style`);
 }
 
 function parseAiGuidedSourceReading(description) {
@@ -16136,6 +16203,7 @@ function updateReferenceDirectionMode(mode) {
   // leave stale wording from the mode you just left.
   updateReferenceInfluence(document.getElementById("referenceInfluence")?.value);
   document.getElementById("pureInspirationControls")?.classList.toggle("is-hidden", referenceReimagineState.blendWithMuralizer);
+  syncGraphicInkTreatmentVisibility();
   // Showing/hiding 11 selector groups in the same synchronous tick as the
   // pill highlight can make the click itself feel laggy on slower devices
   // -- the browser batches paint until the whole handler returns, so the
