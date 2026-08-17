@@ -15684,20 +15684,20 @@ const PURE_INSPIRATION_PROMPTS = {
   },
   subdued: {
     hint: "Quieter forms, softer contrast, and restrained detail while staying close to the source.",
-    direction: "Keep the interpretation subdued: use soft tonal transitions, restrained contrast, simplified detail, and calm, matte painterly surfaces."
+    direction: "Keep the interpretation subdued: use soft tonal transitions, restrained contrast, simplified detail, and calm matte surfaces."
   },
   balanced: {
     hint: "Keeps the source character while refining it into a clear, hand-painted mural.",
-    direction: "Present a hand-painted interpretation with clear composition, harmonious color, visible but controlled brushwork, and subtle non-photorealistic light."
+    direction: "Present a balanced interpretation with clear composition, harmonious color, visible but controlled visual texture, and subtle non-photorealistic light."
   },
   sleek: {
     hint: "A sharp, graphic, contemporary treatment with clean silhouettes and decisive visual structure.",
-    direction: "Present a sleek, contemporary hand-painted image with bold clean silhouettes, sharp deliberate edges and lines, simplified geometry, polished color fields, and controlled visible brushwork. Treat its gleams and reflections subtly rather than realistically, capturing the play of light and shadow across its curves and edges. Use a refined modern editorial design language with crisp focal forms and controlled contrast; avoid photographic rendering, weathering, visual clutter, and ornate detail."
+    direction: "Present a sleek, contemporary image with bold clean silhouettes, sharp deliberate edges and lines, simplified geometry, polished color fields, and controlled visual texture. Treat its gleams and reflections subtly rather than realistically, capturing the play of light and shadow across its curves and edges. Use a refined modern editorial design language with crisp focal forms and controlled contrast; avoid photographic rendering, weathering, visual clutter, and ornate detail."
   },
   inkline: {
     hint: "Bright, bold inkline treatment with sharp edges, graphic silhouettes, and dramatized reflections.",
-    sourceGuidance: "Create an original, hand-painted image inspired by the supplied reference image. Preserve its central subject, overall compositional character, and palette without copying it literally.",
-    direction: "Create an edgy, sleekly modern, contemporary hand-painted image with an inkline treatment, bright and bold clean silhouettes, sharp deliberate edges and lines, simplified geometry, polished color fields, and controlled tight brushwork. Treat its shines, gleams, and reflections stylistically - emphasizing and dramatizing them greatly."
+    sourceGuidance: "Create an original, hand-painted image inspired by the supplied reference image. Preserve its central subject, overall compositional character, and palette.",
+    direction: "Create an edgy, sleekly modern, contemporary image with an inkline treatment, bright and bold clean silhouettes, sharp deliberate edges and lines, simplified geometry, polished color fields, and controlled visual texture. Treat its shines, gleams, and reflections stylistically - emphasizing and dramatizing them greatly."
   }
 };
 
@@ -15809,7 +15809,7 @@ function buildAiGuidedPureInspirationPrompt(interpretation, selections) {
 
 function buildDirectPureInspirationPrompt(interpretation, selections) {
   const sourceGuidance = interpretation.sourceGuidance
-    || "Create an original, hand-painted image inspired by the supplied reference image. Preserve its central subject, compositional character, and palette without copying it literally.";
+    || "Create an original, hand-painted image inspired by the supplied reference image. Preserve its central subject, compositional character, and palette.";
   const outcome = applyPureInspirationApplicationStyle(sourceGuidance, selections.applicationStyle);
   const sceneOverride = selections.selectedBackground
     ? ` Give the subject an intentional setting of ${selections.selectedBackground}.`
@@ -18449,6 +18449,7 @@ const attributes = {
       "Lakeside Settlement Scene",
       "Terraced Farmland Panorama",
       "Coastal Cliff Settlement",
+      "City Panoramic",
       "Mountain and Sea",
       "Gulf Coast Beachfront",
       "West Coast Beachfront",
