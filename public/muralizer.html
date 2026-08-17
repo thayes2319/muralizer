@@ -23712,7 +23712,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  function setActiveContext(index) {
+  function setActiveContext(index, options = {}) {
     const safeIndex = Number(index);
     const ctx = contexts[safeIndex];
     if (!ctx) return;
@@ -23733,7 +23733,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     renderConceptSelector(ctx);
-    applyConceptImageForContext(ctx, getActiveConceptName(ctx));
+    applyConceptImageForContext(ctx, getActiveConceptName(ctx), options);
     persistCpcState(safeIndex);
   }
 
@@ -24131,7 +24131,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   renderOpenProjectChips(0);
   const initialIndex = Number.isInteger(restoredActiveIndex) ? restoredActiveIndex : 0;
-  setActiveContext(initialIndex >= 0 ? initialIndex : 0);
+  setActiveContext(initialIndex >= 0 ? initialIndex : 0, { restoreRecipe: false });
   cpcSnapshots = readCpcSnapshots();
   renderSnapshotSelector();
 
@@ -24150,13 +24150,13 @@ document.addEventListener("DOMContentLoaded", () => {
       : [];
     if (!recoveredContexts.length) return;
     contexts = recoveredContexts.map((context, index) => normalizeContext(context, getDefaultContext(index)));
-    setActiveContext(0);
+    setActiveContext(0, { restoreRecipe: false });
     setSessionStatus("Recovered client concepts from Render Disk.");
   }).then(() => hydrateBackendConceptImages()).then(() => {
     const activeIndex = getActiveProjectIndex();
     const ctx = contexts[activeIndex];
     if (!ctx) return;
-    applyConceptImageForContext(ctx, getActiveConceptName(ctx));
+    applyConceptImageForContext(ctx, getActiveConceptName(ctx), { restoreRecipe: false });
     renderOpenProjectChips(activeIndex);
   });
 });
