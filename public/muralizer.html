@@ -16193,6 +16193,13 @@ function updateReferenceInfluence(value) {
   }
 }
 
+function syncCreativeReferenceInfluenceVisibility() {
+  const control = document.getElementById("creativeReferenceInfluence");
+  if (!control) return;
+  const inInspirationMode = document.getElementById("referenceReimagineBody")?.classList.contains("is-visible");
+  control.hidden = !inInspirationMode || !referenceReimagineState.dataUrl;
+}
+
 function clearReferenceReimagine() {
   referenceReimagineState.dataUrl = "";
   referenceReimagineState.mimeType = "";
@@ -16234,6 +16241,7 @@ function clearReferenceReimagine() {
     assessmentStatus.textContent = "";
     assessmentStatus.classList.remove("is-working");
   }
+  syncCreativeReferenceInfluenceVisibility();
   syncContrastCalibrator();
   if (!muralGenerationInProgress) setMuralProgress("");
   syncGenerateAvailability();
@@ -16515,8 +16523,7 @@ function updateCreativeDirectionMode(mode) {
     // text happened to be sitting in the box already.
     updateOutput();
   }
-  const creativeReferenceInfluence = document.getElementById("creativeReferenceInfluence");
-  if (creativeReferenceInfluence) creativeReferenceInfluence.hidden = !isInspiration;
+  syncCreativeReferenceInfluenceVisibility();
   if (isInspiration) updateReferenceInfluence(document.getElementById("referenceInfluence")?.value);
   updateReferenceReimagineCopy();
   updateSelectionGroupsVisibility();
@@ -16634,6 +16641,7 @@ async function handleReferenceReimagineFile(file) {
   const dataUrl = normalized.dataUrl;
   const previousMuralizerDescription = document.getElementById("imagePrompt")?.value || "";
   referenceReimagineState.dataUrl = dataUrl;
+  syncCreativeReferenceInfluenceVisibility();
   referenceReimagineState.mimeType = normalized.blob.type || "image/jpeg";
   referenceReimagineState.name = file.name;
   referenceReimagineState.crop = { left: 0, top: 0, width: 1, height: 1 };
