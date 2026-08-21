@@ -655,7 +655,14 @@ async function handleSeedDefaultConcepts(req, res) {
     const nextId = sanitizeName(`cpc_seed_${Date.now()}_${conceptName}_${crypto.randomUUID().slice(0, 6)}`);
     const imageFileName = `${nextId}.png`;
     const targetImagePath = path.join(conceptDir, imageFileName);
-    await fs.copyFile(sourceFilePath, targetImagePath);
+    // Index can reference template files no longer on disk (post data-loss);
+    // skip those instead of letting ENOENT 500 the whole seed for every new owner.
+    try {
+      await fs.copyFile(sourceFilePath, targetImagePath);
+    } catch (copyError) {
+      console.warn(`[seed-defaults] template copy failed for ${conceptName}:`, copyError.message);
+      continue;
+    }
 
     let imageSizeBytes = null;
     try {
