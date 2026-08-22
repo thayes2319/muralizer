@@ -158,9 +158,12 @@
     saveMeasurementRequest(payload) {
       return post("/api/measurement-requests", withOwner(payload));
     },
-    loadConceptImages(ownerId) {
+    loadConceptImages(ownerId, options) {
       const resolvedOwnerId = resolveOwnerId(ownerId);
-      return get("/api/concept-images", { ownerId: resolvedOwnerId });
+      return get("/api/concept-images", {
+        ownerId: resolvedOwnerId,
+        canonical: !options || options.canonical !== false ? "true" : ""
+      });
     },
     deleteConceptImages(params) {
       const safeParams = params && typeof params === "object" ? { ...params } : {};

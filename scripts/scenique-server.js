@@ -220,6 +220,47 @@ function getRecordRank(record) {
   return isSavedRecord ? 2 : 1;
 }
 
+function getConceptPosition(record) {
+  const explicitPosition = Number(record && record.position);
+  if (Number.isInteger(explicitPosition) && explicitPosition > 0) return explicitPosition;
+  const match = String(record && record.concept || '').match(/c\s*(\d+)/i);
+  return match ? Number(match[1]) : Number.MAX_SAFE_INTEGER;
+}
+
+function buildCanonicalConceptRecords(items, ownerId) {
+  const canonicalByIdentity = new Map();
+  (Array.isArray(items) ? items : []).forEach((item) => {
+    if (ownerId && normalizeOwnerId(item && item.ownerId) !== ownerId) return;
+    if (getRecordRank(item) !== 2 || !item || !item.imageUrl) return;
+
+    const context = item.context && typeof item.context === 'object' ? item.context : {};
+    const client = String(context.client || item.client || '').trim();
+    const project = String(context.project || item.project || '').trim();
+    const concept = String(item.concept || '').trim();
+    if (!client || !project || !concept) return;
+
+    // New records have a permanent ID. Legacy records are imported once by
+    // their old slot name so they remain visible, but all new writes use the
+    // permanent ID and never depend on this fallback.
+    const conceptId = String(item.conceptId || item.id || '').trim();
+    if (!conceptId) return;
+    const legacyIdentity = `${normalizeOwnerId(item.ownerId) || '__unowned__'}|${normalizeMatchValue(client)}|${normalizeMatchValue(project)}|${normalizeConceptMatchValue(concept)}`;
+    const identity = item.conceptId ? `id:${conceptId}` : `legacy:${legacyIdentity}`;
+    const existing = canonicalByIdentity.get(identity);
+    if (!existing || toPositiveTimestamp(item.createdAt) > toPositiveTimestamp(existing.createdAt)) {
+      canonicalByIdentity.set(identity, {
+        ...item,
+        conceptId,
+        position: getConceptPosition(item),
+        context: { ...context, client, project }
+      });
+    }
+  });
+
+  return Array.from(canonicalByIdentity.values())
+    .sort((a, b) => getConceptPosition(a) - getConceptPosition(b) || toPositiveTimestamp(a.createdAt) - toPositiveTimestamp(b.createdAt));
+}
+
 function resolveRecordImageFilePath(record) {
   const storedPath = String(record && record.imagePath || '').trim();
   if (storedPath) {
@@ -348,7 +389,11 @@ function resolveWithin(baseDir, requestPath) {
 
 async function handleConceptImage(req, res) {
   const body = await readBody(req);
-  const id = sanitizeName(body.id || `cpc_img_${Date.now()}_${crypto.randomUUID().slice(0, 8)}`);
+  const isCanonicalSave = body.savedConcept === true && body.canonical === true;
+  const conceptId = isCanonicalSave
+    ? sanitizeName(body.conceptId || `concept_${crypto.randomUUID()}`)
+    : '';
+  const id = sanitizeName(body.id || conceptId || `cpc_img_${Date.now()}_${crypto.randomUUID().slice(0, 8)}`);
   const createdAt = body.createdAt || new Date().toISOString();
   const ownerId = normalizeOwnerId(body.ownerId);
   const imageBuffer = dataUrlToBuffer(body.imageBase64, body.imageDataUrl);
@@ -369,6 +414,9 @@ async function handleConceptImage(req, res) {
     id,
     createdAt,
     ownerId,
+    conceptId: conceptId || undefined,
+    position: isCanonicalSave ? getConceptPosition(body) : undefined,
+    canonical: isCanonicalSave || undefined,
     imageUrl,
     imagePath: path.relative(dataDir, imagePath),
     imageSizeBytes: imageBuffer ? imageBuffer.length : null,
@@ -377,7 +425,13 @@ async function handleConceptImage(req, res) {
     imageDataUrl: undefined
   };
 
-  await appendJsonItem(conceptIndexPath, record);
+  const existingItems = await readJson(conceptIndexPath, []);
+  if (isCanonicalSave && Array.isArray(existingItems)) {
+    const replaced = existingItems.filter((item) => String(item && item.conceptId || '') !== conceptId);
+    await writeJson(conceptIndexPath, capRecordsPerOwner([record, ...replaced]));
+  } else {
+    await appendJsonItem(conceptIndexPath, record);
+  }
   sendJson(res, 201, record);
 }
 
@@ -452,6 +506,7 @@ async function handleDeleteConceptImages(req, res, url) {
     .map((value) => normalizeMatchValue(value).replace(/\s+/g, ''))
     .filter(Boolean);
   const conceptSet = new Set(conceptValues);
+  const conceptIdSet = new Set(url.searchParams.getAll('conceptId').map((value) => String(value || '').trim()).filter(Boolean));
 
   const removed = [];
   const kept = [];
@@ -473,6 +528,11 @@ async function handleDeleteConceptImages(req, res, url) {
     }
 
     if (project && itemProject !== project) {
+      kept.push(item);
+      return;
+    }
+
+    if (conceptIdSet.size && !conceptIdSet.has(String(item && item.conceptId || item && item.id || ''))) {
       kept.push(item);
       return;
     }
@@ -1169,9 +1229,10 @@ async function handleApi(req, res, url) {
   if (req.method === 'GET' && url.pathname === '/api/concept-images') {
     const items = await readJson(conceptIndexPath, []);
     const ownerId = normalizeOwnerId(url.searchParams.get('ownerId'));
-    const filtered = ownerId
-      ? items.filter((item) => normalizeOwnerId(item && item.ownerId) === ownerId)
-      : items;
+    const canonical = url.searchParams.get('canonical') === 'true';
+    const filtered = canonical
+      ? buildCanonicalConceptRecords(items, ownerId)
+      : (ownerId ? items.filter((item) => normalizeOwnerId(item && item.ownerId) === ownerId) : items);
     sendJson(res, 200, filtered);
     return true;
   }
